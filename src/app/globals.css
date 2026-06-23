@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  /* Paleta oficial AMET — apenas 3 cores + branco */
+  --amet-purple: #b355c9;
+  --amet-blue: #285ace;
+  --amet-indigo: #1c2493;
+  --amet-white: #ffffff;
+}
+
+@theme inline {
+  --color-amet-purple: var(--amet-purple);
+  --color-amet-blue: var(--amet-blue);
+  --color-amet-indigo: var(--amet-indigo);
+  --color-amet-white: var(--amet-white);
+  --font-sans: var(--font-league-spartan);
+}
+
+body {
+  background: var(--amet-indigo);
+  color: var(--amet-white);
+  font-family: var(--font-league-spartan), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--amet-purple) 40%, var(--amet-indigo));
+  color: var(--amet-white);
+}
