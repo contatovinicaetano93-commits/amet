@@ -4,29 +4,42 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AreaCard, type VacancyInfo } from "@/components/AreaCard";
 import { StepIndicator } from "@/components/StepIndicator";
-import { CURSOS, POLLING_INTERVAL_MS, type AreaCode } from "@/lib/constants";
 import {
-  areaSchema,
-  candidaturaSchema,
-  cursoSchema,
-  personalDataSchema,
-  type PersonalData,
-} from "@/lib/schemas";
+  CURSOS,
+  FORM_STEPS,
+  POLLING_INTERVAL_MS,
+  UNIDADES,
+  type AreaCode,
+  type TipoPerfil,
+  type UnidadeCode,
+} from "@/lib/constants";
+import { candidaturaSchema, personalDataSchema } from "@/lib/schemas";
+import { siteContent } from "@/lib/content";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatCpf, formatPhone } from "@/lib/validators";
 
-type FormState = PersonalData & {
-  areaInteresse: AreaCode | "";
+type FormState = {
+  tipoPerfil: TipoPerfil | "";
+  nomeCompleto: string;
+  rgm: string;
+  cpf: string;
+  telefone: string;
+  email: string;
+  unidades: UnidadeCode[];
   cursoAtual: (typeof CURSOS)[number] | "";
+  areasInteresse: AreaCode[];
 };
 
 const initialForm: FormState = {
+  tipoPerfil: "",
   nomeCompleto: "",
   rgm: "",
   cpf: "",
   telefone: "",
   email: "",
-  areaInteresse: "",
+  unidades: [],
   cursoAtual: "",
+  areasInteresse: [],
 };
 
 export function ApplicationForm() {
@@ -37,7 +50,11 @@ export function ApplicationForm() {
   const [loadingVagas, setLoadingVagas] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successTipo, setSuccessTipo] = useState<TipoPerfil | "">("");
   const [submitError, setSubmitError] = useState("");
+
+  const isAluno = form.tipoPerfil === "aluno";
+  const enforceLimit = isAluno;
 
   const fetchVagas = useCallback(async () => {
     try {
@@ -52,39 +69,67 @@ export function ApplicationForm() {
 
   useEffect(() => {
     void fetchVagas();
-    const interval = setInterval(() => {
-      void fetchVagas();
-    }, POLLING_INTERVAL_MS);
+    const interval = setInterval(() => void fetchVagas(), POLLING_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [fetchVagas]);
 
   useEffect(() => {
-    if (!form.areaInteresse) return;
-    const selected = areas.find((area) => area.code === form.areaInteresse);
-    if (selected?.full) {
-      setForm((current) => ({ ...current, areaInteresse: "" }));
-    }
-  }, [areas, form.areaInteresse]);
+    if (!enforceLimit || form.areasInteresse.length !== 1) return;
+    const selected = areas.find((a) => a.code === form.areasInteresse[0]);
+    if (selected?.full) setForm((c) => ({ ...c, areasInteresse: [] }));
+  }, [areas, form.areasInteresse, enforceLimit]);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((current) => ({ ...current, [key]: value }));
-    setErrors((current) => {
-      const next = { ...current };
-      delete next[key as string];
-      return next;
-    });
+    setForm((c) => ({ ...c, [key]: value }));
+    setErrors((c) => { const n = { ...c }; delete n[key as string]; return n; });
   }
 
-  function validateStep(currentStep: number): boolean {
-    if (currentStep === 1) {
+  function toggleUnidade(code: UnidadeCode) {
+    if (isAluno) {
+      updateField("unidades", [code]);
+      return;
+    }
+    setForm((c) => ({
+      ...c,
+      unidades: c.unidades.includes(code)
+        ? c.unidades.filter((u) => u !== code)
+        : [...c.unidades, code],
+    }));
+    setErrors((c) => { const n = { ...c }; delete n.unidades; return n; });
+  }
+
+  function toggleArea(code: AreaCode) {
+    if (isAluno) {
+      const area = areas.find((a) => a.code === code);
+      if (area?.full) return;
+      updateField("areasInteresse", [code]);
+      return;
+    }
+    setForm((c) => ({
+      ...c,
+      areasInteresse: c.areasInteresse.includes(code)
+        ? c.areasInteresse.filter((a) => a !== code)
+        : [...c.areasInteresse, code],
+    }));
+    setErrors((c) => { const n = { ...c }; delete n.areasInteresse; return n; });
+  }
+
+  function validateStep(s: number): boolean {
+    if (s === 1) {
+      if (!form.tipoPerfil) {
+        setErrors({ tipoPerfil: "Informe se você é aluno ou não aluno" });
+        return false;
+      }
+      setErrors({});
+      return true;
+    }
+    if (s === 2) {
       const result = personalDataSchema.safeParse(form);
       if (!result.success) {
         const fieldErrors: Record<string, string> = {};
         for (const issue of result.error.issues) {
           const key = issue.path[0];
-          if (typeof key === "string" && !fieldErrors[key]) {
-            fieldErrors[key] = issue.message;
-          }
+          if (typeof key === "string" && !fieldErrors[key]) fieldErrors[key] = issue.message;
         }
         setErrors(fieldErrors);
         return false;
@@ -92,50 +137,55 @@ export function ApplicationForm() {
       setErrors({});
       return true;
     }
-
-    if (currentStep === 2) {
-      const result = areaSchema.safeParse(form);
-      if (!result.success) {
-        setErrors({ areaInteresse: "Selecione uma área de interesse" });
+    if (s === 3) {
+      if (form.unidades.length === 0) {
+        setErrors({ unidades: isAluno ? "Selecione uma unidade" : "Selecione ao menos uma unidade" });
         return false;
       }
-      const selected = areas.find((area) => area.code === form.areaInteresse);
-      if (selected?.full) {
-        setErrors({ areaInteresse: "Esta área está com vagas esgotadas" });
+      if (isAluno && form.unidades.length > 1) {
+        setErrors({ unidades: "Selecione apenas uma unidade" });
         return false;
       }
       setErrors({});
       return true;
     }
-
-    if (currentStep === 3) {
-      const result = cursoSchema.safeParse(form);
-      if (!result.success) {
-        setErrors({ cursoAtual: "Selecione seu curso atual na AMET" });
+    if (s === 4) {
+      if (!form.cursoAtual) {
+        setErrors({ cursoAtual: "Selecione um curso" });
         return false;
       }
       setErrors({});
       return true;
     }
-
+    if (s === 5) {
+      if (form.areasInteresse.length === 0) {
+        setErrors({ areasInteresse: "Selecione ao menos uma área" });
+        return false;
+      }
+      if (isAluno && form.areasInteresse.length > 1) {
+        setErrors({ areasInteresse: "Selecione apenas uma área" });
+        return false;
+      }
+      if (isAluno) {
+        const area = areas.find((a) => a.code === form.areasInteresse[0]);
+        if (area?.full) {
+          setErrors({ areasInteresse: "Esta área está com vagas esgotadas" });
+          return false;
+        }
+      }
+      setErrors({});
+      return true;
+    }
     return false;
   }
 
-  function goNext() {
-    if (!validateStep(step)) return;
-    setStep((current) => Math.min(current + 1, 3));
-  }
-
-  function goBack() {
-    setErrors({});
-    setSubmitError("");
-    setStep((current) => Math.max(current - 1, 1));
-  }
-
   async function handleSubmit() {
-    if (!validateStep(3)) return;
-
-    const parsed = candidaturaSchema.safeParse(form);
+    if (!validateStep(5)) return;
+    const parsed = candidaturaSchema.safeParse({
+      ...form,
+      tipoPerfil: form.tipoPerfil,
+      cursoAtual: form.cursoAtual || undefined,
+    });
     if (!parsed.success) {
       setSubmitError("Revise os dados antes de enviar.");
       return;
@@ -150,17 +200,19 @@ export function ApplicationForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
-
-      const data = (await response.json()) as { error?: string; message?: string };
+      const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        setSubmitError(data.error ?? "Não foi possível enviar sua candidatura.");
-        if (response.status === 409) {
-          void fetchVagas();
-        }
+        setSubmitError(data.error ?? "Não foi possível enviar.");
+        if (response.status === 409) void fetchVagas();
         return;
       }
 
+      if (parsed.data.tipoPerfil === "nao_aluno") {
+        window.open(buildWhatsAppUrl(siteContent.whatsapp, parsed.data), "_blank");
+      }
+
+      setSuccessTipo(parsed.data.tipoPerfil);
       setSuccess(true);
       setForm(initialForm);
       setStep(1);
@@ -174,173 +226,163 @@ export function ApplicationForm() {
 
   if (success) {
     return (
-      <div className="rounded-3xl border border-amet-blue/30 bg-amet-blue/10 p-8 text-center">
-        <h2 className="text-2xl font-semibold text-amet-blue">
-          Candidatura enviada com sucesso!
-        </h2>
-        <p className="mt-3 text-amet-white/75">
-          Recebemos sua inscrição. A AMET entrará em contato pelo e-mail informado.
+      <div className="rounded-3xl border border-amet-blue/20 bg-amet-blue/5 p-8 text-center">
+        <h2 className="text-2xl font-semibold text-amet-blue">Inscrição registrada!</h2>
+        <p className="mt-3 text-amet-indigo/70">
+          {successTipo === "nao_aluno"
+            ? "Seus dados foram salvos e o WhatsApp foi aberto para contato da AMET."
+            : "Recebemos sua candidatura. A AMET entrará em contato pelo e-mail informado."}
         </p>
         <button
           type="button"
           onClick={() => setSuccess(false)}
-          className="mt-6 rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white transition hover:bg-amet-blue"
+          className="mt-6 rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white"
         >
-          Enviar nova candidatura
+          Nova inscrição
         </button>
       </div>
     );
   }
 
   return (
-    <div className="rounded-3xl border border-amet-white/15 bg-amet-white/5 p-6 shadow-2xl shadow-amet-indigo/50 backdrop-blur-sm sm:p-8">
-      <div className="mb-8 space-y-3">
-        <h2 className="text-2xl font-semibold text-amet-white">Formulário de Candidatura</h2>
-        <p className="text-sm text-amet-white/65">
-          Preencha as três etapas abaixo. A disponibilidade de vagas é atualizada
-          automaticamente a cada 30 segundos.
-        </p>
-        <StepIndicator currentStep={step} />
-      </div>
+    <div className="rounded-3xl border border-amet-blue/10 bg-amet-white p-6 shadow-lg shadow-amet-blue/5 sm:p-8">
+      <StepIndicator currentStep={step} labels={FORM_STEPS} />
 
-      {step === 1 && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Nome completo" error={errors.nomeCompleto} className="sm:col-span-2">
-            <input
-              value={form.nomeCompleto}
-              onChange={(event) => updateField("nomeCompleto", event.target.value)}
-              className={inputClass(errors.nomeCompleto)}
-              placeholder="Seu nome completo"
-            />
-          </Field>
-          <Field label="RGM" error={errors.rgm}>
-            <input
-              value={form.rgm}
-              onChange={(event) => updateField("rgm", event.target.value)}
-              className={inputClass(errors.rgm)}
-              placeholder="Registro Geral de Matrícula"
-            />
-          </Field>
-          <Field label="CPF" error={errors.cpf}>
-            <input
-              value={form.cpf}
-              onChange={(event) => updateField("cpf", formatCpf(event.target.value))}
-              className={inputClass(errors.cpf)}
-              placeholder="000.000.000-00"
-              inputMode="numeric"
-            />
-          </Field>
-          <Field label="Telefone / WhatsApp" error={errors.telefone}>
-            <input
-              value={form.telefone}
-              onChange={(event) => updateField("telefone", formatPhone(event.target.value))}
-              className={inputClass(errors.telefone)}
-              placeholder="(11) 99999-9999"
-              inputMode="tel"
-            />
-          </Field>
-          <Field label="E-mail" error={errors.email}>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(event) => updateField("email", event.target.value)}
-              className={inputClass(errors.email)}
-              placeholder="seu@email.com"
-            />
-          </Field>
-        </div>
-      )}
+      <div className="mt-8">
+        {step === 1 && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <p className="sm:col-span-2 text-sm text-amet-indigo/70">Você é aluno da AMET?</p>
+            {(["aluno", "nao_aluno"] as const).map((tipo) => (
+              <button
+                key={tipo}
+                type="button"
+                onClick={() => updateField("tipoPerfil", tipo)}
+                className={`rounded-2xl border px-4 py-4 text-left font-medium transition ${
+                  form.tipoPerfil === tipo
+                    ? "border-amet-blue bg-amet-blue/10 text-amet-blue"
+                    : "border-amet-indigo/15 text-amet-indigo/80 hover:border-amet-purple"
+                }`}
+              >
+                {tipo === "aluno" ? "Sou aluno AMET" : "Não sou aluno AMET"}
+              </button>
+            ))}
+            {errors.tipoPerfil && <p className="sm:col-span-2 text-sm text-amet-purple">{errors.tipoPerfil}</p>}
+          </div>
+        )}
 
-      {step === 2 && (
-        <div className="space-y-4">
-          <p className="text-sm text-amet-white/75">
-            Escolha uma área de interesse. Áreas esgotadas não permitem novas candidaturas.
-          </p>
-          {loadingVagas ? (
-            <p className="text-sm text-amet-white/55">Carregando vagas...</p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {areas.map((area) => (
-                <AreaCard
-                  key={area.code}
-                  area={area}
-                  selected={form.areaInteresse === area.code}
-                  onSelect={(code) => updateField("areaInteresse", code)}
-                />
+        {step === 2 && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Nome completo" error={errors.nomeCompleto} className="sm:col-span-2">
+              <input value={form.nomeCompleto} onChange={(e) => updateField("nomeCompleto", e.target.value)} className={inputClass(errors.nomeCompleto)} />
+            </Field>
+            <Field label="RGM" error={errors.rgm}>
+              <input value={form.rgm} onChange={(e) => updateField("rgm", e.target.value)} className={inputClass(errors.rgm)} />
+            </Field>
+            <Field label="CPF" error={errors.cpf}>
+              <input value={form.cpf} onChange={(e) => updateField("cpf", formatCpf(e.target.value))} className={inputClass(errors.cpf)} inputMode="numeric" />
+            </Field>
+            <Field label="Telefone / WhatsApp" error={errors.telefone}>
+              <input value={form.telefone} onChange={(e) => updateField("telefone", formatPhone(e.target.value))} className={inputClass(errors.telefone)} inputMode="tel" />
+            </Field>
+            <Field label="E-mail" error={errors.email}>
+              <input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} className={inputClass(errors.email)} />
+            </Field>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-4">
+            <p className="text-sm text-amet-indigo/70">
+              {isAluno ? "Selecione sua unidade." : "Selecione uma ou mais unidades de interesse."}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {UNIDADES.map((u) => (
+                <button
+                  key={u.code}
+                  type="button"
+                  onClick={() => toggleUnidade(u.code)}
+                  className={`rounded-2xl border px-4 py-4 font-medium transition ${
+                    form.unidades.includes(u.code)
+                      ? "border-amet-purple bg-amet-purple/10 text-amet-purple"
+                      : "border-amet-indigo/15 text-amet-indigo/80 hover:border-amet-blue"
+                  }`}
+                >
+                  {u.label}
+                </button>
               ))}
             </div>
-          )}
-          {errors.areaInteresse && (
-            <p className="text-sm text-amet-purple">{errors.areaInteresse}</p>
-          )}
-        </div>
-      )}
+            {errors.unidades && <p className="text-sm text-amet-purple">{errors.unidades}</p>}
+          </div>
+        )}
 
-      {step === 3 && (
-        <div className="space-y-4">
-          <p className="text-sm text-amet-white/75">
-            Selecione o curso que você cursa atualmente na AMET.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {CURSOS.map((curso) => {
-              const selected = form.cursoAtual === curso;
-              return (
+        {step === 4 && (
+          <div className="space-y-4">
+            <p className="text-sm text-amet-indigo/70">Selecione seu curso na AMET.</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {CURSOS.map((curso) => (
                 <button
                   key={curso}
                   type="button"
                   onClick={() => updateField("cursoAtual", curso)}
                   className={`rounded-2xl border px-4 py-4 text-left text-sm font-medium transition ${
-                    selected
-                      ? "border-amet-blue bg-amet-blue/15 text-amet-blue"
-                      : "border-amet-white/20 bg-amet-white/5 text-amet-white/80 hover:border-amet-purple"
+                    form.cursoAtual === curso
+                      ? "border-amet-blue bg-amet-blue/10 text-amet-blue"
+                      : "border-amet-indigo/15 text-amet-indigo/80 hover:border-amet-purple"
                   }`}
                 >
                   {curso}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+            {errors.cursoAtual && <p className="text-sm text-amet-purple">{errors.cursoAtual}</p>}
           </div>
-          {errors.cursoAtual && (
-            <p className="text-sm text-amet-purple">{errors.cursoAtual}</p>
-          )}
-        </div>
-      )}
+        )}
+
+        {step === 5 && (
+          <div className="space-y-4">
+            <p className="text-sm text-amet-indigo/70">
+              {isAluno
+                ? "Escolha uma área. Vagas esgotadas não permitem candidatura."
+                : "Escolha uma ou mais áreas. As vagas são exibidas apenas para referência."}
+            </p>
+            {loadingVagas ? (
+              <p className="text-sm text-amet-indigo/50">Carregando vagas...</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {areas.map((area) => (
+                  <AreaCard
+                    key={area.code}
+                    area={area}
+                    selected={form.areasInteresse.includes(area.code)}
+                    onSelect={toggleArea}
+                    multi={!isAluno}
+                    enforceLimit={enforceLimit}
+                  />
+                ))}
+              </div>
+            )}
+            {errors.areasInteresse && <p className="text-sm text-amet-purple">{errors.areasInteresse}</p>}
+          </div>
+        )}
+      </div>
 
       {submitError && (
-        <p className="mt-6 rounded-xl border border-amet-purple/40 bg-amet-purple/10 px-4 py-3 text-sm text-amet-purple">
-          {submitError}
-        </p>
+        <p className="mt-6 rounded-xl border border-amet-purple/40 bg-amet-purple/10 px-4 py-3 text-sm text-amet-purple">{submitError}</p>
       )}
 
       <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         {step > 1 ? (
-          <button
-            type="button"
-            onClick={goBack}
-            className="rounded-full border border-amet-white/25 px-6 py-3 text-sm font-medium text-amet-white/80 transition hover:border-amet-blue hover:text-amet-blue"
-          >
+          <button type="button" onClick={() => { setErrors({}); setStep((s) => s - 1); }} className="rounded-full border border-amet-indigo/20 px-6 py-3 text-sm text-amet-indigo/70 hover:border-amet-blue hover:text-amet-blue">
             Voltar
           </button>
-        ) : (
-          <span />
-        )}
-
-        {step < 3 ? (
-          <button
-            type="button"
-            onClick={goNext}
-            className="rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-amet-white transition hover:bg-amet-purple"
-          >
+        ) : <span />}
+        {step < 5 ? (
+          <button type="button" onClick={() => { if (validateStep(step)) setStep((s) => s + 1); }} className="rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-purple">
             Continuar
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => void handleSubmit()}
-            disabled={submitting}
-            className="rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white transition hover:bg-amet-blue disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Enviando..." : "Enviar candidatura"}
+          <button type="button" onClick={() => void handleSubmit()} disabled={submitting} className="rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-blue disabled:opacity-60">
+            {submitting ? "Enviando..." : isAluno ? "Enviar candidatura" : "Enviar e abrir WhatsApp"}
           </button>
         )}
       </div>
@@ -348,20 +390,10 @@ export function ApplicationForm() {
   );
 }
 
-function Field({
-  label,
-  error,
-  className,
-  children,
-}: {
-  label: string;
-  error?: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, error, className, children }: { label: string; error?: string; className?: string; children: React.ReactNode }) {
   return (
     <label className={`block space-y-2 ${className ?? ""}`}>
-      <span className="text-sm font-medium text-amet-white/80">{label}</span>
+      <span className="text-sm font-medium text-amet-indigo/80">{label}</span>
       {children}
       {error && <span className="block text-sm text-amet-purple">{error}</span>}
     </label>
@@ -369,9 +401,7 @@ function Field({
 }
 
 function inputClass(error?: string) {
-  return `w-full rounded-xl border bg-amet-indigo/60 px-4 py-3 text-amet-white outline-none transition placeholder:text-amet-white/35 ${
-    error
-      ? "border-amet-purple focus:border-amet-purple"
-      : "border-amet-white/20 focus:border-amet-blue"
+  return `w-full rounded-xl border bg-amet-white px-4 py-3 text-amet-indigo outline-none transition placeholder:text-amet-indigo/35 ${
+    error ? "border-amet-purple" : "border-amet-indigo/15 focus:border-amet-blue"
   }`;
 }

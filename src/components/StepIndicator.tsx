@@ -2,50 +2,42 @@
 
 type StepIndicatorProps = {
   currentStep: number;
+  labels: readonly string[];
 };
 
-const STEPS = [
-  { number: 1, label: "Dados Pessoais" },
-  { number: 2, label: "Área de Interesse" },
-  { number: 3, label: "Curso Atual" },
-];
-
-export function StepIndicator({ currentStep }: StepIndicatorProps) {
+export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
   return (
-    <ol className="grid gap-3 sm:grid-cols-3">
-      {STEPS.map((step) => {
-        const isActive = step.number === currentStep;
-        const isComplete = step.number < currentStep;
+    <ol className="grid gap-2 sm:grid-cols-5">
+      {labels.map((label, index) => {
+        const number = index + 1;
+        const isActive = number === currentStep;
+        const isComplete = number < currentStep;
 
         return (
           <li
-            key={step.number}
-            className={`rounded-2xl border px-4 py-3 transition-colors ${
+            key={label}
+            className={`rounded-xl border px-2 py-2 sm:px-3 sm:py-3 ${
               isActive
-                ? "border-amet-blue bg-amet-blue/10"
+                ? "border-amet-blue bg-amet-blue/5"
                 : isComplete
-                  ? "border-amet-purple bg-amet-purple/10"
-                  : "border-amet-white/15 bg-amet-white/5"
+                  ? "border-amet-purple/30 bg-amet-purple/5"
+                  : "border-amet-indigo/10 bg-amet-white"
             }`}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <span
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                   isActive
                     ? "bg-amet-blue text-amet-white"
                     : isComplete
                       ? "bg-amet-purple text-amet-white"
-                      : "bg-amet-white/10 text-amet-white/60"
+                      : "bg-amet-indigo/10 text-amet-indigo/50"
                 }`}
               >
-                {step.number}
+                {number}
               </span>
-              <span
-                className={`text-sm font-medium ${
-                  isActive ? "text-amet-blue" : "text-amet-white/80"
-                }`}
-              >
-                {step.label}
+              <span className={`text-xs font-medium sm:text-sm ${isActive ? "text-amet-blue" : "text-amet-indigo/70"}`}>
+                {label}
               </span>
             </div>
           </li>

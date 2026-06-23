@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
 
-import { createCandidatura } from "@/lib/db";
+import { createCandidatura, listCandidaturas } from "@/lib/db";
 import { candidaturaSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
+
+function isAdmin(request: Request): boolean {
+  const key = process.env.ADMIN_KEY ?? "amet-admin";
+  return request.headers.get("x-admin-key") === key;
+}
+
+export async function GET(request: Request) {
+  if (!isAdmin(request)) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+  return NextResponse.json({ candidaturas: listCandidaturas() });
+}
 
 export async function POST(request: Request) {
   try {
@@ -23,16 +35,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      {
-        message: "Candidatura enviada com sucesso!",
-        id: result.candidatura.id,
-      },
+      { message: "Candidatura registrada com sucesso!", id: result.candidatura.id },
       { status: 201 },
     );
   } catch {
-    return NextResponse.json(
-      { error: "Não foi possível processar sua candidatura." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Não foi possível processar sua candidatura." }, { status: 500 });
   }
 }

@@ -4,12 +4,9 @@ import { estagiosContent } from "@/lib/content";
 
 export function EstagiosSection() {
   return (
-    <section id="estagios" className="border-b border-amet-white/10 py-20">
+    <section id="estagios" className="border-b border-amet-blue/10 bg-amet-blue/[0.03] py-20">
       <div className="mx-auto max-w-6xl px-6">
-        <SectionHeading
-          title={estagiosContent.title}
-          subtitle={estagiosContent.subtitle}
-        />
+        <SectionHeading title={estagiosContent.title} />
         <ApplicationForm />
       </div>
     </section>

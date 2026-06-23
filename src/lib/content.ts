@@ -15,7 +15,7 @@ export const navLinks = [
   { href: "#cursos", label: "Cursos" },
   { href: "#estagios", label: "Estágios" },
   { href: "#pos-graduacao", label: "Pós-Graduação" },
-  { href: "#campus", label: "Campus" },
+  { href: "#unidades", label: "Unidades" },
 ] as const;
 
 export const heroContent = {
@@ -23,7 +23,7 @@ export const heroContent = {
   title: "Venha para a AMET",
   subtitle:
     "Desenvolva competências técnicas e humanas em um ambiente pensado para a prática real da saúde, estética e laboratório.",
-  ctaPrimary: "Candidatar-se a estágio",
+  ctaPrimary: "Ver estágios",
   ctaSecondary: "Conheça a AMET",
 };
 
@@ -96,8 +96,49 @@ export const praticasCursosContent = {
 
 export const estagiosContent = {
   title: "Estágios",
-  subtitle:
-    "Candidate-se às vagas disponíveis. A disponibilidade por área é atualizada em tempo real.",
+  subtitle: "",
+};
+
+export const unidadesEquipamentosContent = {
+  title: "Unidades e Equipamentos",
+  subtitle: "Estrutura distribuída em unidades com laboratórios e equipamentos para formação prática.",
+  notaAtualizacao:
+    "Conteúdo baseado na estrutura institucional AMET — atualize com os dados das apresentações oficiais.",
+  unidades: [
+    {
+      nome: "Liberdade",
+      descricao:
+        "Unidade central com salas de aula, laboratórios de análises clínicas e espaços de prática supervisionada.",
+    },
+    {
+      nome: "CTA",
+      descricao:
+        "Unidade com foco em tecnologias aplicadas à saúde, estética e rotinas laboratoriais avançadas.",
+    },
+    {
+      nome: "Guarulhos",
+      descricao:
+        "Unidade regional com infraestrutura para cursos técnicos, práticas e atendimento acadêmico.",
+    },
+  ],
+  equipamentos: [
+    {
+      categoria: "Laboratório de Análises Clínicas",
+      itens: ["Microscópios", "Centrífugas", "Espectrofotômetros", "Kits diagnósticos"],
+    },
+    {
+      categoria: "Imaginologia e Diagnóstico",
+      itens: ["Simuladores de imagem", "Equipamentos de raio-X didáticos", "Estações de laudo"],
+    },
+    {
+      categoria: "Estética e Saúde",
+      itens: ["Macas e cabines", "Aparelhos de estética facial/corporal", "Materiais esterilizados"],
+    },
+    {
+      categoria: "Hematologia",
+      itens: ["Contadores hematológicos", "Microscopia avançada", "Bancadas de coleta"],
+    },
+  ],
 };
 
 export const posGraduacaoContent = {

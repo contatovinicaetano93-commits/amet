@@ -1,10 +1,10 @@
-import { CampusSection } from "@/components/sections/CampusSection";
 import { DiferenciacaoSection } from "@/components/sections/DiferenciacaoSection";
 import { EstagiosSection } from "@/components/sections/EstagiosSection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { PosGraduacaoSection } from "@/components/sections/PosGraduacaoSection";
 import { PraticasCursosSection } from "@/components/sections/PraticasCursosSection";
 import { QuemSomosSection } from "@/components/sections/QuemSomosSection";
+import { UnidadesEquipamentosSection } from "@/components/sections/UnidadesEquipamentosSection";
 
 export default function Home() {
   return (
@@ -15,7 +15,7 @@ export default function Home() {
       <PraticasCursosSection />
       <EstagiosSection />
       <PosGraduacaoSection />
-      <CampusSection />
+      <UnidadesEquipamentosSection />
     </main>
   );
 }

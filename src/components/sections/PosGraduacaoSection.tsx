@@ -5,7 +5,7 @@ export function PosGraduacaoSection() {
   const whatsappHref = `https://wa.me/${siteContent.whatsapp.replace(/\D/g, "")}`;
 
   return (
-    <section id="pos-graduacao" className="border-b border-amet-white/10 py-20">
+    <section id="pos-graduacao" className="border-b border-amet-blue/10 bg-amet-blue/[0.03] py-20">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeading
           title={posGraduacaoContent.title}
@@ -16,7 +16,7 @@ export function PosGraduacaoSection() {
           {posGraduacaoContent.programs.map((program, index) => (
             <article
               key={program.title}
-              className="rounded-3xl border border-amet-white/15 bg-amet-white/5 p-8"
+              className="rounded-3xl border border-amet-blue/10 bg-amet-white p-8 shadow-sm"
             >
               <h3
                 className={`text-lg font-semibold ${
@@ -25,7 +25,7 @@ export function PosGraduacaoSection() {
               >
                 {program.title}
               </h3>
-              <p className="mt-4 text-sm leading-7 text-amet-white/75">{program.description}</p>
+              <p className="mt-4 text-sm leading-7 text-amet-indigo/70">{program.description}</p>
             </article>
           ))}
         </div>
@@ -35,7 +35,7 @@ export function PosGraduacaoSection() {
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex rounded-full border border-amet-purple bg-amet-purple/15 px-6 py-3 text-sm font-semibold text-amet-white transition hover:bg-amet-purple/30"
+            className="inline-flex rounded-full border border-amet-purple bg-amet-purple/10 px-6 py-3 text-sm font-semibold text-amet-purple transition hover:bg-amet-purple hover:text-amet-white"
           >
             {posGraduacaoContent.cta}
           </a>

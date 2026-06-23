@@ -5,14 +5,11 @@ export function SiteFooter() {
   const whatsappHref = `https://wa.me/${siteContent.whatsapp.replace(/\D/g, "")}`;
 
   return (
-    <footer className="border-t border-amet-white/10 bg-amet-indigo">
+    <footer className="border-t border-amet-blue/10 bg-amet-white">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        <div className="flex flex-col items-center gap-6 border-b border-amet-white/10 pb-8 sm:flex-row sm:items-start sm:justify-between">
-          <BrandLogo
-            markClassName="h-16 w-16"
-            nameClassName="text-lg font-semibold tracking-[0.08em] text-amet-blue"
-          />
-          <div className="space-y-2 text-center text-sm text-amet-white/80 sm:text-right">
+        <div className="flex flex-col items-center gap-6 border-b border-amet-blue/10 pb-8 sm:flex-row sm:items-start sm:justify-between">
+          <BrandLogo nameClassName="text-lg font-semibold tracking-[0.06em] text-amet-blue" />
+          <div className="space-y-2 text-center text-sm text-amet-indigo/75 sm:text-right">
             <a
               href="https://instagram.com/ametsaude"
               target="_blank"
@@ -28,13 +25,13 @@ export function SiteFooter() {
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="block transition hover:text-amet-purple"
+              className="block transition hover:text-amet-blue"
             >
               WhatsApp: {siteContent.whatsappDisplay}
             </a>
           </div>
         </div>
-        <p className="mt-6 text-center text-xs text-amet-white/50">{siteContent.cadan}</p>
+        <p className="mt-6 text-center text-xs text-amet-indigo/45">{siteContent.cadan}</p>
       </div>
     </footer>
   );
