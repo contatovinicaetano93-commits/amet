@@ -14,8 +14,6 @@ import {
   type UnidadeCode,
 } from "@/lib/constants";
 import { candidaturaSchema, personalDataSchema } from "@/lib/schemas";
-import { siteContent } from "@/lib/content";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatCpf, formatPhone } from "@/lib/validators";
 
 type FormState = {
@@ -50,7 +48,6 @@ export function ApplicationForm() {
   const [loadingVagas, setLoadingVagas] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [successTipo, setSuccessTipo] = useState<TipoPerfil | "">("");
   const [submitError, setSubmitError] = useState("");
 
   const isAluno = form.tipoPerfil === "aluno";
@@ -208,11 +205,6 @@ export function ApplicationForm() {
         return;
       }
 
-      if (parsed.data.tipoPerfil === "nao_aluno") {
-        window.open(buildWhatsAppUrl(siteContent.whatsapp, parsed.data), "_blank");
-      }
-
-      setSuccessTipo(parsed.data.tipoPerfil);
       setSuccess(true);
       setForm(initialForm);
       setStep(1);
@@ -229,9 +221,7 @@ export function ApplicationForm() {
       <div className="rounded-3xl border border-amet-blue/20 bg-amet-blue/5 p-8 text-center">
         <h2 className="text-2xl font-semibold text-amet-blue">Inscrição registrada!</h2>
         <p className="mt-3 text-amet-indigo/70">
-          {successTipo === "nao_aluno"
-            ? "Seus dados foram salvos e o WhatsApp foi aberto para contato da AMET."
-            : "Recebemos sua candidatura. A AMET entrará em contato pelo e-mail informado."}
+          Recebemos sua candidatura. A AMET entrará em contato pelo e-mail informado.
         </p>
         <button
           type="button"
@@ -343,10 +333,12 @@ export function ApplicationForm() {
             <p className="text-sm text-amet-indigo/70">
               {isAluno
                 ? "Escolha uma área. Vagas esgotadas não permitem candidatura."
-                : "Escolha uma ou mais áreas. As vagas são exibidas apenas para referência."}
+                : "Escolha uma ou mais áreas de interesse."}
             </p>
             {loadingVagas ? (
-              <p className="text-sm text-amet-indigo/50">Carregando vagas...</p>
+              <p className="text-sm text-amet-indigo/50">
+                {isAluno ? "Carregando vagas..." : "Carregando áreas..."}
+              </p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {areas.map((area) => (
@@ -357,6 +349,7 @@ export function ApplicationForm() {
                     onSelect={toggleArea}
                     multi={!isAluno}
                     enforceLimit={enforceLimit}
+                    showVacancyCount={isAluno}
                   />
                 ))}
               </div>
@@ -382,7 +375,7 @@ export function ApplicationForm() {
           </button>
         ) : (
           <button type="button" onClick={() => void handleSubmit()} disabled={submitting} className="rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-blue disabled:opacity-60">
-            {submitting ? "Enviando..." : isAluno ? "Enviar candidatura" : "Enviar e abrir WhatsApp"}
+            {submitting ? "Enviando..." : "Enviar candidatura"}
           </button>
         )}
       </div>

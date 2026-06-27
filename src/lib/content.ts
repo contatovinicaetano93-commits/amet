@@ -6,16 +6,17 @@ export const siteContent = {
   phone: "11-2367-6594",
   instagram: "@ametsaude",
   cadan: "CADAN: 2023-000.308-5",
+  contatoEmail: "contato.vinicaetano93@gmail.com",
 };
 
 export const navLinks = [
-  { href: "#inicio", label: "Início" },
-  { href: "#quem-somos", label: "Quem Somos" },
-  { href: "#diferenciais", label: "Diferenciais" },
-  { href: "#cursos", label: "Cursos" },
-  { href: "#estagios", label: "Estágios" },
-  { href: "#pos-graduacao", label: "Pós-Graduação" },
-  { href: "#unidades", label: "Unidades" },
+  { href: "/#inicio", label: "Início" },
+  { href: "/#quem-somos", label: "Quem Somos" },
+  { href: "/#diferenciais", label: "Diferenciais" },
+  { href: "/#cursos", label: "Cursos" },
+  { href: "/#estagios", label: "Estágios" },
+  { href: "/#pos-graduacao", label: "Pós-Graduação" },
+  { href: "/#unidades", label: "Unidades" },
 ] as const;
 
 export const heroContent = {
@@ -96,7 +97,63 @@ export const praticasCursosContent = {
 
 export const estagiosContent = {
   title: "Estágios",
-  subtitle: "",
+  subtitle:
+    "Programa supervisionado de estágio com prática real em laboratório, clínica e rotinas profissionais.",
+  intro:
+    "O programa de estágios da AMET conecta alunos e candidatos a experiências práticas nas unidades Liberdade, CTA e Guarulhos. Com acompanhamento docente e vagas limitadas por área, você desenvolve competências técnicas alinhadas ao mercado de saúde e estética.",
+  highlights: [
+    {
+      title: "Supervisão especializada",
+      description:
+        "Acompanhamento de professores e profissionais atuantes em cada etapa da prática.",
+    },
+    {
+      title: "Vagas por área",
+      description:
+        "Inscrições organizadas por especialidade, com controle de vagas em tempo real.",
+    },
+    {
+      title: "Três unidades",
+      description:
+        "Oportunidades nas unidades Liberdade, CTA e Guarulhos, conforme disponibilidade.",
+    },
+    {
+      title: "Foco em 2027",
+      description:
+        "Processo seletivo aberto para garantir sua vaga no ciclo de estágios de 2027.",
+    },
+  ],
+  areas: [
+    {
+      code: "AC",
+      name: "Análises Clínicas",
+      description: "Rotinas laboratoriais, coleta, processamento e análise de amostras.",
+    },
+    {
+      code: "BCT",
+      name: "Biologia Celular e Tecidual",
+      description: "Práticas em citologia, histologia e técnicas de biologia celular.",
+    },
+    {
+      code: "BC",
+      name: "Bioquímica Clínica",
+      description: "Ensaios bioquímicos, controle de qualidade e interpretação de resultados.",
+    },
+    {
+      code: "NMA",
+      name: "Neurociência e Morfoanatomia",
+      description: "Estudo aplicado de estruturas anatômicas e neurociências.",
+    },
+  ],
+  cta: "Garanta sua vaga para 2027",
+  ctaHref: "/estagios",
+};
+
+export const estagiosInscricaoContent = {
+  title: "Inscrição para Estágios 2027",
+  subtitle:
+    "Preencha o formulário abaixo para candidatar-se ao programa de estágios da AMET.",
+  backLabel: "Voltar para a página inicial",
 };
 
 export const unidadesEquipamentosContent = {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createCandidatura, listCandidaturas } from "@/lib/db";
+import { sendCandidaturaEmail } from "@/lib/email";
 import { candidaturaSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,13 @@ export async function POST(request: Request) {
     if (!result.ok) {
       const status = result.code === "AREA_FULL" ? 409 : 400;
       return NextResponse.json({ error: result.error, code: result.code }, { status });
+    }
+
+    if (parsed.data.tipoPerfil === "nao_aluno") {
+      const emailResult = await sendCandidaturaEmail(parsed.data);
+      if (!emailResult.ok) {
+        return NextResponse.json({ error: emailResult.error }, { status: 500 });
+      }
     }
 
     return NextResponse.json(

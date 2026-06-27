@@ -11,7 +11,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-amet-blue/10 bg-amet-white/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-        <a href="#inicio">
+        <a href="/#inicio">
           <BrandLogo
             markClassName="h-11 w-11 sm:h-12 sm:w-12"
             nameClassName="text-sm font-semibold tracking-[0.06em] text-amet-blue sm:text-base"

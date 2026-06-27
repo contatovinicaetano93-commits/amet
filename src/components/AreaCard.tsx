@@ -17,10 +17,33 @@ type AreaCardProps = {
   onSelect: (code: AreaCode) => void;
   multi?: boolean;
   enforceLimit?: boolean;
+  showVacancyCount?: boolean;
 };
 
-export function AreaCard({ area, selected, onSelect, enforceLimit }: AreaCardProps) {
+export function AreaCard({
+  area,
+  selected,
+  onSelect,
+  enforceLimit,
+  showVacancyCount = true,
+}: AreaCardProps) {
   const disabled = enforceLimit && area.full;
+
+  const subtitle = !showVacancyCount
+    ? "Área de interesse"
+    : enforceLimit && area.full
+      ? "Vagas Esgotadas"
+      : `${area.available} de ${area.limit} vagas disponíveis`;
+
+  const badgeLabel = !showVacancyCount
+    ? selected
+      ? "Selecionado"
+      : "Disponível"
+    : enforceLimit && area.full
+      ? "Esgotado"
+      : selected
+        ? "Selecionado"
+        : "Aberto";
 
   return (
     <button
@@ -38,11 +61,7 @@ export function AreaCard({ area, selected, onSelect, enforceLimit }: AreaCardPro
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-2xl font-bold tracking-wide text-amet-indigo">{area.label}</p>
-          <p className="mt-1 text-sm text-amet-indigo/60">
-            {enforceLimit && area.full
-              ? "Vagas Esgotadas"
-              : `${area.available} de ${area.limit} vagas disponíveis`}
-          </p>
+          <p className="mt-1 text-sm text-amet-indigo/60">{subtitle}</p>
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
@@ -53,7 +72,7 @@ export function AreaCard({ area, selected, onSelect, enforceLimit }: AreaCardPro
                 : "bg-amet-indigo/5 text-amet-indigo"
           }`}
         >
-          {enforceLimit && area.full ? "Esgotado" : selected ? "Selecionado" : "Aberto"}
+          {badgeLabel}
         </span>
       </div>
     </button>
