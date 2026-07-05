@@ -2,8 +2,8 @@ import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { unidadesEquipamentosContent } from "@/lib/content";
 
-const titleColors = ["text-amet-purple", "text-amet-blue", "text-amet-indigo"] as const;
-const bulletColors = ["before:text-amet-purple", "before:text-amet-blue", "before:text-amet-indigo"] as const;
+const titleColors = ["text-amet-purple", "text-amet-blue", "text-amet-white"] as const;
+const bulletColors = ["before:text-amet-purple", "before:text-amet-blue", "before:text-amet-white"] as const;
 
 export function UnidadesEquipamentosSection() {
   return (
@@ -24,7 +24,7 @@ export function UnidadesEquipamentosSection() {
               <h3 className={`text-xl font-semibold ${titleColors[index % 3]}`}>
                 {unidade.nome}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-amet-indigo/70">{unidade.descricao}</p>
+              <p className="mt-3 text-sm leading-6 text-amet-white/75">{unidade.descricao}</p>
             </article>
             </Reveal>
           ))}
@@ -41,7 +41,7 @@ export function UnidadesEquipamentosSection() {
                 {grupo.itens.map((item) => (
                   <li
                     key={item}
-                    className={`text-sm text-amet-indigo/75 before:mr-2 before:content-['•'] ${bulletColors[index % 3]}`}
+                    className={`text-sm text-amet-white/80 before:mr-2 before:content-['•'] ${bulletColors[index % 3]}`}
                   >
                     {item}
                   </li>

@@ -2,8 +2,8 @@ import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { praticasCursosContent } from "@/lib/content";
 
-const titleColors = ["text-amet-purple", "text-amet-blue", "text-amet-indigo"] as const;
-const bulletColors = ["before:bg-amet-purple", "before:bg-amet-blue", "before:bg-amet-indigo"] as const;
+const titleColors = ["text-amet-purple", "text-amet-blue", "text-amet-white"] as const;
+const bulletColors = ["before:bg-amet-purple", "before:bg-amet-blue", "before:bg-amet-white"] as const;
 
 export function PraticasCursosSection() {
   return (
@@ -26,7 +26,7 @@ export function PraticasCursosSection() {
                 {linha.items.map((item) => (
                   <li
                     key={item}
-                    className={`flex gap-3 text-sm leading-6 text-amet-indigo/75 before:mt-2 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full ${bulletColors[index]}`}
+                    className={`flex gap-3 text-sm leading-6 text-amet-white/80 before:mt-2 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full ${bulletColors[index]}`}
                   >
                     {item}
                   </li>

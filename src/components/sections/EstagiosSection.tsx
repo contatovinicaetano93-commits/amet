@@ -4,8 +4,8 @@ import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { estagiosContent } from "@/lib/content";
 
-const accentColors = ["text-amet-purple", "text-amet-blue", "text-amet-indigo"] as const;
-const accentBadges = ["bg-amet-purple/10", "bg-amet-blue/10", "bg-amet-indigo/10"] as const;
+const accentColors = ["text-amet-purple", "text-amet-blue", "text-amet-white"] as const;
+const accentBadges = ["bg-amet-purple/20", "bg-amet-blue/20", "bg-amet-white/15"] as const;
 
 export function EstagiosSection() {
   return (
@@ -32,8 +32,8 @@ export function EstagiosSection() {
               >
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <h3 className="mt-5 text-xl font-semibold text-amet-indigo">{item.title}</h3>
-              <p className="mt-3 leading-7 text-amet-indigo/70">{item.description}</p>
+              <h3 className="mt-5 text-xl font-semibold text-amet-white">{item.title}</h3>
+              <p className="mt-3 leading-7 text-amet-white/75">{item.description}</p>
             </article>
             </Reveal>
           ))}
@@ -54,8 +54,8 @@ export function EstagiosSection() {
                     {area.code}
                   </span>
                   <div>
-                    <h4 className="font-semibold text-amet-indigo">{area.name}</h4>
-                    <p className="mt-2 text-sm leading-6 text-amet-indigo/70">{area.description}</p>
+                    <h4 className="font-semibold text-amet-white">{area.name}</h4>
+                    <p className="mt-2 text-sm leading-6 text-amet-white/75">{area.description}</p>
                   </div>
                 </div>
               </article>

@@ -2,7 +2,7 @@ import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { posGraduacaoContent, siteContent } from "@/lib/content";
 
-const titleColors = ["text-amet-purple", "text-amet-blue", "text-amet-indigo"] as const;
+const titleColors = ["text-amet-purple", "text-amet-blue", "text-amet-white"] as const;
 
 export function PosGraduacaoSection() {
   const whatsappHref = `https://wa.me/${siteContent.whatsapp.replace(/\D/g, "")}`;
@@ -25,7 +25,7 @@ export function PosGraduacaoSection() {
               <h3 className={`text-lg font-semibold ${titleColors[index % 3]}`}>
                 {program.title}
               </h3>
-              <p className="mt-4 text-sm leading-7 text-amet-indigo/70">{program.description}</p>
+              <p className="mt-4 text-sm leading-7 text-amet-white/75">{program.description}</p>
             </article>
             </Reveal>
           ))}
