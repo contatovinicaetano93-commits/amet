@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { praticasCursosContent } from "@/lib/content";
 
@@ -16,9 +17,9 @@ export function PraticasCursosSection() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           {praticasCursosContent.linhas.map((linha, index) => (
+            <Reveal key={linha.title} delay={index * 120}>
             <article
-              key={linha.title}
-              className="rounded-3xl bg-amet-white p-8 shadow-lg"
+              className="amet-card h-full rounded-3xl p-8"
             >
               <h3 className={`text-xl font-semibold ${titleColors[index]}`}>{linha.title}</h3>
               <ul className="mt-6 space-y-3">
@@ -32,6 +33,7 @@ export function PraticasCursosSection() {
                 ))}
               </ul>
             </article>
+            </Reveal>
           ))}
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { quemSomosContent } from "@/lib/content";
 
@@ -7,7 +8,8 @@ export function QuemSomosSection() {
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeading title={quemSomosContent.title} light />
 
-        <article className="mx-auto max-w-3xl rounded-3xl bg-amet-white p-8 shadow-lg">
+        <Reveal className="mx-auto max-w-3xl">
+        <article className="amet-card rounded-3xl p-8">
           <p className="text-lg font-medium leading-8 text-amet-indigo">{quemSomosContent.mission}</p>
           <p className="mt-6 leading-7 text-amet-indigo/75">{quemSomosContent.about}</p>
           <ul className="mt-8 space-y-3">
@@ -21,6 +23,7 @@ export function QuemSomosSection() {
             ))}
           </ul>
         </article>
+        </Reveal>
       </div>
     </section>
   );

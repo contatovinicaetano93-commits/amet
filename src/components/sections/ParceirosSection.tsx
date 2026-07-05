@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { parceirosContent } from "@/lib/content";
 
@@ -7,6 +8,7 @@ export function ParceirosSection() {
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeading title={parceirosContent.title} subtitle={parceirosContent.subtitle} light />
 
+        <Reveal>
         <ul className="flex flex-wrap justify-center gap-4">
           {parceirosContent.parceiros.map((parceiro, index) => (
             <li
@@ -23,6 +25,7 @@ export function ParceirosSection() {
             </li>
           ))}
         </ul>
+        </Reveal>
       </div>
     </section>
   );

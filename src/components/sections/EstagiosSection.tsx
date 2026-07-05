@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { estagiosContent } from "@/lib/content";
 
@@ -22,9 +23,9 @@ export function EstagiosSection() {
 
         <div className="grid gap-6 sm:grid-cols-2">
           {estagiosContent.highlights.map((item, index) => (
+            <Reveal key={item.title} delay={(index % 2) * 120}>
             <article
-              key={item.title}
-              className="rounded-3xl bg-amet-white p-8 shadow-lg"
+              className="amet-card h-full rounded-3xl p-8"
             >
               <span
                 className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${accentBadges[index % 3]} ${accentColors[index % 3]}`}
@@ -34,6 +35,7 @@ export function EstagiosSection() {
               <h3 className="mt-5 text-xl font-semibold text-amet-indigo">{item.title}</h3>
               <p className="mt-3 leading-7 text-amet-indigo/70">{item.description}</p>
             </article>
+            </Reveal>
           ))}
         </div>
 
@@ -41,9 +43,9 @@ export function EstagiosSection() {
           <h3 className="text-center text-2xl font-bold text-amet-white">Áreas disponíveis</h3>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {estagiosContent.areas.map((area, index) => (
+              <Reveal key={area.code} delay={(index % 2) * 120}>
               <article
-                key={area.code}
-                className="rounded-2xl bg-amet-white p-6 shadow-lg"
+                className="amet-card h-full rounded-2xl p-6"
               >
                 <div className="flex items-start gap-4">
                   <span
@@ -57,6 +59,7 @@ export function EstagiosSection() {
                   </div>
                 </div>
               </article>
+              </Reveal>
             ))}
           </div>
         </div>

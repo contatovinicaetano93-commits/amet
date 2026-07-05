@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { posGraduacaoContent, siteContent } from "@/lib/content";
 
@@ -17,15 +18,16 @@ export function PosGraduacaoSection() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           {posGraduacaoContent.programs.map((program, index) => (
+            <Reveal key={program.title} delay={index * 120}>
             <article
-              key={program.title}
-              className="rounded-3xl bg-amet-white p-8 shadow-lg"
+              className="amet-card h-full rounded-3xl p-8"
             >
               <h3 className={`text-lg font-semibold ${titleColors[index % 3]}`}>
                 {program.title}
               </h3>
               <p className="mt-4 text-sm leading-7 text-amet-indigo/70">{program.description}</p>
             </article>
+            </Reveal>
           ))}
         </div>
 
