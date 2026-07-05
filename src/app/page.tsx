@@ -1,6 +1,7 @@
 import { DiferenciacaoSection } from "@/components/sections/DiferenciacaoSection";
 import { EstagiosSection } from "@/components/sections/EstagiosSection";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { ParceirosSection } from "@/components/sections/ParceirosSection";
 import { PosGraduacaoSection } from "@/components/sections/PosGraduacaoSection";
 import { PraticasCursosSection } from "@/components/sections/PraticasCursosSection";
 import { QuemSomosSection } from "@/components/sections/QuemSomosSection";
@@ -16,6 +17,7 @@ export default function Home() {
       <EstagiosSection />
       <PosGraduacaoSection />
       <UnidadesEquipamentosSection />
+      <ParceirosSection />
     </main>
   );
 }

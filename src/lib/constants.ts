@@ -1,14 +1,13 @@
 export const AREAS = {
-  AC: { code: "AC", label: "AC", limit: 50 },
-  BCT: { code: "BCT", label: "BCT", limit: 20 },
-  BC: { code: "BC", label: "BC", limit: 20 },
-  NMA: { code: "NMA", label: "NMA", limit: 20 },
+  IMG: { code: "IMG", label: "Imagenologia", limit: 20 },
+  AC: { code: "AC", label: "Análises Clínicas", limit: 50 },
+  EST: { code: "EST", label: "Estética", limit: 20 },
 } as const;
 
 export type AreaCode = keyof typeof AREAS;
 
 export const CURSOS = [
-  "Imaginologia",
+  "Imagenologia",
   "Estética",
   "Análises Clínicas",
   "Hematologia",

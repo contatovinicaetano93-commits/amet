@@ -1,31 +1,27 @@
 import { SectionHeading } from "@/components/SectionHeading";
 import { diferenciacaoContent } from "@/lib/content";
 
-const accentColors = ["text-amet-purple", "text-amet-blue", "text-amet-indigo", "text-amet-purple"] as const;
-const accentBorders = [
-  "border-amet-purple/20",
-  "border-amet-blue/20",
-  "border-amet-indigo/20",
-  "border-amet-blue/20",
-] as const;
+const accentColors = ["text-amet-purple", "text-amet-blue", "text-amet-indigo"] as const;
+const accentBadges = ["bg-amet-purple/10", "bg-amet-blue/10", "bg-amet-indigo/10"] as const;
 
 export function DiferenciacaoSection() {
   return (
-    <section id="diferenciais" className="border-b border-amet-blue/10 bg-amet-white py-20">
+    <section id="diferenciais" className="border-b border-amet-white/10 bg-gradient-to-br from-amet-purple to-amet-indigo py-20">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeading
           title={diferenciacaoContent.title}
           subtitle={diferenciacaoContent.subtitle}
+          light
         />
 
         <div className="grid gap-6 sm:grid-cols-2">
           {diferenciacaoContent.items.map((item, index) => (
             <article
               key={item.title}
-              className={`rounded-3xl border bg-amet-white p-8 shadow-sm transition hover:shadow-md ${accentBorders[index]}`}
+              className="rounded-3xl bg-amet-white p-8 shadow-lg transition hover:shadow-xl"
             >
               <span
-                className={`inline-flex h-10 w-10 items-center justify-center rounded-full bg-amet-blue/5 text-sm font-bold ${accentColors[index]}`}
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${accentBadges[index % 3]} ${accentColors[index % 3]}`}
               >
                 {String(index + 1).padStart(2, "0")}
               </span>

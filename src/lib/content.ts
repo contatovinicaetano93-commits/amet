@@ -1,6 +1,6 @@
 export const siteContent = {
   brand: "AMET Saúde & Estética",
-  tagline: "Formação prática em saúde, estética e ciências biomédicas.",
+  tagline: "Capacitação e prática em saúde, estética e ciências biomédicas.",
   whatsapp: "+5511991118479",
   whatsappDisplay: "(11) 99111-8479",
   phone: "11-2367-6594",
@@ -17,13 +17,14 @@ export const navLinks = [
   { href: "/#estagios", label: "Estágios" },
   { href: "/#pos-graduacao", label: "Pós-Graduação" },
   { href: "/#unidades", label: "Unidades" },
+  { href: "/#parceiros", label: "Parceiros" },
 ] as const;
 
 export const heroContent = {
-  eyebrow: "Instituição de ensino em saúde",
-  title: "Venha para a AMET",
+  eyebrow: "Capacitação e Prática — Grupo Aquila",
+  title: "Transforme teoria em prática e prática em carreira.",
   subtitle:
-    "Desenvolva competências técnicas e humanas em um ambiente pensado para a prática real da saúde, estética e laboratório.",
+    "Vivencie o cotidiano clínico de forma supervisionada e integrada, com laboratórios equipados como o mercado e corpo docente atuante em saúde e estética.",
   ctaPrimary: "Ver estágios",
   ctaSecondary: "Conheça a AMET",
 };
@@ -32,65 +33,72 @@ export const quemSomosContent = {
   title: "Quem Somos",
   missionTitle: "Nossa Missão",
   mission:
-    "Formar profissionais qualificados para a área da saúde e estética, unindo rigor científico, experiência prática e compromisso com o cuidado humanizado.",
+    "A AMET é dedicada a oferecer excelência em saúde e geração do conhecimento, com foco em ética, sustentabilidade e responsabilidade social. Comprometida com a inovação, busca ser referência na formação de profissionais qualificados, promovendo qualidade, transparência e segurança em todas as suas atividades.",
   aboutTitle: "Quem Somos",
   about:
-    "A AMET Saúde & Estética é uma instituição dedicada ao ensino técnico e superior aplicado, com foco em formação prática, laboratórios equipados e corpo docente experiente no mercado.",
+    "A AMET Saúde e Estética é uma empresa do Grupo Aquila, que atua no segmento desde 1992, sediada na Vila Mariana, em São Paulo. Seu fundador, Dr. Vinicius Aquila, Biomédico (CRBM 46.886), soma mais de 20 anos de experiência em docência e ambiente laboratorial, é Pós-Graduado em Biomedicina no Diagnóstico por Imagem e Biologia Molecular pelo Hospital Israelita Albert Einstein, Cirurgião-Dentista e membro da SBAC e da ABBM. Para aproximar a teoria da prática e preparar profissionais mais qualificados para o mercado, foi criada a Residência Clínica em Saúde — um programa inovador que permite aos alunos da área da saúde vivenciar o cotidiano clínico de forma supervisionada e integrada.",
   highlights: [
-    "Tradição em formação na área da saúde",
-    "Infraestrutura para prática supervisionada",
-    "Parcerias com clínicas, laboratórios e centros estéticos",
-    "Acompanhamento próximo do estudante em todas as etapas",
+    "Participação em atendimentos clínicos supervisionados",
+    "Aplicação de conhecimentos teóricos em situações reais",
+    "Desenvolvimento de competências essenciais para o exercício profissional",
+    "Interação com diferentes áreas multiprofissionais, com visão ampla e integrada da saúde",
   ],
 };
 
 export const diferenciacaoContent = {
-  title: "Por que a AMET é referência no mercado",
+  title: "Por que nos diferenciamos do mercado?",
   subtitle:
-    "Unimos ensino aplicado, infraestrutura moderna e proximidade com o mercado de trabalho.",
+    "Formação prática supervisionada que desenvolve habilidades técnicas, raciocínio clínico e postura ética.",
   items: [
     {
-      title: "Ensino prático desde o início",
+      title: "Prática diária com equipamentos reais",
       description:
-        "Metodologia orientada à vivência real em laboratório, clínica e rotinas profissionais.",
+        "Rotinas do ambiente de trabalho vivenciadas todos os dias, com os mesmos equipamentos usados no mercado.",
     },
     {
-      title: "Corpo docente atuante",
+      title: "Flexibilidade de horários e turmas",
       description:
-        "Professores com experiência de mercado que conectam teoria, técnica e demandas reais.",
+        "Turmas e horários pensados para se ajustar à rotina de estudo e trabalho de cada aluno.",
     },
     {
-      title: "Infraestrutura completa",
+      title: "Conteúdo alinhado ao mercado",
       description:
-        "Salas, laboratórios e espaços de simulação preparados para formação de excelência.",
+        "Conteúdo atualizado e alinhado às exigências do mercado, garantindo que o aluno esteja sempre preparado.",
     },
     {
-      title: "Foco em empregabilidade",
+      title: "Laboratórios com estrutura profissional",
       description:
-        "Programas alinhados às necessidades do setor de saúde, estética e análises clínicas.",
+        "Laboratórios com tecnologia e estrutura profissional para análises clínicas, imagenologia e estética.",
+    },
+    {
+      title: "Parcerias com universidades",
+      description:
+        "Convênios com grandes instituições de ensino que reconhecem a formação prática da AMET.",
+    },
+    {
+      title: "Exigências acadêmicas atendidas",
+      description:
+        "Atendimento às exigências acadêmicas de Graduação e Pós-Graduação, incluindo estágio obrigatório.",
     },
   ],
 };
 
 export const praticasCursosContent = {
-  title: "Práticas e Cursos",
-  subtitle: "Linha de ensino, estágios supervisionados e programas de pós-graduação.",
+  title: "Cursos e Modalidades",
+  subtitle:
+    "Três áreas de formação, com estágio obrigatório, pós-graduação e desenvolvimento de carreira profissional.",
   linhas: [
     {
-      title: "Linha de Ensino",
-      items: ["Imaginologia", "Estética", "Análises Clínicas", "Hematologia"],
+      title: "Imagenologia",
+      items: ["Estágio Obrigatório", "Pós-Graduação (6 meses)", "Carreira Profissional"],
     },
     {
-      title: "Estágios Supervisionados",
-      items: ["AC — Análises Clínicas", "BCT — Biologia Celular e Tecidual", "BC — Bioquímica Clínica", "NMA — Neurociência e Morfoanatomia"],
+      title: "Análises Clínicas",
+      items: ["Estágio Obrigatório", "Pós-Graduação (6 meses)", "Carreira Profissional"],
     },
     {
-      title: "Pós-Graduação",
-      items: [
-        "Especializações em saúde e estética",
-        "Programas com foco em prática avançada",
-        "Atualização profissional contínua",
-      ],
+      title: "Estética",
+      items: ["Estágio Obrigatório", "Pós-Graduação (6 meses)", "Carreira Profissional"],
     },
   ],
 };
@@ -98,14 +106,14 @@ export const praticasCursosContent = {
 export const estagiosContent = {
   title: "Estágios",
   subtitle:
-    "Programa supervisionado de estágio com prática real em laboratório, clínica e rotinas profissionais.",
+    "Residência Clínica em Saúde: formação complementar em ambiente real, com acompanhamento de profissionais experientes.",
   intro:
-    "O programa de estágios da AMET conecta alunos e candidatos a experiências práticas nas unidades Liberdade, CTA e Guarulhos. Com acompanhamento docente e vagas limitadas por área, você desenvolve competências técnicas alinhadas ao mercado de saúde e estética.",
+    "A residência permite que os participantes atuem em ambiente real, com acompanhamento de profissionais experientes, desenvolvendo habilidades técnicas, raciocínio clínico e postura ética diante de situações do dia a dia. As oportunidades são organizadas por área nas unidades Liberdade, CTA e Guarulhos, com vagas limitadas e acompanhamento docente em todas as etapas.",
   highlights: [
     {
       title: "Supervisão especializada",
       description:
-        "Acompanhamento de professores e profissionais atuantes em cada etapa da prática.",
+        "Atendimentos clínicos supervisionados por professores e profissionais atuantes em cada etapa.",
     },
     {
       title: "Vagas por área",
@@ -125,24 +133,22 @@ export const estagiosContent = {
   ],
   areas: [
     {
+      code: "IMG",
+      name: "Imagenologia",
+      description:
+        "Práticas com tomógrafo, simulador de plataforma DICOM e console Siemens para simulação de exames.",
+    },
+    {
       code: "AC",
       name: "Análises Clínicas",
-      description: "Rotinas laboratoriais, coleta, processamento e análise de amostras.",
+      description:
+        "Rotinas laboratoriais completas: coleta, bioquímica, hematologia, coagulação, urinálise e microscopia.",
     },
     {
-      code: "BCT",
-      name: "Biologia Celular e Tecidual",
-      description: "Práticas em citologia, histologia e técnicas de biologia celular.",
-    },
-    {
-      code: "BC",
-      name: "Bioquímica Clínica",
-      description: "Ensaios bioquímicos, controle de qualidade e interpretação de resultados.",
-    },
-    {
-      code: "NMA",
-      name: "Neurociência e Morfoanatomia",
-      description: "Estudo aplicado de estruturas anatômicas e neurociências.",
+      code: "EST",
+      name: "Estética",
+      description:
+        "Atendimento estético assistido em clínicas equipadas, sob supervisão de um Biomédico.",
     },
   ],
   cta: "Garanta sua vaga para 2027",
@@ -158,9 +164,8 @@ export const estagiosInscricaoContent = {
 
 export const unidadesEquipamentosContent = {
   title: "Unidades e Equipamentos",
-  subtitle: "Estrutura distribuída em unidades com laboratórios e equipamentos para formação prática.",
-  notaAtualizacao:
-    "Conteúdo baseado na estrutura institucional AMET — atualize com os dados das apresentações oficiais.",
+  subtitle:
+    "Metodologia de aprendizado na prática: laboratórios, clínicas e salas com equipamentos reais.",
   unidades: [
     {
       nome: "Liberdade",
@@ -181,41 +186,81 @@ export const unidadesEquipamentosContent = {
   equipamentos: [
     {
       categoria: "Laboratório de Análises Clínicas",
-      itens: ["Microscópios", "Centrífugas", "Espectrofotômetros", "Kits diagnósticos"],
+      itens: [
+        "Contador hematológico URIT 5160",
+        "Bioquímica automatizada PK125 e semi-automatizada URIT 880",
+        "Analisador de coagulação URIT 610 e de urina URIT 50",
+        "Microscópios com câmera e contador celular",
+        "Centrífugas, microcentrífugas e homogeneizador",
+      ],
     },
     {
-      categoria: "Imaginologia e Diagnóstico",
-      itens: ["Simuladores de imagem", "Equipamentos de raio-X didáticos", "Estações de laudo"],
+      categoria: "Laboratório de Imagenologia",
+      itens: [
+        "Tomógrafo para práticas de exames",
+        "Console Siemens Healthineers para simulação de exames",
+        "Simulador Plataforma DICOM (Weasis)",
+        "Negatoscópios e estação de laudo",
+      ],
     },
     {
-      categoria: "Estética e Saúde",
-      itens: ["Macas e cabines", "Aparelhos de estética facial/corporal", "Materiais esterilizados"],
+      categoria: "Clínicas de Estética",
+      itens: [
+        "Heccus Turbo e Ares — Carboxiterapia",
+        "Ultrafocus e Stimulus — HTM",
+        "Dermotonus, Dermosteam e Carboxi Skin",
+        "Macas e cabines para atendimento estético assistido",
+      ],
     },
     {
-      categoria: "Hematologia",
-      itens: ["Contadores hematológicos", "Microscopia avançada", "Bancadas de coleta"],
+      categoria: "Anatomia, Microscopia e Coleta",
+      itens: [
+        "Laboratório de Anatomia com modelos e peças anatômicas",
+        "Laboratório de Microscopia — Hematologia e Citologia Oncótica",
+        "Sala de Coleta de Materiais Biológicos e Anamnese Assistida",
+        "Consultório de Atendimento Estético Assistido",
+      ],
     },
   ],
 };
 
 export const posGraduacaoContent = {
   title: "Pós-Graduação",
-  subtitle: "Programas para aprofundamento técnico e científico na área da saúde.",
+  subtitle: "Programas de 6 meses para aprofundamento técnico e científico na área da saúde.",
   programs: [
     {
-      title: "Especialização em Estética Avançada",
-      description: "Técnicas contemporâneas, protocolos clínicos e gestão de procedimentos.",
+      title: "Pós-Graduação em Imagenologia",
+      description:
+        "6 meses de formação avançada com tomógrafo, plataforma DICOM e console de práticas de exames.",
     },
     {
-      title: "Especialização em Análises Clínicas",
-      description: "Aprofundamento laboratorial, controle de qualidade e rotinas diagnósticas.",
+      title: "Pós-Graduação em Análises Clínicas",
+      description:
+        "6 meses de aprofundamento laboratorial: bioquímica, hematologia, coagulação e controle de qualidade.",
     },
     {
-      title: "Especialização em Imagem Diagnóstica",
-      description: "Formação avançada para atuação em imaginologia e laudos assistidos.",
+      title: "Pós-Graduação em Estética",
+      description:
+        "6 meses de prática avançada em clínica de estética, com protocolos assistidos por Biomédico.",
     },
   ],
   cta: "Fale conosco para matrícula",
+};
+
+export const parceirosContent = {
+  title: "Parceiros Acadêmicos",
+  subtitle:
+    "Instituições de ensino que reconhecem e integram a formação prática da AMET.",
+  parceiros: [
+    "Anhanguera",
+    "Universidade Cruzeiro do Sul",
+    "UNINOVE",
+    "Universidade Anhembi Morumbi",
+    "UNICID",
+    "UNINTER",
+    "Ânima Educação",
+    "Estácio",
+  ],
 };
 
 export const campusContent = {
@@ -225,7 +270,7 @@ export const campusContent = {
     {
       title: "Localização",
       description:
-        "Campus AMET com fácil acesso e estrutura pensada para receber alunos, visitantes e eventos acadêmicos.",
+        "Sede na Vila Mariana, em São Paulo, com estrutura pensada para receber alunos, visitantes e eventos acadêmicos.",
     },
     {
       title: "Salas de Aula",
@@ -235,7 +280,7 @@ export const campusContent = {
     {
       title: "Laboratórios",
       description:
-        "Espaços dedicados à prática em análises clínicas, estética, hematologia e imaginologia.",
+        "Espaços dedicados à prática em análises clínicas, estética, hematologia, anatomia e imagenologia.",
     },
     {
       title: "Atendimento",

@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    // AVIF trava o otimizador neste ambiente; WebP responde normalmente.
+    formats: ["image/webp"],
+  },
 };
 
 export default nextConfig;

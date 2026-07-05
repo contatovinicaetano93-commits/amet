@@ -3,12 +3,12 @@ import { quemSomosContent } from "@/lib/content";
 
 export function QuemSomosSection() {
   return (
-    <section id="quem-somos" className="border-b border-amet-blue/10 bg-amet-blue/[0.03] py-20">
+    <section id="quem-somos" className="border-b border-amet-white/10 bg-gradient-to-br from-amet-indigo to-amet-blue py-20">
       <div className="mx-auto max-w-6xl px-6">
-        <SectionHeading title={quemSomosContent.title} />
+        <SectionHeading title={quemSomosContent.title} light />
 
-        <article className="mx-auto max-w-3xl rounded-3xl border border-amet-blue/15 bg-amet-white p-8 shadow-sm">
-          <p className="text-lg leading-8 text-amet-indigo/80">{quemSomosContent.mission}</p>
+        <article className="mx-auto max-w-3xl rounded-3xl bg-amet-white p-8 shadow-lg">
+          <p className="text-lg font-medium leading-8 text-amet-indigo">{quemSomosContent.mission}</p>
           <p className="mt-6 leading-7 text-amet-indigo/75">{quemSomosContent.about}</p>
           <ul className="mt-8 space-y-3">
             {quemSomosContent.highlights.map((item) => (

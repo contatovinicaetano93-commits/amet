@@ -8,7 +8,10 @@ export function SiteFooter() {
     <footer className="border-t border-amet-blue/10 bg-amet-white">
       <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="flex flex-col items-center gap-6 border-b border-amet-blue/10 pb-8 sm:flex-row sm:items-start sm:justify-between">
-          <BrandLogo nameClassName="text-lg font-semibold tracking-[0.06em] text-amet-blue" />
+          <BrandLogo
+            markClassName="h-11 w-11"
+            nameClassName="text-base font-semibold tracking-[0.06em] text-amet-blue"
+          />
           <div className="space-y-2 text-center text-sm text-amet-indigo/75 sm:text-right">
             <a
               href="https://instagram.com/ametsaude"

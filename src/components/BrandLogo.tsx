@@ -13,9 +13,13 @@ export function BrandLogo({
   nameClassName = "text-base font-semibold tracking-[0.06em] text-amet-blue sm:text-lg",
 }: BrandLogoProps) {
   return (
-    <span className="inline-flex items-center gap-3">
+    <span className="inline-flex flex-col items-center gap-1.5">
       <AmetMark className={markClassName} />
-      {showName && <span className={nameClassName}>{siteContent.brand}</span>}
+      {showName && (
+        <span className={`whitespace-nowrap text-center ${nameClassName}`}>
+          {siteContent.brand}
+        </span>
+      )}
     </span>
   );
 }
