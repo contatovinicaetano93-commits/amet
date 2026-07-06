@@ -235,7 +235,7 @@ export function ApplicationForm() {
   }
 
   return (
-    <div className="rounded-3xl border border-amet-blue/10 bg-amet-white p-6 shadow-lg shadow-amet-blue/5 sm:p-8">
+    <div className="rounded-3xl border border-amet-blue/15 bg-gradient-to-br from-amet-blue/10 via-amet-white to-amet-purple/10 p-6 shadow-lg shadow-amet-blue/10 sm:p-8">
       <StepIndicator currentStep={step} labels={FORM_STEPS} />
 
       <div className="mt-8">
