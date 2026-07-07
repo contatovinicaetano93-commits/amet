@@ -29,6 +29,13 @@ export const heroContent = {
   ctaSecondary: "Conheça a AMET",
 };
 
+export const heroStats = [
+  { value: "1992", label: "Grupo Aquila no mercado" },
+  { value: "20+", label: "Anos de experiência do fundador" },
+  { value: "3", label: "Áreas de formação" },
+  { value: "3", label: "Unidades em São Paulo" },
+] as const;
+
 export const quemSomosContent = {
   title: "Quem Somos",
   missionTitle: "Nossa Missão",

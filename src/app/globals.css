@@ -44,3 +44,23 @@ body {
     0 28px 55px -16px rgba(0, 0, 0, 0.55),
     0 6px 18px -6px color-mix(in srgb, var(--amet-blue) 40%, transparent);
 }
+
+.amet-card-light {
+  border: 1px solid color-mix(in srgb, var(--amet-indigo) 8%, transparent);
+  background: var(--amet-white);
+  box-shadow: 0 12px 30px -18px color-mix(in srgb, var(--amet-indigo) 18%, transparent);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+.amet-card-light:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--amet-indigo) 16%, transparent);
+  box-shadow: 0 20px 40px -16px color-mix(in srgb, var(--amet-indigo) 22%, transparent);
+}
+
+.hero-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
