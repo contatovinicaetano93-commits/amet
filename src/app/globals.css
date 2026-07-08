@@ -92,8 +92,12 @@ body {
   background-position: center 30%;
   opacity: 0;
   filter: saturate(0.8) contrast(1.05) brightness(0.9);
-  animation: amet-hero-photo-crossfade var(--hero-crossfade-duration, 30s) ease-in-out infinite;
+  transition: opacity var(--hero-crossfade-ms, 900ms) ease-in-out;
   will-change: opacity;
+}
+
+.amet-hero-photo-slide.is-active {
+  opacity: 1;
 }
 
 .amet-hero-photo-scrim {
@@ -121,17 +125,6 @@ body {
     color-mix(in srgb, var(--amet-blue) 18%, transparent) 100%
   );
   mix-blend-mode: multiply;
-}
-
-@keyframes amet-hero-photo-crossfade {
-  0%,
-  20% {
-    opacity: 1;
-  }
-  25%,
-  100% {
-    opacity: 0;
-  }
 }
 
 @media (min-width: 769px) {
@@ -239,7 +232,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .amet-hero-photo-slide {
-    animation: none;
+    transition: none;
     opacity: 0;
   }
 
