@@ -38,23 +38,23 @@ export const heroStats = [
 
 export const heroCarouselImages = [
   {
-    src: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=900&q=80&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1400&q=85&auto=format&fit=crop",
     alt: "Alunos em prática supervisionada em laboratório biomédico",
   },
   {
-    src: "https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=900&q=80&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=1400&q=85&auto=format&fit=crop",
     alt: "Estudantes de saúde em atividade prática em sala de aula",
   },
   {
-    src: "https://images.unsplash.com/photo-1532187863486-abf9db8811e4?w=900&q=80&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1532187863486-abf9db8811e4?w=1400&q=85&auto=format&fit=crop",
     alt: "Prática em ciências biomédicas com equipamentos de laboratório",
   },
   {
-    src: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1400&q=85&auto=format&fit=crop",
     alt: "Formação prática em ambiente clínico e laboratorial",
   },
   {
-    src: "https://images.unsplash.com/photo-1559757142-5d350d0d3c56?w=900&q=80&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1559757142-5d350d0d3c56?w=1400&q=85&auto=format&fit=crop",
     alt: "Alunos em treinamento técnico em saúde",
   },
 ] as const;
