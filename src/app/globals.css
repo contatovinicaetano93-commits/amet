@@ -82,6 +82,7 @@ body {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  background-color: var(--amet-indigo);
 }
 
 .amet-hero-photo-slide {
@@ -91,7 +92,7 @@ body {
   background-position: center 30%;
   opacity: 0;
   filter: saturate(0.8) contrast(1.05) brightness(0.9);
-  animation: amet-hero-photo-crossfade var(--hero-crossfade-duration, 50s) ease-in-out infinite;
+  animation: amet-hero-photo-crossfade var(--hero-crossfade-duration, 30s) ease-in-out infinite;
   will-change: opacity;
 }
 
@@ -124,10 +125,10 @@ body {
 
 @keyframes amet-hero-photo-crossfade {
   0%,
-  18% {
+  20% {
     opacity: 1;
   }
-  22%,
+  25%,
   100% {
     opacity: 0;
   }

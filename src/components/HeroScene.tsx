@@ -4,7 +4,8 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 import { heroCarouselImages } from "@/lib/content";
 
-const CROSSFADE_DURATION_S = heroCarouselImages.length * 10;
+const SLIDE_SECONDS = 6;
+const CROSSFADE_DURATION_S = heroCarouselImages.length * SLIDE_SECONDS;
 
 type HeroSceneProps = {
   children: ReactNode;
@@ -61,7 +62,7 @@ export function HeroScene({ children }: HeroSceneProps) {
               className="amet-hero-photo-slide"
               style={{
                 backgroundImage: `url(${photo.src})`,
-                animationDelay: `${index * 10}s`,
+                animationDelay: `${index * SLIDE_SECONDS}s`,
               }}
             />
           ))}
