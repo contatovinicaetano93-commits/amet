@@ -64,3 +64,44 @@ body {
     linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   background-size: 48px 48px;
 }
+
+.hero-carousel-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: hero-carousel-scroll 55s linear infinite;
+}
+
+.hero-carousel-slide {
+  position: relative;
+  flex-shrink: 0;
+  width: clamp(260px, 32vw, 420px);
+  height: 100%;
+  opacity: 0.55;
+}
+
+.hero-carousel-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(28, 36, 147, 0.15) 0%,
+    rgba(28, 36, 147, 0.45) 100%
+  );
+}
+
+@keyframes hero-carousel-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-carousel-track {
+    animation: none;
+  }
+}
