@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { heroCarouselImages } from "@/lib/content";
 
-const SLIDE_MS = 3500;
-const CROSSFADE_MS = 800;
+const SLIDE_MS = 2500;
+const CROSSFADE_MS = 600;
 
 type HeroSceneProps = {
   children: ReactNode;
@@ -14,17 +14,28 @@ type HeroSceneProps = {
 export function HeroScene({ children }: HeroSceneProps) {
   const heroRef = useRef<HTMLElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [leavingIndex, setLeavingIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) return;
 
     const interval = setInterval(() => {
-      setActiveIndex((current) => (current + 1) % heroCarouselImages.length);
+      setActiveIndex((current) => {
+        setLeavingIndex(current);
+        return (current + 1) % heroCarouselImages.length;
+      });
     }, SLIDE_MS);
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (leavingIndex === null) return;
+
+    const timeout = setTimeout(() => setLeavingIndex(null), CROSSFADE_MS);
+    return () => clearTimeout(timeout);
+  }, [leavingIndex, activeIndex]);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -55,6 +66,8 @@ export function HeroScene({ children }: HeroSceneProps) {
     };
   }, []);
 
+  const isTransitioning = leavingIndex !== null;
+
   return (
     <section
       ref={heroRef}
@@ -64,13 +77,26 @@ export function HeroScene({ children }: HeroSceneProps) {
     >
       <div className="amet-hero-scene pointer-events-none absolute inset-0" aria-hidden>
         <div className="amet-hero-photo-panel">
-          {heroCarouselImages.map((photo, index) => (
-            <div
-              key={photo.src}
-              className={`amet-hero-photo-slide${index === activeIndex ? " is-active" : ""}`}
-              style={{ backgroundImage: `url(${photo.src})` }}
-            />
-          ))}
+          {heroCarouselImages.map((photo, index) => {
+            const isStable = index === activeIndex && !isTransitioning;
+            const isFadeIn = index === activeIndex && isTransitioning;
+            const isFadeOut = index === leavingIndex;
+
+            return (
+              <div
+                key={photo.src}
+                className={[
+                  "amet-hero-photo-slide",
+                  isStable ? "is-stable" : "",
+                  isFadeIn ? "is-fade-in" : "",
+                  isFadeOut ? "is-fade-out" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style={{ backgroundImage: `url(${photo.src})` }}
+              />
+            );
+          })}
           <div className="amet-hero-photo-scrim" />
           <div className="amet-hero-photo-tint" />
         </div>
