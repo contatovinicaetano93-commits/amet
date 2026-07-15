@@ -27,22 +27,16 @@ body {
 }
 
 .amet-card {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(9, 13, 36, 0.55);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow:
-    0 22px 45px -18px rgba(0, 0, 0, 0.45),
-    0 4px 14px -6px color-mix(in srgb, var(--amet-purple) 30%, transparent);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
+  border: 1px solid color-mix(in srgb, var(--amet-indigo) 8%, transparent);
+  background: var(--amet-white);
+  box-shadow: 0 12px 30px -18px color-mix(in srgb, var(--amet-indigo) 18%, transparent);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 
 .amet-card:hover {
   transform: translateY(-3px);
-  background: rgba(9, 13, 36, 0.68);
-  box-shadow:
-    0 28px 55px -16px rgba(0, 0, 0, 0.55),
-    0 6px 18px -6px color-mix(in srgb, var(--amet-blue) 40%, transparent);
+  border-color: color-mix(in srgb, var(--amet-indigo) 16%, transparent);
+  box-shadow: 0 20px 40px -16px color-mix(in srgb, var(--amet-indigo) 22%, transparent);
 }
 
 .amet-card-light {
