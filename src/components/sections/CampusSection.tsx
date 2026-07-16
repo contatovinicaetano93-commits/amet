@@ -8,6 +8,8 @@ export function CampusSection() {
     <section id="campus" className="bg-amet-white py-20">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeading
+          index="—"
+          eyebrow="Campus"
           title={campusContent.title}
           subtitle={campusContent.subtitle}
         />

@@ -5,6 +5,7 @@
   --amet-blue: #285ace;
   --amet-indigo: #1c2493;
   --amet-white: #ffffff;
+  --amet-paper: #faf7f2;
 }
 
 @theme inline {
@@ -12,11 +13,13 @@
   --color-amet-blue: var(--amet-blue);
   --color-amet-indigo: var(--amet-indigo);
   --color-amet-white: var(--amet-white);
+  --color-amet-paper: var(--amet-paper);
   --font-sans: var(--font-league-spartan);
+  --font-editorial: var(--font-fraunces);
 }
 
 body {
-  background: var(--amet-white);
+  background: var(--amet-paper);
   color: var(--amet-indigo);
   font-family: var(--font-league-spartan), Arial, Helvetica, sans-serif;
 }
@@ -26,37 +29,46 @@ body {
   color: var(--amet-indigo);
 }
 
+/* ── Dossiê editorial: cards planos com tab de cor por categoria ── */
 .amet-card {
-  border: 1px solid color-mix(in srgb, var(--amet-indigo) 8%, transparent);
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--amet-indigo) 12%, transparent);
+  border-left-width: 3px;
+  border-left-color: color-mix(in srgb, var(--amet-indigo) 20%, transparent);
   background: var(--amet-white);
-  box-shadow: 0 12px 30px -18px color-mix(in srgb, var(--amet-indigo) 18%, transparent);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  border-radius: 6px;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .amet-card:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--amet-indigo) 16%, transparent);
-  box-shadow: 0 20px 40px -16px color-mix(in srgb, var(--amet-indigo) 22%, transparent);
+  background: color-mix(in srgb, var(--amet-indigo) 2%, var(--amet-white));
 }
 
-.amet-card-light {
-  border: 1px solid color-mix(in srgb, var(--amet-indigo) 8%, transparent);
+.amet-card-purple {
+  border-left-color: var(--amet-purple);
+}
+
+.amet-card-blue {
+  border-left-color: var(--amet-blue);
+}
+
+.amet-card-indigo {
+  border-left-color: var(--amet-indigo);
+}
+
+/* Card "pasta" sobre a seção escura de Estágios */
+.amet-card-onDark {
+  border: 1px solid color-mix(in srgb, var(--amet-white) 10%, transparent);
+  border-left-width: 3px;
   background: var(--amet-white);
-  box-shadow: 0 12px 30px -18px color-mix(in srgb, var(--amet-indigo) 18%, transparent);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  border-radius: 6px;
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.amet-card-light:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--amet-indigo) 16%, transparent);
-  box-shadow: 0 20px 40px -16px color-mix(in srgb, var(--amet-indigo) 22%, transparent);
-}
-
-.hero-grid-bg {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 48px 48px;
+.amet-card-onDark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 26px 46px -18px rgba(0, 0, 0, 0.55);
 }
 
 /* ── Hero IMOBI-style crossfade (AMET) ── */

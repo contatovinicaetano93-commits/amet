@@ -4,16 +4,16 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type RevealProps = {
   children: ReactNode;
-  /** Atraso em ms para escalonar cards vizinhos. */
-  delay?: number;
   className?: string;
 };
 
 /**
- * Revela o conteúdo quando entra na viewport: desliza de cima para baixo
- * com fade. Com prefers-reduced-motion, mostra direto sem animação.
+ * Revela o conteúdo com um fade sutil quando entra na viewport.
+ * Pensado para ser usado uma vez por seção, não em cascata por card
+ * (o momento coreografado da página é o hero). Com prefers-reduced-motion,
+ * mostra direto sem animação.
  */
-export function Reveal({ children, delay = 0, className = "" }: RevealProps) {
+export function Reveal({ children, className = "" }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -47,10 +47,7 @@ export function Reveal({ children, delay = 0, className = "" }: RevealProps) {
   return (
     <div
       ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${
-        visible ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
-      } ${className}`}
+      className={`transition-opacity duration-700 ease-out ${visible ? "opacity-100" : "opacity-0"} ${className}`}
     >
       {children}
     </div>

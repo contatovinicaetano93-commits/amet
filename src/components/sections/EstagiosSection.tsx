@@ -1,70 +1,63 @@
 import Link from "next/link";
 
-import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
+import { StaggerReveal } from "@/components/StaggerReveal";
 import { estagiosContent } from "@/lib/content";
 
-const accentColors = ["text-amet-purple", "text-amet-blue", "text-amet-white"] as const;
-const accentBadges = ["bg-amet-purple/20", "bg-amet-blue/20", "bg-amet-white/15"] as const;
+const highlightTab = ["amet-card-purple", "amet-card-blue", "amet-card-indigo"] as const;
+
+const areaTab: Record<string, (typeof highlightTab)[number]> = {
+  IMG: "amet-card-indigo",
+  AC: "amet-card-blue",
+  EST: "amet-card-purple",
+};
 
 export function EstagiosSection() {
   return (
-    <section id="estagios" className="border-b border-amet-white/10 bg-gradient-to-br from-amet-indigo to-amet-purple py-20">
+    <section id="estagios" className="border-b border-amet-white/10 bg-amet-indigo py-24">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeading
+          index="04"
+          eyebrow="Residência Clínica"
           title={estagiosContent.title}
           subtitle={estagiosContent.subtitle}
           light
         />
 
-        <p className="mx-auto mb-12 max-w-3xl text-center text-base leading-7 text-amet-white/80 sm:text-lg">
+        <p className="max-w-2xl text-base leading-7 text-amet-white/70">
           {estagiosContent.intro}
         </p>
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <StaggerReveal className="mt-12 grid gap-4 sm:grid-cols-2">
           {estagiosContent.highlights.map((item, index) => (
-            <Reveal key={item.title} delay={(index % 2) * 120}>
-            <article
-              className="amet-card h-full rounded-3xl p-8"
-            >
-              <span
-                className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${accentBadges[index % 3]} ${accentColors[index % 3]}`}
-              >
+            <article key={item.title} className={`amet-card-onDark ${highlightTab[index % 3]} h-full p-6`}>
+              <span className="font-mono text-xs font-semibold text-amet-indigo/40">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <h3 className="mt-5 text-xl font-semibold text-amet-white">{item.title}</h3>
-              <p className="mt-3 leading-7 text-amet-white/75">{item.description}</p>
+              <h3 className="mt-3 text-lg font-semibold text-amet-indigo">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-amet-indigo/70">{item.description}</p>
             </article>
-            </Reveal>
           ))}
-        </div>
+        </StaggerReveal>
 
-        <div className="mt-12">
-          <h3 className="text-center text-2xl font-bold text-amet-white">Áreas disponíveis</h3>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            {estagiosContent.areas.map((area, index) => (
-              <Reveal key={area.code} delay={(index % 2) * 120}>
-              <article
-                className="amet-card h-full rounded-2xl p-6"
-              >
-                <div className="flex items-start gap-4">
-                  <span
-                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${accentBadges[index % 3]} ${accentColors[index % 3]}`}
-                  >
-                    {area.code}
-                  </span>
-                  <div>
-                    <h4 className="font-semibold text-amet-white">{area.name}</h4>
-                    <p className="mt-2 text-sm leading-6 text-amet-white/75">{area.description}</p>
-                  </div>
-                </div>
+        <div className="mt-16">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amet-white/45">
+            Áreas disponíveis
+          </p>
+          <StaggerReveal className="mt-6 grid gap-4 sm:grid-cols-3">
+            {estagiosContent.areas.map((area) => (
+              <article key={area.code} className={`amet-card-onDark ${areaTab[area.code]} h-full p-6`}>
+                <span className="font-mono text-xs font-semibold tracking-wider text-amet-indigo/40">
+                  {area.code}
+                </span>
+                <h4 className="mt-2 font-semibold text-amet-indigo">{area.name}</h4>
+                <p className="mt-2 text-sm leading-6 text-amet-indigo/70">{area.description}</p>
               </article>
-              </Reveal>
             ))}
-          </div>
+          </StaggerReveal>
         </div>
 
-        <div className="mt-14 text-center">
+        <div className="mt-16">
           <Link
             href={estagiosContent.ctaHref}
             className="inline-flex items-center justify-center rounded-full bg-amet-white px-8 py-4 text-base font-semibold text-amet-indigo transition hover:bg-amet-purple hover:text-amet-white"

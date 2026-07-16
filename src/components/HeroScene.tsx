@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { heroCarouselImages } from "@/lib/content";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const SLIDE_MS = 2500;
 const CROSSFADE_MS = 600;
@@ -13,8 +17,32 @@ type HeroSceneProps = {
 
 export function HeroScene({ children }: HeroSceneProps) {
   const heroRef = useRef<HTMLElement | null>(null);
+  const photoPanelRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [leavingIndex, setLeavingIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const hero = heroRef.current;
+    const photoPanel = photoPanelRef.current;
+    if (!hero || !photoPanel) return;
+
+    const tween = gsap.to(photoPanel, {
+      yPercent: 18,
+      ease: "none",
+      scrollTrigger: {
+        trigger: hero,
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+      },
+    });
+
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  }, []);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -76,7 +104,7 @@ export function HeroScene({ children }: HeroSceneProps) {
       style={{ "--hero-crossfade-ms": `${CROSSFADE_MS}ms` } as React.CSSProperties}
     >
       <div className="amet-hero-scene pointer-events-none absolute inset-0" aria-hidden>
-        <div className="amet-hero-photo-panel">
+        <div ref={photoPanelRef} className="amet-hero-photo-panel">
           {heroCarouselImages.map((photo, index) => {
             const isStable = index === activeIndex && !isTransitioning;
             const isFadeIn = index === activeIndex && isTransitioning;

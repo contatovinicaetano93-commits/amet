@@ -1,36 +1,36 @@
-import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
+import { StaggerReveal } from "@/components/StaggerReveal";
 import { posGraduacaoContent, siteContent } from "@/lib/content";
 
-const titleColors = ["text-amet-purple", "text-amet-blue", "text-amet-indigo"] as const;
+const cardTab = ["amet-card-indigo", "amet-card-blue", "amet-card-purple"] as const;
+const titleColor = ["text-amet-indigo", "text-amet-blue", "text-amet-purple"] as const;
 
 export function PosGraduacaoSection() {
   const whatsappHref = `https://wa.me/${siteContent.whatsapp.replace(/\D/g, "")}`;
 
   return (
-    <section id="pos-graduacao" className="border-b border-amet-indigo/5 bg-amet-blue/[0.04] py-20">
+    <section id="pos-graduacao" className="border-b border-amet-indigo/8 bg-amet-paper py-24">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeading
+          index="05"
+          eyebrow="Especialização"
           title={posGraduacaoContent.title}
           subtitle={posGraduacaoContent.subtitle}
+          accent="purple"
         />
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <StaggerReveal className="grid gap-6 lg:grid-cols-3">
           {posGraduacaoContent.programs.map((program, index) => (
-            <Reveal key={program.title} delay={index * 120}>
-            <article
-              className="amet-card-light h-full rounded-3xl p-8"
-            >
-              <h3 className={`text-lg font-semibold ${titleColors[index % 3]}`}>
+            <article key={program.title} className={`amet-card ${cardTab[index]} h-full p-8`}>
+              <h3 className={`text-lg font-semibold ${titleColor[index]}`}>
                 {program.title}
               </h3>
               <p className="mt-4 text-sm leading-7 text-amet-indigo/70">{program.description}</p>
             </article>
-            </Reveal>
           ))}
-        </div>
+        </StaggerReveal>
 
-        <div className="mt-10 text-center">
+        <div className="mt-10">
           <a
             href={whatsappHref}
             target="_blank"

@@ -1,40 +1,37 @@
-import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
+import { StaggerReveal } from "@/components/StaggerReveal";
 import { praticasCursosContent } from "@/lib/content";
 
-const titleColors = ["text-amet-purple", "text-amet-blue", "text-amet-indigo"] as const;
-const bulletColors = ["before:bg-amet-purple", "before:bg-amet-blue", "before:bg-amet-indigo"] as const;
+const cardTab = ["amet-card-indigo", "amet-card-blue", "amet-card-purple"] as const;
+const titleColor = ["text-amet-indigo", "text-amet-blue", "text-amet-purple"] as const;
 
 export function PraticasCursosSection() {
   return (
-    <section id="cursos" className="border-b border-amet-indigo/5 bg-amet-white py-20">
+    <section id="cursos" className="border-b border-amet-indigo/8 bg-amet-paper py-24">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeading
+          index="03"
+          eyebrow="Formação"
           title={praticasCursosContent.title}
           subtitle={praticasCursosContent.subtitle}
+          accent="blue"
         />
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <StaggerReveal className="grid gap-6 lg:grid-cols-3">
           {praticasCursosContent.linhas.map((linha, index) => (
-            <Reveal key={linha.title} delay={index * 120}>
-            <article
-              className="amet-card-light h-full rounded-3xl p-8"
-            >
-              <h3 className={`text-xl font-semibold ${titleColors[index]}`}>{linha.title}</h3>
+            <article key={linha.title} className={`amet-card ${cardTab[index]} h-full p-8`}>
+              <h3 className={`text-xl font-semibold ${titleColor[index]}`}>{linha.title}</h3>
               <ul className="mt-6 space-y-3">
                 {linha.items.map((item) => (
-                  <li
-                    key={item}
-                    className={`flex gap-3 text-sm leading-6 text-amet-indigo/75 before:mt-2 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full ${bulletColors[index]}`}
-                  >
+                  <li key={item} className="flex gap-2 text-sm leading-6 text-amet-indigo/75">
+                    <span className="text-amet-indigo/30">–</span>
                     {item}
                   </li>
                 ))}
               </ul>
             </article>
-            </Reveal>
           ))}
-        </div>
+        </StaggerReveal>
       </div>
     </section>
   );

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function EstagiosInscricaoPage() {
   return (
-    <main className="flex-1 border-b border-amet-blue/10 bg-amet-blue/[0.03] py-16 sm:py-20">
+    <main className="flex-1 border-b border-amet-indigo/8 bg-amet-paper py-16 sm:py-20">
       <div className="mx-auto max-w-3xl px-6">
         <Link
           href="/#estagios"
@@ -24,9 +24,10 @@ export default function EstagiosInscricaoPage() {
 
         <div className="mt-8">
           <SectionHeading
+            index="04"
+            eyebrow="Residência Clínica"
             title={estagiosInscricaoContent.title}
             subtitle={estagiosInscricaoContent.subtitle}
-            align="left"
           />
         </div>
 

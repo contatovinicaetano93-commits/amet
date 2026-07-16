@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Fraunces } from "next/font/google";
 import localFont from "next/font/local";
 
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 
 import "./globals.css";
@@ -11,6 +13,14 @@ const leagueSpartan = localFont({
   src: "../fonts/LeagueSpartan-VariableFont_wght.ttf",
   variable: "--font-league-spartan",
   weight: "100 900",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  style: ["italic"],
+  weight: ["400", "500"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
@@ -28,9 +38,10 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${leagueSpartan.variable} h-full scroll-smooth antialiased`}
+      className={`${leagueSpartan.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-amet-white font-sans text-amet-indigo">
+      <body className="min-h-full flex flex-col bg-amet-paper font-sans text-amet-indigo">
+        <SmoothScroll />
         <SiteHeader />
         {children}
         <SiteFooter />
