@@ -1,8 +1,8 @@
 export const siteContent = {
   brand: "AMET Saúde & Estética",
   tagline: "Capacitação e prática em saúde, estética e ciências biomédicas.",
-  whatsapp: "+5511991118479",
-  whatsappDisplay: "(11) 99111-8479",
+  whatsapp: "+5511932096496",
+  whatsappDisplay: "(11) 93209-6496",
   phone: "11-2367-6594",
   instagram: "@ametsaude",
   cadan: "CADAN: 2023-000.308-5",
