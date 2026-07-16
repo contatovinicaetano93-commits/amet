@@ -69,17 +69,32 @@ export function HeroScene({ children }: HeroSceneProps) {
     const hero = heroRef.current;
     if (!hero) return;
 
-    const handleMove = (event: MouseEvent) => {
+    let frame: number | null = null;
+    let lastX = 0;
+    let lastY = 0;
+
+    const applyTilt = () => {
+      frame = null;
       const rect = hero.getBoundingClientRect();
-      const mx = (event.clientX - rect.left) / rect.width - 0.5;
-      const my = (event.clientY - rect.top) / rect.height - 0.5;
+      const mx = (lastX - rect.left) / rect.width - 0.5;
+      const my = (lastY - rect.top) / rect.height - 0.5;
       hero.style.setProperty("--mx", mx.toFixed(3));
       hero.style.setProperty("--my", my.toFixed(3));
       hero.style.setProperty("--rx", `${(mx * 6).toFixed(2)}deg`);
       hero.style.setProperty("--ry", `${(my * -6).toFixed(2)}deg`);
     };
 
+    const handleMove = (event: MouseEvent) => {
+      lastX = event.clientX;
+      lastY = event.clientY;
+      if (frame === null) frame = requestAnimationFrame(applyTilt);
+    };
+
     const handleLeave = () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+        frame = null;
+      }
       hero.style.setProperty("--mx", "0");
       hero.style.setProperty("--my", "0");
       hero.style.setProperty("--rx", "0deg");
@@ -91,6 +106,7 @@ export function HeroScene({ children }: HeroSceneProps) {
     return () => {
       hero.removeEventListener("mousemove", handleMove);
       hero.removeEventListener("mouseleave", handleLeave);
+      if (frame !== null) cancelAnimationFrame(frame);
     };
   }, []);
 

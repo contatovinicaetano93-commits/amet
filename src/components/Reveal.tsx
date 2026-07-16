@@ -26,22 +26,17 @@ export function Reveal({ children, className = "" }: RevealProps) {
       return;
     }
 
-    const check = () => {
-      const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight - 40 && rect.bottom > 0) {
-        setVisible(true);
-        cleanup();
-      }
-    };
-    const cleanup = () => {
-      window.removeEventListener("scroll", check);
-      window.removeEventListener("resize", check);
-    };
-
-    window.addEventListener("scroll", check, { passive: true });
-    window.addEventListener("resize", check);
-    check();
-    return cleanup;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -40px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   return (
