@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Garante que a allowlist de CPFs entre no bundle serverless (Vercel)
+  outputFileTracingIncludes: {
+    "/api/participantes/lookup": ["./data/participantes.json"],
+    "/api/candidaturas": ["./data/participantes.json"],
+  },
 };
 
 export default nextConfig;

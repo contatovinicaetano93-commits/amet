@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createCandidatura, listCandidaturas } from "@/lib/db";
 import { sendCandidaturaEmail } from "@/lib/email";
+import { isParticipanteCpf } from "@/lib/participantes";
 import { candidaturaSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,17 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message ?? "Dados inválidos";
       return NextResponse.json({ error: firstError }, { status: 400 });
+    }
+
+    if (parsed.data.tipoPerfil === "aluno" && !isParticipanteCpf(parsed.data.cpf)) {
+      return NextResponse.json(
+        {
+          error:
+            "CPF não encontrado na base de alunos AMET. Selecione “Não sou aluno AMET” ou verifique o CPF.",
+          code: "CPF_NOT_IN_BASE",
+        },
+        { status: 400 },
+      );
     }
 
     const result = createCandidatura(parsed.data);
