@@ -2,10 +2,12 @@ import { and, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { LessonAskAi } from "@/components/ava/LessonAskAi";
 import { LessonPlayer } from "@/components/ava/LessonPlayer";
 import { userCanAccessClass } from "@/lib/ava/access";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
+import { avaLog, errorMessage } from "@/lib/ava/observability";
 import { canManageClass } from "@/lib/ava/permissions";
 import { lessonProgress, lessons } from "@/lib/ava/schema";
 import { createReadUrl } from "@/lib/ava/storage";
@@ -53,7 +55,10 @@ export default async function LessonPage({ params }: PageProps) {
     try {
       videoUrl = await createReadUrl(lesson.storageKey);
     } catch (error) {
-      console.error("[ava-lesson-page] storage:", error);
+      avaLog.error("lesson.signed_url_failed", {
+        lessonId,
+        message: errorMessage(error),
+      });
     }
   }
 
@@ -86,6 +91,7 @@ export default async function LessonPage({ params }: PageProps) {
           session.user.role === "aluno" || session.user.role === "admin"
         }
       />
+      <LessonAskAi lessonId={lesson.id} />
     </div>
   );
 }

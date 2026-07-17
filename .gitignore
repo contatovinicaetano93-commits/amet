@@ -46,3 +46,6 @@ next-env.d.ts
 # brand kit downloads (fonte oficial fica em src/fonts)
 /brand-assets/
 .claude/
+
+# scratch nested clone attempts
+/amei-ava/

@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 
 import { requireRole } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
+import { jsonError } from "@/lib/ava/http";
 import { sendAvaInviteEmail } from "@/lib/ava/invite-email";
+import { avaLog } from "@/lib/ava/observability";
+import { clientKey, rateLimit } from "@/lib/ava/rate-limit";
 import { invites, users } from "@/lib/ava/schema";
 import { inviteCreateSchema } from "@/lib/ava/schemas";
 import { createInviteToken, hashToken } from "@/lib/ava/tokens";
@@ -36,6 +39,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
+  const limited = rateLimit({
+    key: clientKey(request, `invite:${session.user.id}`),
+    limit: 30,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limited.ok) {
+    return jsonError("Muitos convites em pouco tempo. Aguarde e tente de novo.", {
+      status: 429,
+      event: "invite.rate_limited",
+    });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = inviteCreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -44,6 +59,11 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  avaLog.info("invite.create_requested", {
+    role: parsed.data.role,
+    adminId: session.user.id,
+  });
 
   const db = getDb();
   const [existingUser] = await db

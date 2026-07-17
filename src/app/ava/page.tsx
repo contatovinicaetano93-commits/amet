@@ -1,12 +1,20 @@
+import { asc, count, eq, isNull } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AdminOnboarding } from "@/components/ava/AdminOnboarding";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
+import { avaLog, errorMessage } from "@/lib/ava/observability";
 import { roleLabel } from "@/lib/ava/permissions";
-import { classes, enrollments, subjects, users } from "@/lib/ava/schema";
-import { asc, eq } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import {
+  classes,
+  enrollments,
+  invites,
+  subjects,
+  users,
+} from "@/lib/ava/schema";
 
 export default async function AvaHomePage() {
   const session = await auth();
@@ -20,6 +28,11 @@ export default async function AvaHomePage() {
     subjectName: string;
     teacherName: string | null;
   }> = [];
+  let loadError = false;
+  let subjectsCount = 0;
+  let classesCount = 0;
+  let usersCount = 0;
+  let invitesPendingCount = 0;
 
   try {
     const db = getDb();
@@ -37,6 +50,19 @@ export default async function AvaHomePage() {
         .innerJoin(subjects, eq(subjects.id, classes.subjectId))
         .leftJoin(teacher, eq(teacher.id, classes.teacherId))
         .orderBy(asc(subjects.name), asc(classes.name));
+
+      const [subjectStats] = await db.select({ value: count() }).from(subjects);
+      const [classStats] = await db.select({ value: count() }).from(classes);
+      const [userStats] = await db.select({ value: count() }).from(users);
+      const [inviteStats] = await db
+        .select({ value: count() })
+        .from(invites)
+        .where(isNull(invites.usedAt));
+
+      subjectsCount = subjectStats?.value ?? 0;
+      classesCount = classStats?.value ?? 0;
+      usersCount = userStats?.value ?? 0;
+      invitesPendingCount = inviteStats?.value ?? 0;
     } else if (session.user.role === "professor") {
       classRows = await db
         .select({
@@ -66,8 +92,28 @@ export default async function AvaHomePage() {
         .orderBy(asc(subjects.name), asc(classes.name));
     }
   } catch (error) {
-    console.error("[ava-home] falha ao carregar turmas:", error);
+    loadError = true;
+    avaLog.error("home.load_failed", { message: errorMessage(error) });
   }
+
+  const emptyCopy =
+    session.user.role === "admin"
+      ? {
+          title: "Nenhuma turma ainda",
+          body: "Use o checklist abaixo e o painel admin para criar matéria, turma e convidar pessoas.",
+          cta: { href: "/ava/admin", label: "Abrir painel admin" },
+        }
+      : session.user.role === "professor"
+        ? {
+            title: "Você ainda não tem turmas",
+            body: "Quando o admin te atribuir a uma turma, ela aparece aqui para você publicar aulas.",
+            cta: null,
+          }
+        : {
+            title: "Nenhuma turma matriculada",
+            body: "Assim que o admin te matricular, suas turmas e vídeo-aulas aparecem neste espaço.",
+            cta: null,
+          };
 
   return (
     <div className="space-y-8">
@@ -92,12 +138,39 @@ export default async function AvaHomePage() {
         ) : null}
       </section>
 
+      {session.user.role === "admin" ? (
+        <AdminOnboarding
+          subjectsCount={subjectsCount}
+          classesCount={classesCount}
+          usersCount={usersCount}
+          invitesPendingCount={invitesPendingCount}
+        />
+      ) : null}
+
+      {loadError ? (
+        <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Não foi possível carregar suas turmas agora. Atualize a página em
+          instantes.
+        </p>
+      ) : null}
+
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-amet-indigo">Suas turmas</h2>
         {classRows.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-amet-indigo/20 bg-white/70 px-4 py-8 text-amet-indigo/70">
-            Nenhuma turma disponível ainda.
-          </p>
+          <div className="rounded-lg border border-dashed border-amet-indigo/20 bg-white/70 px-5 py-8">
+            <h3 className="text-lg font-semibold text-amet-indigo">
+              {emptyCopy.title}
+            </h3>
+            <p className="mt-2 max-w-xl text-amet-indigo/70">{emptyCopy.body}</p>
+            {emptyCopy.cta ? (
+              <Link
+                href={emptyCopy.cta.href}
+                className="mt-4 inline-flex rounded-md border border-amet-indigo/15 px-3 py-2 text-sm font-medium text-amet-indigo hover:bg-white"
+              >
+                {emptyCopy.cta.label}
+              </Link>
+            ) : null}
+          </div>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {classRows.map((classRow) => (
