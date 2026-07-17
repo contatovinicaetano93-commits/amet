@@ -24,7 +24,7 @@ export async function loginAction(
   const headerStore = await headers();
   const forwarded = headerStore.get("x-forwarded-for");
   const ip = forwarded?.split(",")[0]?.trim() || "unknown";
-  const limited = rateLimit({
+  const limited = await rateLimit({
     key: `login:${ip}:${parsed.data.email}`,
     limit: 10,
     windowMs: 15 * 60 * 1000,

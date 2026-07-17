@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
-  const limited = rateLimit({
+  const limited = await rateLimit({
     key: clientKey(request, `invite:${session.user.id}`),
     limit: 30,
     windowMs: 60 * 60 * 1000,

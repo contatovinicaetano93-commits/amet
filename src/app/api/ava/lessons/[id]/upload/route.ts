@@ -7,10 +7,13 @@ import { getDb } from "@/lib/ava/db";
 import { canManageClass } from "@/lib/ava/permissions";
 import { lessons } from "@/lib/ava/schema";
 import { uploadIntentSchema } from "@/lib/ava/schemas";
+import { captureAvaException, errorMessage } from "@/lib/ava/observability";
 import {
   buildLessonStorageKey,
   createUploadUrl,
   extensionForContentType,
+  isR2Configured,
+  missingR2EnvKeys,
 } from "@/lib/ava/storage";
 
 type Params = { params: Promise<{ id: string }> };
@@ -66,6 +69,16 @@ export async function POST(request: Request, { params }: Params) {
     extension,
   );
 
+  if (!isR2Configured()) {
+    return NextResponse.json(
+      {
+        error: `Cloudflare R2 não configurado. Faltam: ${missingR2EnvKeys().join(", ")}`,
+        missing: missingR2EnvKeys(),
+      },
+      { status: 503 },
+    );
+  }
+
   let uploadUrl: string;
   try {
     uploadUrl = await createUploadUrl({
@@ -74,9 +87,13 @@ export async function POST(request: Request, { params }: Params) {
       contentLength: parsed.data.contentLength,
     });
   } catch (error) {
-    console.error("[ava-upload] falha ao gerar URL:", error);
+    captureAvaException(error, { event: "upload.presign_failed", lessonId: id });
     return NextResponse.json(
-      { error: "Storage de vídeo não configurado." },
+      {
+        error:
+          errorMessage(error) ||
+          "Não foi possível preparar o upload. Verifique o R2 e o CORS do bucket.",
+      },
       { status: 503 },
     );
   }

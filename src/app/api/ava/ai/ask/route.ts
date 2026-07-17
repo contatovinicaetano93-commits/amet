@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return jsonError("Não autorizado.", { status: 401, event: "ai.unauthorized" });
   }
 
-  const limited = rateLimit({
+  const limited = await rateLimit({
     key: clientKey(request, `ai-ask:${session.user.id}`),
     limit: 20,
     windowMs: 60 * 60 * 1000,

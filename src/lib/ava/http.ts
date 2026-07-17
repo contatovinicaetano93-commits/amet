@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { avaLog, errorMessage } from "@/lib/ava/observability";
+import { captureAvaException, avaLog, errorMessage } from "@/lib/ava/observability";
 
 export function jsonOk<T extends Record<string, unknown>>(
   data: T,
@@ -26,7 +26,7 @@ export function jsonError(
 }
 
 export function jsonServerError(event: string, error: unknown) {
-  avaLog.error(event, { message: errorMessage(error) });
+  captureAvaException(error, { event, message: errorMessage(error) });
   return NextResponse.json(
     { error: "Falha interna. Tente novamente em instantes." },
     { status: 500 },

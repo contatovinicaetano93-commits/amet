@@ -6,6 +6,7 @@ import { AdminPanel } from "@/components/ava/AdminPanel";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
 import { classes, invites, subjects, users } from "@/lib/ava/schema";
+import { isR2Configured, missingR2EnvKeys } from "@/lib/ava/storage";
 
 export default async function AvaAdminPage() {
   const session = await auth();
@@ -71,6 +72,8 @@ export default async function AvaAdminPage() {
         }))}
         initialSubjects={subjectRows}
         initialClasses={classRows}
+        storageConfigured={isR2Configured()}
+        missingStorageKeys={missingR2EnvKeys()}
       />
     </div>
   );

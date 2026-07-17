@@ -38,6 +38,8 @@ type AdminPanelProps = {
   initialInvites: InviteRow[];
   initialSubjects: SubjectRow[];
   initialClasses: ClassRow[];
+  storageConfigured: boolean;
+  missingStorageKeys: string[];
 };
 
 export function AdminPanel({
@@ -45,6 +47,8 @@ export function AdminPanel({
   initialInvites,
   initialSubjects,
   initialClasses,
+  storageConfigured,
+  missingStorageKeys,
 }: AdminPanelProps) {
   const router = useRouter();
   const [users] = useState(initialUsers);
@@ -197,6 +201,17 @@ export function AdminPanel({
 
   return (
     <div className="space-y-10">
+      {!storageConfigured ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Upload de vídeo ainda não está pronto. Configure no Vercel:{" "}
+          <code className="font-mono text-xs">
+            {missingStorageKeys.join(", ") || "R2_*"}
+          </code>
+          . Depois, no bucket R2, libere CORS (PUT/GET) para{" "}
+          <code className="font-mono text-xs">https://ametsaude.com.br</code>.
+        </div>
+      ) : null}
+
       {(message || error) && (
         <div
           className={`rounded-md px-4 py-3 text-sm ${
