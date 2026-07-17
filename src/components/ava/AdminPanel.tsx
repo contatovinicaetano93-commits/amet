@@ -61,42 +61,57 @@ export function AdminPanel({
 
   function createInvite(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     startTransition(async () => {
       setMessage("");
       setError("");
-      const response = await fetch("/api/ava/invites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.get("email"),
-          role: form.get("role"),
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(data.error ?? "Falha ao criar convite.");
-        return;
+      try {
+        const response = await fetch("/api/ava/invites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: form.get("email"),
+            role: form.get("role"),
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao criar convite.");
+          return;
+        }
+
+        const parts = [
+          data.emailSent
+            ? "Convite criado e e-mail enviado."
+            : "Convite criado.",
+          data.warning ? String(data.warning) : "",
+          data.inviteUrl
+            ? `Envie este link ao professor/aluno: ${data.inviteUrl}`
+            : "",
+        ].filter(Boolean);
+
+        setMessage(parts.join(" "));
+        if (data.warning) {
+          setError(String(data.warning));
+        }
+        if (data.invite) {
+          setInvites((current) => [
+            {
+              id: data.invite.id,
+              email: data.invite.email,
+              role: data.invite.role,
+              expiresAt: data.invite.expiresAt,
+              usedAt: null,
+            },
+            ...current,
+          ]);
+        }
+        formEl.reset();
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao criar convite. Tente novamente.");
       }
-      setMessage(
-        data.inviteUrl
-          ? `Convite criado. Link: ${data.inviteUrl}`
-          : "Convite enviado por e-mail.",
-      );
-      if (data.invite) {
-        setInvites((current) => [
-          {
-            id: data.invite.id,
-            email: data.invite.email,
-            role: data.invite.role,
-            expiresAt: data.invite.expiresAt,
-            usedAt: null,
-          },
-          ...current,
-        ]);
-      }
-      event.currentTarget.reset();
-      router.refresh();
     });
   }
 

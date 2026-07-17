@@ -41,7 +41,16 @@ export async function sendAvaInviteEmail(params: {
 
   if (error) {
     console.error("[ava-invite] Falha ao enviar:", error);
-    return { ok: false, error: "Não foi possível enviar o e-mail de convite." };
+    const detail =
+      typeof error === "object" && error && "message" in error
+        ? String((error as { message?: string }).message)
+        : "";
+    return {
+      ok: false,
+      error: detail
+        ? `E-mail não enviado: ${detail}. Use o link do convite abaixo.`
+        : "E-mail não enviado. Use o link do convite abaixo.",
+    };
   }
 
   return { ok: true };
