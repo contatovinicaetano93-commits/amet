@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AMET — site + AVA
+
+Site institucional da AMET Saúde & Estética e MVP do Ambiente Virtual de Aprendizagem (`/ava`).
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+cp env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## AVA (MVP)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Rotas principais:
 
-## Learn More
+- `/ava/login` — login
+- `/ava/convite/[token]` — ativação por convite
+- `/ava` — turmas do usuário
+- `/ava/admin` — painel admin (convites, matérias, turmas, matrículas)
+- `/ava/admin/turmas/[id]` — aulas, upload de vídeo e progresso
 
-To learn more about Next.js, take a look at the following resources:
+### Setup do banco e storage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Crie um banco Neon e preencha `DATABASE_URL`
+2. Gere `AUTH_SECRET` (`openssl rand -base64 32`)
+3. Defina `AVA_BOOTSTRAP_ADMIN_EMAIL` e `AVA_BOOTSTRAP_ADMIN_PASSWORD` para o primeiro admin
+4. Configure Cloudflare R2 (`R2_*`) para upload de vídeo-aulas
+5. Aplique o schema:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run db:push
+# ou
+npm run db:migrate
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Fluxo: admin convida → usuário define senha → admin cria matéria/turma/matrícula → professor/admin sobe vídeo → aluno assiste e marca concluído.
