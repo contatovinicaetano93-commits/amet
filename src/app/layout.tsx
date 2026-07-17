@@ -2,12 +2,6 @@ import type { Metadata } from "next";
 import { Fraunces } from "next/font/google";
 import localFont from "next/font/local";
 
-import { ScrollProgress } from "@/components/ScrollProgress";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SmoothScroll } from "@/components/SmoothScroll";
-import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-
 import "./globals.css";
 
 const leagueSpartan = localFont({
@@ -42,12 +36,7 @@ export default function RootLayout({
       className={`${leagueSpartan.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-amet-paper font-sans text-amet-indigo">
-        <SmoothScroll />
-        <ScrollProgress />
-        <SiteHeader />
         {children}
-        <SiteFooter />
-        <WhatsAppFloat />
       </body>
     </html>
   );
