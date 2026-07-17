@@ -37,11 +37,13 @@ body {
   border-left-color: color-mix(in srgb, var(--amet-indigo) 20%, transparent);
   background: var(--amet-white);
   border-radius: 6px;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .amet-card:hover {
   background: color-mix(in srgb, var(--amet-indigo) 2%, var(--amet-white));
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--amet-indigo) 35%, transparent);
 }
 
 .amet-card-purple {
@@ -214,7 +216,7 @@ body {
   top: -12%;
   left: 6%;
   background: radial-gradient(circle, var(--amet-purple) 0%, transparent 70%);
-  transform: translate3d(calc(var(--mx) * 40px), calc(var(--my) * 40px), 0);
+  transform: translate3d(calc(var(--mx) * 64px), calc(var(--my) * 64px), 0);
 }
 
 .amet-hero-glow-2 {
@@ -223,14 +225,14 @@ body {
   bottom: -18%;
   right: 2%;
   background: radial-gradient(circle, var(--amet-blue) 0%, transparent 70%);
-  transform: translate3d(calc(var(--mx) * -55px), calc(var(--my) * -55px), 0);
+  transform: translate3d(calc(var(--mx) * -85px), calc(var(--my) * -85px), 0);
   opacity: 0.22;
 }
 
 .amet-hero-inner {
   max-width: 56rem;
   margin: 0 auto;
-  transform: translate3d(calc(var(--mx) * -14px), calc(var(--my) * -10px), 0);
+  transform: translate3d(calc(var(--mx) * -22px), calc(var(--my) * -16px), 0);
   transition: transform 0.35s ease-out;
   will-change: transform;
 }
@@ -281,6 +283,29 @@ body {
     transform: none;
     transition: none;
     animation: none;
+  }
+}
+
+/* ── Botão flutuante do WhatsApp: respiração sutil ── */
+@media (prefers-reduced-motion: no-preference) {
+  .amet-whatsapp-float {
+    animation: amet-whatsapp-breathe 2.6s ease-in-out infinite;
+  }
+
+  .amet-whatsapp-float:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes amet-whatsapp-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 10px 25px -5px color-mix(in srgb, var(--amet-blue) 40%, transparent);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 10px 32px -4px color-mix(in srgb, var(--amet-blue) 55%, transparent);
   }
 }
 

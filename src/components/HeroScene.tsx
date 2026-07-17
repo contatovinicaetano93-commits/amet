@@ -28,7 +28,7 @@ export function HeroScene({ children }: HeroSceneProps) {
     if (!hero || !photoPanel) return;
 
     const tween = gsap.to(photoPanel, {
-      yPercent: 18,
+      yPercent: 28,
       ease: "none",
       scrollTrigger: {
         trigger: hero,
@@ -80,8 +80,8 @@ export function HeroScene({ children }: HeroSceneProps) {
       const my = (lastY - rect.top) / rect.height - 0.5;
       hero.style.setProperty("--mx", mx.toFixed(3));
       hero.style.setProperty("--my", my.toFixed(3));
-      hero.style.setProperty("--rx", `${(mx * 6).toFixed(2)}deg`);
-      hero.style.setProperty("--ry", `${(my * -6).toFixed(2)}deg`);
+      hero.style.setProperty("--rx", `${(mx * 10).toFixed(2)}deg`);
+      hero.style.setProperty("--ry", `${(my * -10).toFixed(2)}deg`);
     };
 
     const handleMove = (event: MouseEvent) => {

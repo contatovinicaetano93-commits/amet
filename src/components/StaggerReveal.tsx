@@ -25,14 +25,15 @@ export function StaggerReveal({ children, className }: StaggerRevealProps) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const targets = Array.from(el.children);
-    gsap.set(targets, { opacity: 0, y: 24 });
+    gsap.set(targets, { opacity: 0, y: 40, scale: 0.94 });
 
     const tween = gsap.to(targets, {
       opacity: 1,
       y: 0,
-      duration: 0.6,
+      scale: 1,
+      duration: 0.7,
       ease: "power2.out",
-      stagger: 0.12,
+      stagger: 0.14,
       scrollTrigger: {
         trigger: el,
         start: "top 85%",
