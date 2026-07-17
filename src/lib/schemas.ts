@@ -18,6 +18,10 @@ export const personalDataSchema = z.object({
   email: z.string().trim().email("E-mail inválido").max(120),
 });
 
+export const cpfLookupSchema = z.object({
+  cpf: z.string().trim().refine(isValidCpf, "CPF inválido").transform(stripDigits),
+});
+
 export const candidaturaSchema = z
   .object({
     tipoPerfil: z.enum(TIPOS_PERFIL, { message: "Selecione se você é aluno ou não aluno" }),

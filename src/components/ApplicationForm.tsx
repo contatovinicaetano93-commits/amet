@@ -14,7 +14,7 @@ import {
   type UnidadeCode,
 } from "@/lib/constants";
 import { candidaturaSchema, personalDataSchema } from "@/lib/schemas";
-import { formatCpf, formatPhone } from "@/lib/validators";
+import { formatCpf, formatPhone, isValidCpf, stripDigits } from "@/lib/validators";
 
 type FormState = {
   tipoPerfil: TipoPerfil | "";
@@ -49,6 +49,8 @@ export function ApplicationForm() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [cpfNotice, setCpfNotice] = useState("");
+  const [checkingCpf, setCheckingCpf] = useState(false);
 
   const isAluno = form.tipoPerfil === "aluno";
   const enforceLimit = isAluno;
@@ -109,6 +111,49 @@ export function ApplicationForm() {
         : [...c.areasInteresse, code],
     }));
     setErrors((c) => { const n = { ...c }; delete n.areasInteresse; return n; });
+  }
+
+  async function verifyAlunoCpf(): Promise<boolean> {
+    if (form.tipoPerfil !== "aluno") {
+      setCpfNotice("");
+      return true;
+    }
+
+    if (!isValidCpf(form.cpf)) {
+      setErrors({ cpf: "CPF inválido" });
+      return false;
+    }
+
+    setCheckingCpf(true);
+    setCpfNotice("");
+    try {
+      const response = await fetch("/api/participantes/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cpf: stripDigits(form.cpf) }),
+      });
+      const data = (await response.json()) as { error?: string; found?: boolean };
+
+      if (!response.ok) {
+        setErrors({ cpf: data.error ?? "Não foi possível verificar o CPF." });
+        return false;
+      }
+
+      if (!data.found) {
+        updateField("tipoPerfil", "nao_aluno");
+        setCpfNotice(
+          "CPF não encontrado na base de alunos AMET. Continuaremos no fluxo de não aluno.",
+        );
+      } else {
+        setCpfNotice("");
+      }
+      return true;
+    } catch {
+      setErrors({ cpf: "Erro de conexão ao verificar o CPF." });
+      return false;
+    } finally {
+      setCheckingCpf(false);
+    }
   }
 
   function validateStep(s: number): boolean {
@@ -269,8 +314,19 @@ export function ApplicationForm() {
               <input value={form.rgm} onChange={(e) => updateField("rgm", e.target.value)} className={inputClass(errors.rgm)} />
             </Field>
             <Field label="CPF" error={errors.cpf}>
-              <input value={form.cpf} onChange={(e) => updateField("cpf", formatCpf(e.target.value))} className={inputClass(errors.cpf)} inputMode="numeric" />
+              <input
+                value={form.cpf}
+                onChange={(e) => {
+                  updateField("cpf", formatCpf(e.target.value));
+                  setCpfNotice("");
+                }}
+                className={inputClass(errors.cpf)}
+                inputMode="numeric"
+              />
             </Field>
+            {cpfNotice && (
+              <p className="sm:col-span-2 text-sm text-amet-indigo/70">{cpfNotice}</p>
+            )}
             <Field label="Telefone / WhatsApp" error={errors.telefone}>
               <input value={form.telefone} onChange={(e) => updateField("telefone", formatPhone(e.target.value))} className={inputClass(errors.telefone)} inputMode="tel" />
             </Field>
@@ -370,8 +426,19 @@ export function ApplicationForm() {
           </button>
         ) : <span />}
         {step < 5 ? (
-          <button type="button" onClick={() => { if (validateStep(step)) setStep((s) => s + 1); }} className="rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-purple">
-            Continuar
+          <button
+            type="button"
+            disabled={checkingCpf}
+            onClick={() => {
+              void (async () => {
+                if (!validateStep(step)) return;
+                if (step === 2 && !(await verifyAlunoCpf())) return;
+                setStep((s) => s + 1);
+              })();
+            }}
+            className="rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-purple disabled:opacity-60"
+          >
+            {checkingCpf ? "Verificando CPF..." : "Continuar"}
           </button>
         ) : (
           <button type="button" onClick={() => void handleSubmit()} disabled={submitting} className="rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-blue disabled:opacity-60">

@@ -43,6 +43,11 @@ next-env.d.ts
 # local database
 /data/candidaturas.json
 
+# planilha-fonte com PII (só CPFs vão em participantes.json)
+/data/source/*.xlsx
+/data/source/*.xls
+/data/source/*.csv
+
 # brand kit downloads (fonte oficial fica em src/fonts)
 /brand-assets/
 .claude/
