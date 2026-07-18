@@ -156,11 +156,16 @@ export async function PATCH(request: Request, { params }: Params) {
     );
   }
 
-  if (parsed.data.teacherId) {
+  const nextTeacherId =
+    parsed.data.teacherId === undefined
+      ? existing.teacherId
+      : parsed.data.teacherId;
+
+  if (nextTeacherId) {
     const [teacher] = await db
-      .select({ id: users.id, role: users.role })
+      .select({ id: users.id, role: users.role, name: users.name })
       .from(users)
-      .where(eq(users.id, parsed.data.teacherId))
+      .where(eq(users.id, nextTeacherId))
       .limit(1);
 
     if (!teacher || (teacher.role !== "professor" && teacher.role !== "admin")) {
@@ -173,15 +178,34 @@ export async function PATCH(request: Request, { params }: Params) {
     .set({
       name: parsed.data.name ?? existing.name,
       shift: parsed.data.shift ?? existing.shift,
-      teacherId:
-        parsed.data.teacherId === undefined
-          ? existing.teacherId
-          : parsed.data.teacherId,
+      teacherId: nextTeacherId,
     })
     .where(eq(classes.id, id))
     .returning();
 
-  return NextResponse.json({ class: updated });
+  let teacherName: string | null = null;
+  if (updated.teacherId) {
+    const [teacher] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, updated.teacherId))
+      .limit(1);
+    teacherName = teacher?.name ?? null;
+  }
+
+  avaLog.info("class.updated", {
+    classId: updated.id,
+    teacherId: updated.teacherId,
+    adminId: session.user.id,
+  });
+
+  return NextResponse.json({
+    class: {
+      ...updated,
+      subjectName: existing.subjectName,
+      teacherName,
+    },
+  });
 }
 
 export async function DELETE(_request: Request, { params }: Params) {

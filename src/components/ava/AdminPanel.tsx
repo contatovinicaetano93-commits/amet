@@ -9,8 +9,8 @@ import { roleLabel } from "@/lib/ava/permissions";
 import type { UserRole } from "@/lib/ava/schema";
 import {
   SHIFT_GUIDE,
-  SHIFTS,
   allowedShiftsForSubject,
+  shiftCodes,
   shiftLabel,
   type ShiftCode,
 } from "@/lib/ava/shifts";
@@ -77,6 +77,10 @@ export function AdminPanel({
   );
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedShift, setSelectedShift] = useState<ShiftCode | "">("");
+  const [editingClassId, setEditingClassId] = useState<string | null>(null);
+  const [editClassName, setEditClassName] = useState("");
+  const [editClassShift, setEditClassShift] = useState<ShiftCode | "">("");
+  const [editClassTeacherId, setEditClassTeacherId] = useState("");
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -394,6 +398,94 @@ export function AdminPanel({
     });
   }
 
+  function startEditClass(classRow: ClassRow) {
+    setEditingClassId(classRow.id);
+    setEditClassName(classRow.name);
+    setEditClassShift(
+      classRow.shift &&
+        (shiftCodes as readonly string[]).includes(classRow.shift)
+        ? (classRow.shift as ShiftCode)
+        : "",
+    );
+    setEditClassTeacherId(classRow.teacherId ?? "");
+    setMessage("");
+    setError("");
+  }
+
+  function cancelEditClass() {
+    setEditingClassId(null);
+    setEditClassName("");
+    setEditClassShift("");
+    setEditClassTeacherId("");
+  }
+
+  function saveClassEdit(classRow: ClassRow) {
+    const name = editClassName.trim();
+    if (name.length < 2) {
+      setError("Informe um nome válido para a turma.");
+      return;
+    }
+    if (!editClassShift) {
+      setError("Selecione o turno da turma.");
+      return;
+    }
+    const allowed = allowedShiftsForSubject(classRow.subjectName);
+    if (!allowed.includes(editClassShift)) {
+      setError("Turno inválido para esta matéria.");
+      return;
+    }
+
+    startTransition(async () => {
+      setMessage("");
+      setError("");
+      try {
+        const response = await fetch(`/api/ava/classes/${classRow.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            shift: editClassShift,
+            teacherId: editClassTeacherId || null,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao atualizar turma.");
+          return;
+        }
+
+        const teacher =
+          users.find((item) => item.id === (data.class?.teacherId ?? null)) ??
+          null;
+        setClasses((current) =>
+          current.map((item) =>
+            item.id === classRow.id
+              ? {
+                  ...item,
+                  name: data.class?.name ?? name,
+                  shift: data.class?.shift ?? editClassShift,
+                  teacherId: data.class?.teacherId ?? null,
+                  teacherName:
+                    data.class?.teacherName ?? teacher?.name ?? null,
+                }
+              : item,
+          ),
+        );
+        cancelEditClass();
+        const assignedName =
+          data.class?.teacherName ?? teacher?.name ?? null;
+        setMessage(
+          assignedName
+            ? `Turma atualizada. Ela passa a aparecer no painel de ${assignedName}.`
+            : "Turma atualizada sem professor atribuído.",
+        );
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao atualizar turma.");
+      }
+    });
+  }
+
   function deleteClass(classRow: ClassRow) {
     if (
       !window.confirm(
@@ -417,6 +509,7 @@ export function AdminPanel({
         setClasses((current) =>
           current.filter((item) => item.id !== classRow.id),
         );
+        if (editingClassId === classRow.id) cancelEditClass();
         setMessage(
           `Turma "${classRow.subjectName} — ${classRow.name}" removida.`,
         );
@@ -892,7 +985,8 @@ export function AdminPanel({
         <div className="mb-3 space-y-1">
           <h2 className="text-lg font-semibold">Turmas</h2>
           <p className="text-sm text-amet-indigo/65">
-            Como admin você pode criar, editar aulas e remover turmas inteiras.
+            Edite nome, turno e professor. Ao atribuir um professor, a turma
+            aparece automaticamente no painel dele.
           </p>
         </div>
         {classes.length === 0 ? (
@@ -901,45 +995,148 @@ export function AdminPanel({
           </p>
         ) : null}
         <ul className="space-y-3 text-sm">
-          {classes.map((classRow) => (
-            <li
-              key={classRow.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amet-indigo/10 bg-amet-paper/40 px-3 py-3"
-            >
-              <span>
-                {classRow.subjectName} — {classRow.name}
-                <span className="block text-amet-indigo/55">
-                  {shiftLabel(classRow.shift) ?? "Sem turno"}
-                  {" · "}
-                  {classRow.teacherName
-                    ? `Prof. ${classRow.teacherName}`
-                    : "Sem professor"}
-                </span>
-              </span>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href={classManagePath(classRow.id)}
-                  className="rounded-md bg-amet-indigo px-3 py-1.5 text-sm font-semibold text-white hover:bg-amet-blue"
-                >
-                  Editar aulas
-                </Link>
-                <Link
-                  href={`/ava/turmas/${classRow.id}`}
-                  className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm font-medium text-amet-indigo hover:bg-white"
-                >
-                  Ver turma
-                </Link>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => deleteClass(classRow)}
-                  className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
-                >
-                  Remover
-                </button>
-              </div>
-            </li>
-          ))}
+          {classes.map((classRow) => {
+            const editing = editingClassId === classRow.id;
+            const editShifts = allowedShiftsForSubject(classRow.subjectName);
+            return (
+              <li
+                key={classRow.id}
+                className="rounded-md border border-amet-indigo/10 bg-amet-paper/40 px-3 py-3"
+              >
+                {editing ? (
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amet-indigo/55">
+                      Editando · {classRow.subjectName}
+                    </p>
+                    <label className="block space-y-1.5">
+                      <span className="text-sm font-medium text-amet-indigo">
+                        Nome da turma
+                      </span>
+                      <input
+                        value={editClassName}
+                        onChange={(event) =>
+                          setEditClassName(event.target.value)
+                        }
+                        required
+                        minLength={2}
+                        maxLength={120}
+                        className="ava-input"
+                      />
+                    </label>
+                    <div className="space-y-1.5">
+                      <span className="text-sm font-medium text-amet-indigo">
+                        Turno
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {editShifts.map((shift) => (
+                          <button
+                            key={shift}
+                            type="button"
+                            onClick={() => setEditClassShift(shift)}
+                            className={`rounded-md border px-3 py-2 text-left text-xs font-medium ${
+                              editClassShift === shift
+                                ? "border-amet-indigo bg-amet-indigo text-white"
+                                : "border-amet-indigo/15 bg-white text-amet-indigo"
+                            }`}
+                          >
+                            {shiftLabel(shift)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <label className="block space-y-1.5">
+                      <span className="text-sm font-medium text-amet-indigo">
+                        Professor
+                      </span>
+                      <select
+                        value={editClassTeacherId}
+                        onChange={(event) =>
+                          setEditClassTeacherId(event.target.value)
+                        }
+                        className="ava-input"
+                      >
+                        <option value="">Sem professor</option>
+                        {teachers.map((teacher) => (
+                          <option key={teacher.id} value={teacher.id}>
+                            {teacher.name} ({teacher.email})
+                            {teacher.role === "admin" ? " · admin" : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {teachers.filter((teacher) => teacher.role === "professor")
+                        .length === 0 ? (
+                        <p className="text-xs text-amet-indigo/60">
+                          Nenhum professor ativo ainda. Convide e peça para
+                          ativar a conta — ou atribua um admin temporariamente.
+                        </p>
+                      ) : null}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => saveClassEdit(classRow)}
+                        className="rounded-md bg-amet-indigo px-3 py-1.5 text-sm font-semibold text-white hover:bg-amet-blue disabled:opacity-60"
+                      >
+                        {pending ? "Salvando…" : "Salvar turma"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={cancelEditClass}
+                        className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm font-medium text-amet-indigo hover:bg-white disabled:opacity-60"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span>
+                      {classRow.subjectName} — {classRow.name}
+                      <span className="block text-amet-indigo/55">
+                        {shiftLabel(classRow.shift) ?? "Sem turno"}
+                        {" · "}
+                        {classRow.teacherName
+                          ? `Prof. ${classRow.teacherName}`
+                          : "Sem professor"}
+                      </span>
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => startEditClass(classRow)}
+                        className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm font-medium text-amet-indigo hover:bg-white disabled:opacity-60"
+                      >
+                        Editar turma
+                      </button>
+                      <Link
+                        href={classManagePath(classRow.id)}
+                        className="rounded-md bg-amet-indigo px-3 py-1.5 text-sm font-semibold text-white hover:bg-amet-blue"
+                      >
+                        Editar aulas
+                      </Link>
+                      <Link
+                        href={`/ava/turmas/${classRow.id}`}
+                        className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm font-medium text-amet-indigo hover:bg-white"
+                      >
+                        Ver turma
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => deleteClass(classRow)}
+                        className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
     </div>
