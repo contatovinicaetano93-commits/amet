@@ -204,6 +204,41 @@ export function AdminPanel({
     });
   }
 
+  function cancelInvite(invite: InviteRow) {
+    if (
+      !window.confirm(
+        `Cancelar o convite de ${invite.email}? O link enviado deixa de funcionar.`,
+      )
+    ) {
+      return;
+    }
+    startTransition(async () => {
+      setMessage("");
+      setError("");
+      try {
+        const response = await fetch(`/api/ava/invites/id/${invite.id}`, {
+          method: "DELETE",
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao cancelar convite.");
+          return;
+        }
+        setInvites((current) =>
+          current.filter((item) => item.id !== invite.id),
+        );
+        if (inviteUrl) {
+          setInviteUrl("");
+          setInviteRole(null);
+        }
+        setMessage(`Convite de ${invite.email} cancelado.`);
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao cancelar convite.");
+      }
+    });
+  }
+
   function createSubject(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formEl = event.currentTarget;
@@ -677,7 +712,7 @@ export function AdminPanel({
             {invites.map((invite) => (
               <li
                 key={invite.id}
-                className="flex items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
+                className="flex flex-wrap items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
               >
                 <span>
                   {invite.email}
@@ -685,17 +720,27 @@ export function AdminPanel({
                     {roleLabel(invite.role)}
                   </span>
                 </span>
-                <span className="flex items-center gap-2 text-amet-indigo/70">
+                <span className="flex flex-wrap items-center gap-2 text-amet-indigo/70">
                   {invite.usedAt ? "Usado" : "Pendente"}
                   {!invite.usedAt ? (
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => regenerateInvite(invite)}
-                      className="rounded-md border border-amet-indigo/20 px-2 py-1 text-xs font-medium text-amet-indigo hover:bg-amet-indigo/5 disabled:opacity-60"
-                    >
-                      Gerar novo link
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => regenerateInvite(invite)}
+                        className="rounded-md border border-amet-indigo/20 px-2 py-1 text-xs font-medium text-amet-indigo hover:bg-amet-indigo/5 disabled:opacity-60"
+                      >
+                        Gerar novo link
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => cancelInvite(invite)}
+                        className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+                      >
+                        Cancelar
+                      </button>
+                    </>
                   ) : null}
                 </span>
               </li>
