@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { classManagePath } from "@/lib/ava/navigation";
 import { roleLabel } from "@/lib/ava/permissions";
@@ -79,6 +79,19 @@ export function AdminPanel({
   const [selectedShift, setSelectedShift] = useState<ShiftCode | "">("");
   const [pending, startTransition] = useTransition();
 
+  useEffect(() => {
+    setUsers(initialUsers);
+  }, [initialUsers]);
+  useEffect(() => {
+    setInvites(initialInvites);
+  }, [initialInvites]);
+  useEffect(() => {
+    setSubjects(initialSubjects);
+  }, [initialSubjects]);
+  useEffect(() => {
+    setClasses(initialClasses);
+  }, [initialClasses]);
+
   const selectedSubjectName =
     subjects.find((item) => item.id === selectedSubjectId)?.name ?? "";
   const availableShifts = useMemo(
@@ -87,6 +100,10 @@ export function AdminPanel({
         ? allowedShiftsForSubject(selectedSubjectName)
         : ([] as ShiftCode[]),
     [selectedSubjectName],
+  );
+  const activeEmails = useMemo(
+    () => new Set(users.map((user) => user.email.toLowerCase())),
+    [users],
   );
 
   async function copyInviteUrl(url: string) {
@@ -702,10 +719,22 @@ export function AdminPanel({
               <option value="">Sem professor</option>
               {teachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
-                  {teacher.name}
+                  {teacher.name} ({teacher.email})
+                  {teacher.role === "admin" ? " · admin" : ""}
                 </option>
               ))}
             </select>
+            {teachers.filter((teacher) => teacher.role === "professor")
+              .length === 0 ? (
+              <p className="text-xs text-amet-indigo/60">
+                Nenhum professor com conta ativa. Convide em{" "}
+                <a href="#convidar" className="font-medium text-amet-blue underline">
+                  Convites
+                </a>{" "}
+                e peça para a pessoa abrir o link e ativar a conta — só então
+                ela aparece aqui.
+              </p>
+            ) : null}
           </label>
 
           <button
@@ -808,40 +837,50 @@ export function AdminPanel({
             Pendente: cancela o link. Usado: remove também a conta criada.
           </p>
           <ul className="space-y-2 text-sm">
-            {invites.map((invite) => (
-              <li
-                key={invite.id}
-                className="flex flex-wrap items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
-              >
-                <span>
-                  {invite.email}
-                  <span className="block text-amet-indigo/55">
-                    {roleLabel(invite.role)}
+            {invites.map((invite) => {
+              const hasAccount = activeEmails.has(invite.email.toLowerCase());
+              const statusLabel = !invite.usedAt
+                ? "Pendente"
+                : hasAccount
+                  ? "Usado"
+                  : "Conta removida";
+              return (
+                <li
+                  key={invite.id}
+                  className="flex flex-wrap items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
+                >
+                  <span>
+                    {invite.email}
+                    <span className="block text-amet-indigo/55">
+                      {roleLabel(invite.role)}
+                    </span>
                   </span>
-                </span>
-                <span className="flex flex-wrap items-center gap-2 text-amet-indigo/70">
-                  {invite.usedAt ? "Usado" : "Pendente"}
-                  {!invite.usedAt ? (
+                  <span className="flex flex-wrap items-center gap-2 text-amet-indigo/70">
+                    {statusLabel}
+                    {!invite.usedAt || !hasAccount ? (
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => regenerateInvite(invite)}
+                        className="rounded-md border border-amet-indigo/20 px-2 py-1 text-xs font-medium text-amet-indigo hover:bg-amet-indigo/5 disabled:opacity-60"
+                      >
+                        Gerar novo link
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       disabled={pending}
-                      onClick={() => regenerateInvite(invite)}
-                      className="rounded-md border border-amet-indigo/20 px-2 py-1 text-xs font-medium text-amet-indigo hover:bg-amet-indigo/5 disabled:opacity-60"
+                      onClick={() => cancelInvite(invite)}
+                      className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
                     >
-                      Gerar novo link
+                      {invite.usedAt && hasAccount
+                        ? "Remover acesso"
+                        : "Cancelar"}
                     </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => cancelInvite(invite)}
-                    className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
-                  >
-                    {invite.usedAt ? "Remover acesso" : "Cancelar"}
-                  </button>
-                </span>
-              </li>
-            ))}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </section>

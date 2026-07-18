@@ -54,6 +54,8 @@ export async function DELETE(_request: Request, { params }: Params) {
     }
   }
 
+  // Remove account and any invites for that email so the person can be
+  // re-invited cleanly and no longer appears as an active teacher.
   await db.delete(invites).where(eq(invites.email, user.email));
   await db.delete(users).where(eq(users.id, user.id));
 
