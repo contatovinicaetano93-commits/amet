@@ -746,48 +746,34 @@ export function AdminPanel({
             </select>
           </label>
 
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-amet-indigo">
-              Turno
-            </legend>
-            <input type="hidden" name="shift" value={selectedShift} />
-            {!selectedSubjectId ? (
-              <p className="border border-dashed border-[var(--ava-line-strong)] px-3 py-4 text-sm text-[var(--ava-muted)]">
-                Selecione a matéria para ver os turnos disponíveis.
-              </p>
-            ) : (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {availableShifts.map((code) => {
-                  const info = SHIFTS[code];
-                  const active = selectedShift === code;
-                  return (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => setSelectedShift(code)}
-                      className={`border px-3 py-3 text-left transition ${
-                        active
-                          ? "border-amet-indigo bg-amet-indigo text-white"
-                          : "border-[var(--ava-line-strong)] bg-white/70 text-amet-indigo hover:border-amet-indigo/40"
-                      }`}
-                    >
-                      <span className="block text-sm font-semibold">
-                        {info.label}
-                      </span>
-                      <span
-                        className={`mt-1 block text-xs ${
-                          active ? "text-white/80" : "text-[var(--ava-muted)]"
-                        }`}
-                      >
-                        {info.hours}
-                        {code === "sabado" ? "" : ` · ${info.dayLabel}`}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </fieldset>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">Turno</span>
+            <select
+              name="shift"
+              required
+              className="ava-input"
+              value={selectedShift}
+              disabled={!selectedSubjectId}
+              onChange={(event) =>
+                setSelectedShift((event.target.value || "") as ShiftCode | "")
+              }
+            >
+              <option value="" disabled>
+                {selectedSubjectId
+                  ? "Selecione o turno"
+                  : "Selecione a matéria primeiro"}
+              </option>
+              {availableShifts.map((code) => {
+                const info = SHIFTS[code];
+                return (
+                  <option key={code} value={code}>
+                    {info.label} ({info.hours}
+                    {code === "sabado" ? "" : ` · ${info.dayLabel}`})
+                  </option>
+                );
+              })}
+            </select>
+          </label>
 
           <label className="block space-y-2">
             <span className="text-sm font-medium text-amet-indigo">
@@ -1024,27 +1010,33 @@ export function AdminPanel({
                         className="ava-input"
                       />
                     </label>
-                    <div className="space-y-1.5">
+                    <label className="block space-y-1.5">
                       <span className="text-sm font-medium text-amet-indigo">
                         Turno
                       </span>
-                      <div className="flex flex-wrap gap-2">
-                        {editShifts.map((shift) => (
-                          <button
-                            key={shift}
-                            type="button"
-                            onClick={() => setEditClassShift(shift)}
-                            className={`rounded-md border px-3 py-2 text-left text-xs font-medium ${
-                              editClassShift === shift
-                                ? "border-amet-indigo bg-amet-indigo text-white"
-                                : "border-amet-indigo/15 bg-white text-amet-indigo"
-                            }`}
-                          >
-                            {shiftLabel(shift)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                      <select
+                        className="ava-input"
+                        value={editClassShift}
+                        onChange={(event) =>
+                          setEditClassShift(
+                            (event.target.value || "") as ShiftCode | "",
+                          )
+                        }
+                      >
+                        <option value="" disabled>
+                          Selecione o turno
+                        </option>
+                        {editShifts.map((shift) => {
+                          const info = SHIFTS[shift];
+                          return (
+                            <option key={shift} value={shift}>
+                              {info.label} ({info.hours}
+                              {shift === "sabado" ? "" : ` · ${info.dayLabel}`})
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </label>
                     <label className="block space-y-1.5">
                       <span className="text-sm font-medium text-amet-indigo">
                         Professor
