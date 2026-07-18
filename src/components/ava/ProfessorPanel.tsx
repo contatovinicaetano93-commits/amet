@@ -1,8 +1,10 @@
 import Link from "next/link";
 
+import { DoubtsInbox } from "@/components/ava/DoubtsInbox";
 import { FlowTree } from "@/components/ava/FlowTree";
 import { buildProfessorFlow } from "@/lib/ava/flows";
 import { classManagePath } from "@/lib/ava/navigation";
+import type { OpenDoubt } from "@/lib/ava/ops";
 import { shiftDetail } from "@/lib/ava/shifts";
 
 type ClassRow = {
@@ -18,9 +20,14 @@ type ClassRow = {
 type ProfessorPanelProps = {
   teacherName: string;
   classes: ClassRow[];
+  openDoubts: OpenDoubt[];
 };
 
-export function ProfessorPanel({ teacherName, classes }: ProfessorPanelProps) {
+export function ProfessorPanel({
+  teacherName,
+  classes,
+  openDoubts,
+}: ProfessorPanelProps) {
   const firstName = teacherName.split(" ")[0] || "Professor(a)";
   const firstClass = classes[0] ?? null;
   const lessonsCount = classes.reduce((sum, row) => sum + row.lessonCount, 0);
@@ -51,6 +58,8 @@ export function ProfessorPanel({ teacherName, classes }: ProfessorPanelProps) {
       <div className="ava-fade-in-delay">
         <FlowTree tree={tree} />
       </div>
+
+      <DoubtsInbox doubts={openDoubts} />
 
       <section className="ava-fade-in-delay-2 space-y-5">
         <div className="flex flex-wrap items-end justify-between gap-3">

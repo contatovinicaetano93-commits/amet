@@ -6,6 +6,7 @@ import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
 import { homePathForRole } from "@/lib/ava/navigation";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
+import { listOpenDoubts, type OpenDoubt } from "@/lib/ava/ops";
 import { classes, enrollments, lessons, subjects } from "@/lib/ava/schema";
 
 export default async function ProfessorPage() {
@@ -29,6 +30,7 @@ export default async function ProfessorPage() {
     publishedCount: number;
     studentCount: number;
   }> = [];
+  let openDoubts: OpenDoubt[] = [];
 
   try {
     const db = getDb();
@@ -68,6 +70,11 @@ export default async function ProfessorPage() {
         };
       }),
     );
+
+    openDoubts = await listOpenDoubts({
+      teacherId: session.user.id,
+      limit: 30,
+    });
   } catch (error) {
     avaLog.error("professor.panel_load_failed", {
       message: errorMessage(error),
@@ -78,6 +85,7 @@ export default async function ProfessorPage() {
     <ProfessorPanel
       teacherName={session.user.name ?? "Professor(a)"}
       classes={classRows}
+      openDoubts={openDoubts}
     />
   );
 }

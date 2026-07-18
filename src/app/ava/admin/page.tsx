@@ -4,9 +4,16 @@ import { redirect } from "next/navigation";
 
 import { AdminOnboarding } from "@/components/ava/AdminOnboarding";
 import { AdminPanel } from "@/components/ava/AdminPanel";
+import { OpsSummary } from "@/components/ava/OpsSummary";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
 import { inviteEmailCanDeliverBroadly } from "@/lib/ava/invite-email";
+import {
+  getOpsSnapshot,
+  listOpenDoubts,
+  type OpenDoubt,
+  type OpsSnapshot,
+} from "@/lib/ava/ops";
 import {
   classes,
   enrollments,
@@ -106,6 +113,29 @@ export default async function AvaAdminPage() {
     return a.name.localeCompare(b.name, "pt-BR");
   });
 
+  let snapshot: OpsSnapshot = {
+    professors: 0,
+    students: 0,
+    classes: classRows.length,
+    classesWithoutTeacher: classRows.filter((row) => !row.teacherId).length,
+    enrollments: enrollmentStats?.value ?? 0,
+    publishedLessons: publishedStats?.value ?? 0,
+    pendingInvites: pendingInviteStats?.value ?? 0,
+    openDoubts: 0,
+  };
+  let openDoubts: OpenDoubt[] = [];
+
+  try {
+    const [ops, doubts] = await Promise.all([
+      getOpsSnapshot(),
+      listOpenDoubts({ limit: 12 }),
+    ]);
+    snapshot = ops;
+    openDoubts = doubts;
+  } catch (error) {
+    console.error("[ava-admin] ops snapshot failed:", error);
+  }
+
   return (
     <div className="space-y-10">
       <div className="ava-fade-in space-y-4">
@@ -114,9 +144,11 @@ export default async function AvaAdminPage() {
           Painel AVA
         </h1>
         <p className="max-w-xl text-lg leading-relaxed text-[var(--ava-muted)]">
-          Convite → matéria → turma → matrícula → gerir aulas.
+          Convite → turma → matrícula → aulas. Acompanhe a operação abaixo.
         </p>
       </div>
+
+      <OpsSummary snapshot={snapshot} openDoubts={openDoubts} />
 
       <AdminOnboarding
         invitedOrExtraUsers={

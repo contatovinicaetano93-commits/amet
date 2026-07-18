@@ -100,7 +100,7 @@ export function buildProfessorFlow(stats: {
   return {
     role: "professor",
     title: "Fluxo canônico — Professor",
-    subtitle: "Turmas → gerir → criar aula → upload → publicar",
+    subtitle: "Turmas → aulas → publicar → responder dúvidas",
     steps: markCurrent([
       {
         id: "classes",
@@ -131,12 +131,10 @@ export function buildProfessorFlow(stats: {
         done: stats.publishedCount > 0,
       },
       {
-        id: "preview",
-        title: "Ver como aluno",
-        detail: "Confira a experiência da turma antes da aula ao vivo.",
-        href: stats.firstClassId
-          ? `/ava/turmas/${stats.firstClassId}`
-          : homePathForRole("professor"),
+        id: "doubts",
+        title: "Responder dúvidas",
+        detail: "Acompanhe as perguntas em aberto no painel.",
+        href: homePathForRole("professor"),
         done: stats.publishedCount > 0,
       },
     ]),
