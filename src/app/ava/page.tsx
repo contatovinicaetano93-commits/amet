@@ -3,8 +3,10 @@ import { alias } from "drizzle-orm/pg-core";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { FlowTree } from "@/components/ava/FlowTree";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
+import { buildStudentFlow } from "@/lib/ava/flows";
 import { homePathForRole } from "@/lib/ava/navigation";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
 import { roleLabel } from "@/lib/ava/permissions";
@@ -16,7 +18,6 @@ export default async function AvaHomePage() {
     redirect("/ava/login");
   }
 
-  // Role homes: keep /ava as aluno hub; send others to their panels.
   if (session.user.role !== "aluno") {
     redirect(homePathForRole(session.user.role));
   }
@@ -50,6 +51,11 @@ export default async function AvaHomePage() {
     avaLog.error("home.load_failed", { message: errorMessage(error) });
   }
 
+  const tree = buildStudentFlow({
+    classesCount: classRows.length,
+    hasOpenClass: classRows.length > 0,
+  });
+
   return (
     <div className="space-y-8">
       <section className="space-y-3">
@@ -60,10 +66,12 @@ export default async function AvaHomePage() {
           Olá, {session.user.name?.split(" ")[0] ?? "bem-vindo(a)"}
         </h1>
         <p className="max-w-2xl text-amet-indigo/70">
-          Você está conectado como {roleLabel(session.user.role)}. Acesse suas
-          turmas e acompanhe as vídeo-aulas.
+          Você está conectado como {roleLabel(session.user.role)}. Fluxo:
+          matrícula → turma → assistir → progresso → IA.
         </p>
       </section>
+
+      <FlowTree tree={tree} compact />
 
       {loadError ? (
         <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">

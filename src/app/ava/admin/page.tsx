@@ -1,12 +1,20 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, isNull, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { redirect } from "next/navigation";
 
+import { AdminOnboarding } from "@/components/ava/AdminOnboarding";
 import { AdminPanel } from "@/components/ava/AdminPanel";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
 import { inviteEmailCanDeliverBroadly } from "@/lib/ava/invite-email";
-import { classes, invites, subjects, users } from "@/lib/ava/schema";
+import {
+  classes,
+  enrollments,
+  invites,
+  lessons,
+  subjects,
+  users,
+} from "@/lib/ava/schema";
 import { isR2Configured, missingR2EnvKeys } from "@/lib/ava/storage";
 
 export default async function AvaAdminPage() {
@@ -17,7 +25,16 @@ export default async function AvaAdminPage() {
   const db = getDb();
   const teacher = alias(users, "teacher");
 
-  const [userRows, inviteRows, subjectRows, classRows] = await Promise.all([
+  const [
+    userRows,
+    inviteRows,
+    subjectRows,
+    classRows,
+    [enrollmentStats],
+    [publishedStats],
+    [pendingInviteStats],
+    [nonBootstrapUsers],
+  ] = await Promise.all([
     db
       .select({
         id: users.id,
@@ -51,7 +68,22 @@ export default async function AvaAdminPage() {
       .innerJoin(subjects, eq(subjects.id, classes.subjectId))
       .leftJoin(teacher, eq(teacher.id, classes.teacherId))
       .orderBy(asc(subjects.name), asc(classes.name)),
+    db.select({ value: count() }).from(enrollments),
+    db
+      .select({ value: count() })
+      .from(lessons)
+      .where(and(eq(lessons.published, 1), isNotNull(lessons.storageKey))),
+    db
+      .select({ value: count() })
+      .from(invites)
+      .where(isNull(invites.usedAt)),
+    db
+      .select({ value: count() })
+      .from(users)
+      .where(ne(users.email, session.user.email ?? "")),
   ]);
+
+  const firstClassId = classRows[0]?.id ?? null;
 
   return (
     <div className="space-y-6">
@@ -61,9 +93,22 @@ export default async function AvaAdminPage() {
         </p>
         <h1 className="text-3xl font-semibold text-amet-indigo">Painel AVA</h1>
         <p className="text-amet-indigo/70">
-          Convide usuários, organize matérias e turmas, e acompanhe o ambiente.
+          Fluxo: convite → matéria → turma → matrícula → gerir aulas.
         </p>
       </div>
+
+      <AdminOnboarding
+        invitedOrExtraUsers={
+          (nonBootstrapUsers?.value ?? 0) > 0 ||
+          (pendingInviteStats?.value ?? 0) > 0
+        }
+        subjectsCount={subjectRows.length}
+        classesCount={classRows.length}
+        enrollmentsCount={enrollmentStats?.value ?? 0}
+        publishedLessonsCount={publishedStats?.value ?? 0}
+        firstClassId={firstClassId}
+      />
+
       <AdminPanel
         initialUsers={userRows}
         initialInvites={inviteRows.map((invite) => ({

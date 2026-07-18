@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { FlowTree } from "@/components/ava/FlowTree";
+import { buildClassManageFlow } from "@/lib/ava/flows";
+import { homePathForRole } from "@/lib/ava/navigation";
 import type { UserRole } from "@/lib/ava/schema";
 
 type LessonRow = {
@@ -54,6 +57,12 @@ export function ClassManagePanel({
   const [uploadingLessonId, setUploadingLessonId] = useState<string | null>(
     null,
   );
+
+  const manageFlow = buildClassManageFlow({
+    lessonsCount: lessons.length,
+    withVideoCount: lessons.filter((lesson) => lesson.hasVideo).length,
+    publishedCount: lessons.filter((lesson) => lesson.published).length,
+  });
 
   function refresh() {
     router.refresh();
@@ -189,19 +198,22 @@ export function ClassManagePanel({
         </p>
         <h1 className="text-3xl font-semibold text-amet-indigo">{className}</h1>
         <div className="flex flex-wrap gap-3">
-          <Link href="/ava" className="text-sm text-amet-blue hover:underline">
-            ← Voltar ao AVA
+          <Link
+            href={homePathForRole(viewerRole)}
+            className="text-sm text-amet-blue hover:underline"
+          >
+            ← Voltar ao painel
           </Link>
-          {viewerRole === "admin" ? (
-            <Link
-              href="/ava/admin"
-              className="text-sm text-amet-blue hover:underline"
-            >
-              Painel admin
-            </Link>
-          ) : null}
+          <Link
+            href={`/ava/turmas/${classId}`}
+            className="text-sm text-amet-blue hover:underline"
+          >
+            Ver como aluno
+          </Link>
         </div>
       </div>
+
+      <FlowTree tree={manageFlow} compact />
 
       {(message || error) && (
         <div
@@ -214,8 +226,9 @@ export function ClassManagePanel({
       )}
 
       <form
+        id="nova-aula"
         onSubmit={createLesson}
-        className="space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+        className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
       >
         <h2 className="text-lg font-semibold">Nova vídeo-aula</h2>
         <input
@@ -242,7 +255,10 @@ export function ClassManagePanel({
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Aulas</h2>
         {lessons.length === 0 ? (
-          <p className="text-amet-indigo/60">Nenhuma aula ainda.</p>
+          <p className="rounded-md border border-dashed border-amet-indigo/15 bg-white/70 px-4 py-6 text-amet-indigo/70">
+            Nenhuma aula ainda. Siga o fluxo: criar aula → enviar vídeo →
+            publicar.
+          </p>
         ) : (
           <ul className="space-y-3">
             {lessons.map((lesson) => (

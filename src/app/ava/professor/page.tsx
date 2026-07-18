@@ -1,4 +1,4 @@
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 import { ProfessorPanel } from "@/components/ava/ProfessorPanel";
@@ -25,6 +25,7 @@ export default async function ProfessorPage() {
     name: string;
     subjectName: string;
     lessonCount: number;
+    publishedCount: number;
     studentCount: number;
   }> = [];
 
@@ -47,6 +48,12 @@ export default async function ProfessorPage() {
           .select({ value: count() })
           .from(lessons)
           .where(eq(lessons.classId, row.id));
+        const [publishedStats] = await db
+          .select({ value: count() })
+          .from(lessons)
+          .where(
+            and(eq(lessons.classId, row.id), eq(lessons.published, 1)),
+          );
         const [studentStats] = await db
           .select({ value: count() })
           .from(enrollments)
@@ -54,6 +61,7 @@ export default async function ProfessorPage() {
         return {
           ...row,
           lessonCount: lessonStats?.value ?? 0,
+          publishedCount: publishedStats?.value ?? 0,
           studentCount: studentStats?.value ?? 0,
         };
       }),

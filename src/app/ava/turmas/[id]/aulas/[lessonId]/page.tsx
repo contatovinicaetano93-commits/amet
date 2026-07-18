@@ -88,7 +88,9 @@ export default async function LessonPage({ params }: PageProps) {
         videoUrl={videoUrl}
         initialCompleted={Boolean(progress)}
         canMarkProgress={
-          session.user.role === "aluno" || session.user.role === "admin"
+          session.user.role === "aluno" ||
+          session.user.role === "admin" ||
+          session.user.role === "professor"
         }
       />
       <LessonAskAi lessonId={lesson.id} />

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { FlowTree } from "@/components/ava/FlowTree";
+import { buildProfessorFlow } from "@/lib/ava/flows";
 import { classManagePath } from "@/lib/ava/navigation";
 
 type ClassRow = {
@@ -7,6 +9,7 @@ type ClassRow = {
   name: string;
   subjectName: string;
   lessonCount: number;
+  publishedCount: number;
   studentCount: number;
 };
 
@@ -17,6 +20,19 @@ type ProfessorPanelProps = {
 
 export function ProfessorPanel({ teacherName, classes }: ProfessorPanelProps) {
   const firstName = teacherName.split(" ")[0] || "Professor(a)";
+  const firstClass = classes[0] ?? null;
+  const lessonsCount = classes.reduce((sum, row) => sum + row.lessonCount, 0);
+  const publishedCount = classes.reduce(
+    (sum, row) => sum + row.publishedCount,
+    0,
+  );
+
+  const tree = buildProfessorFlow({
+    classesCount: classes.length,
+    lessonsCount,
+    publishedCount,
+    firstClassId: firstClass?.id ?? null,
+  });
 
   return (
     <div className="space-y-8">
@@ -28,10 +44,12 @@ export function ProfessorPanel({ teacherName, classes }: ProfessorPanelProps) {
           Olá, {firstName}
         </h1>
         <p className="max-w-2xl text-amet-indigo/70">
-          Aqui você gerencia suas turmas, publica vídeo-aulas e acompanha o
-          progresso dos alunos.
+          Fluxo: turmas → gerir → criar aula → upload → publicar → ver como
+          aluno.
         </p>
       </section>
+
+      <FlowTree tree={tree} />
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -49,15 +67,9 @@ export function ProfessorPanel({ teacherName, classes }: ProfessorPanelProps) {
               Nenhuma turma atribuída ainda
             </h3>
             <p className="mt-2 max-w-xl text-amet-indigo/70">
-              O administrador precisa criar uma matéria, abrir a turma e
-              atribuir você como professor. Assim que isso acontecer, a turma
-              aparece aqui com o botão para gerir aulas.
+              O administrador precisa criar a matéria, abrir a turma e atribuir
+              você como professor. Depois a turma aparece aqui.
             </p>
-            <ol className="mt-5 space-y-2 text-sm text-amet-indigo/70">
-              <li>1. Admin cria a matéria</li>
-              <li>2. Admin cria a turma e escolhe você como professor</li>
-              <li>3. Você volta aqui e publica as vídeo-aulas</li>
-            </ol>
           </div>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
@@ -73,9 +85,16 @@ export function ProfessorPanel({ teacherName, classes }: ProfessorPanelProps) {
                   <p className="mt-2 text-sm text-amet-indigo/60">
                     {classRow.lessonCount} aula
                     {classRow.lessonCount === 1 ? "" : "s"} ·{" "}
+                    {classRow.publishedCount} publicada
+                    {classRow.publishedCount === 1 ? "" : "s"} ·{" "}
                     {classRow.studentCount} aluno
                     {classRow.studentCount === 1 ? "" : "s"}
                   </p>
+                  {classRow.lessonCount === 0 ? (
+                    <p className="mt-2 text-sm text-amet-indigo/70">
+                      Próximo passo: criar e publicar a primeira aula.
+                    </p>
+                  ) : null}
                   <div className="mt-5 flex flex-wrap gap-2">
                     <Link
                       href={classManagePath(classRow.id)}

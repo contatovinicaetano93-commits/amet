@@ -345,8 +345,9 @@ export function AdminPanel({
 
       <section className="grid gap-6 lg:grid-cols-2">
         <form
+          id="convidar"
           onSubmit={createInvite}
-          className="space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+          className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
         >
           <h2 className="text-lg font-semibold">Convidar usuário</h2>
           <p className="text-sm text-amet-indigo/65">
@@ -380,8 +381,9 @@ export function AdminPanel({
         </form>
 
         <form
+          id="materia"
           onSubmit={createSubject}
-          className="space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+          className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
         >
           <h2 className="text-lg font-semibold">Nova matéria</h2>
           <input
@@ -400,8 +402,9 @@ export function AdminPanel({
         </form>
 
         <form
+          id="turma"
           onSubmit={createClass}
-          className="space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+          className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
         >
           <h2 className="text-lg font-semibold">Nova turma</h2>
           <select
@@ -447,8 +450,9 @@ export function AdminPanel({
         </form>
 
         <form
+          id="matricular"
           onSubmit={enrollStudent}
-          className="space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+          className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
         >
           <h2 className="text-lg font-semibold">Matricular aluno</h2>
           <select
@@ -543,8 +547,16 @@ export function AdminPanel({
         </div>
       </section>
 
-      <section className="rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
+      <section
+        id="turmas"
+        className="scroll-mt-24 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+      >
         <h2 className="mb-3 text-lg font-semibold">Turmas</h2>
+        {classes.length === 0 ? (
+          <p className="text-sm text-amet-indigo/60">
+            Nenhuma turma ainda. Crie matéria e turma no fluxo acima.
+          </p>
+        ) : null}
         <ul className="space-y-2 text-sm">
           {classes.map((classRow) => (
             <li
