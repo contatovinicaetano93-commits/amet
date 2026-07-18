@@ -43,6 +43,7 @@ type ClassRow = {
 };
 
 type AdminPanelProps = {
+  currentUserId: string;
   initialUsers: UserRow[];
   initialInvites: InviteRow[];
   initialSubjects: SubjectRow[];
@@ -53,6 +54,7 @@ type AdminPanelProps = {
 };
 
 export function AdminPanel({
+  currentUserId,
   initialUsers,
   initialInvites,
   initialSubjects,
@@ -62,7 +64,7 @@ export function AdminPanel({
   emailConfigured,
 }: AdminPanelProps) {
   const router = useRouter();
-  const [users] = useState(initialUsers);
+  const [users, setUsers] = useState(initialUsers);
   const [invites, setInvites] = useState(initialInvites);
   const [subjects, setSubjects] = useState(initialSubjects);
   const [classes, setClasses] = useState(initialClasses);
@@ -205,9 +207,12 @@ export function AdminPanel({
   }
 
   function cancelInvite(invite: InviteRow) {
+    const accepted = Boolean(invite.usedAt);
     if (
       !window.confirm(
-        `Cancelar o convite de ${invite.email}? O link enviado deixa de funcionar.`,
+        accepted
+          ? `O convite de ${invite.email} já foi aceito. Remover também a conta desta pessoa da ferramenta?`
+          : `Cancelar o convite de ${invite.email}? O link enviado deixa de funcionar.`,
       )
     ) {
       return;
@@ -227,14 +232,55 @@ export function AdminPanel({
         setInvites((current) =>
           current.filter((item) => item.id !== invite.id),
         );
+        if (data.removedUser?.id) {
+          setUsers((current) =>
+            current.filter((user) => user.id !== data.removedUser.id),
+          );
+        }
         if (inviteUrl) {
           setInviteUrl("");
           setInviteRole(null);
         }
-        setMessage(`Convite de ${invite.email} cancelado.`);
+        setMessage(
+          data.removedUser
+            ? `Acesso de ${data.removedUser.email} removido da ferramenta.`
+            : `Convite de ${invite.email} cancelado.`,
+        );
         router.refresh();
       } catch {
         setError("Falha de rede ao cancelar convite.");
+      }
+    });
+  }
+
+  function removeUser(user: UserRow) {
+    if (
+      !window.confirm(
+        `Remover ${user.name} (${user.email}) da ferramenta? A pessoa perde o acesso imediatamente.`,
+      )
+    ) {
+      return;
+    }
+    startTransition(async () => {
+      setMessage("");
+      setError("");
+      try {
+        const response = await fetch(`/api/ava/users/${user.id}`, {
+          method: "DELETE",
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao remover usuário.");
+          return;
+        }
+        setUsers((current) => current.filter((item) => item.id !== user.id));
+        setInvites((current) =>
+          current.filter((invite) => invite.email !== user.email),
+        );
+        setMessage(`Acesso de ${user.email} removido da ferramenta.`);
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao remover usuário.");
       }
     });
   }
@@ -690,17 +736,34 @@ export function AdminPanel({
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
           <h2 className="mb-3 text-lg font-semibold">Usuários</h2>
+          <p className="mb-3 text-sm text-amet-indigo/65">
+            Remova alguém para tirar o acesso à ferramenta.
+          </p>
           <ul className="space-y-2 text-sm">
             {users.map((user) => (
               <li
                 key={user.id}
-                className="flex items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
+                className="flex flex-wrap items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
               >
                 <span>
                   {user.name}
                   <span className="block text-amet-indigo/55">{user.email}</span>
                 </span>
-                <span className="text-amet-indigo/70">{roleLabel(user.role)}</span>
+                <span className="flex flex-wrap items-center gap-2 text-amet-indigo/70">
+                  {roleLabel(user.role)}
+                  {user.id !== currentUserId ? (
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => removeUser(user)}
+                      className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+                    >
+                      Remover
+                    </button>
+                  ) : (
+                    <span className="text-xs text-amet-indigo/45">Você</span>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
@@ -708,6 +771,9 @@ export function AdminPanel({
 
         <div className="rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
           <h2 className="mb-3 text-lg font-semibold">Convites</h2>
+          <p className="mb-3 text-sm text-amet-indigo/65">
+            Pendente: cancela o link. Usado: remove também a conta criada.
+          </p>
           <ul className="space-y-2 text-sm">
             {invites.map((invite) => (
               <li
@@ -723,25 +789,23 @@ export function AdminPanel({
                 <span className="flex flex-wrap items-center gap-2 text-amet-indigo/70">
                   {invite.usedAt ? "Usado" : "Pendente"}
                   {!invite.usedAt ? (
-                    <>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => regenerateInvite(invite)}
-                        className="rounded-md border border-amet-indigo/20 px-2 py-1 text-xs font-medium text-amet-indigo hover:bg-amet-indigo/5 disabled:opacity-60"
-                      >
-                        Gerar novo link
-                      </button>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => cancelInvite(invite)}
-                        className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
-                      >
-                        Cancelar
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => regenerateInvite(invite)}
+                      className="rounded-md border border-amet-indigo/20 px-2 py-1 text-xs font-medium text-amet-indigo hover:bg-amet-indigo/5 disabled:opacity-60"
+                    >
+                      Gerar novo link
+                    </button>
                   ) : null}
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => cancelInvite(invite)}
+                    className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+                  >
+                    {invite.usedAt ? "Remover acesso" : "Cancelar"}
+                  </button>
                 </span>
               </li>
             ))}

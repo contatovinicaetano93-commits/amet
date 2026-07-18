@@ -163,6 +163,7 @@ export default async function AvaAdminPage() {
       />
 
       <AdminPanel
+        currentUserId={session.user.id}
         initialUsers={userRows}
         initialInvites={inviteRows.map((invite) => ({
           ...invite,
