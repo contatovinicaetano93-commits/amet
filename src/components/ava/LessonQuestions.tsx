@@ -99,9 +99,11 @@ export function LessonQuestions({
           Dúvidas com o professor
         </h2>
         <p className="text-sm text-amet-indigo/65">
-          {canAnswer
-            ? "Responda as dúvidas dos alunos desta aula."
-            : "Envie sua dúvida. O professor responde aqui nesta mesma página."}
+          {canAsk
+            ? "Envie sua dúvida. Só alunos perguntam; o professor responde aqui."
+            : canAnswer
+              ? "Responda as dúvidas dos alunos desta aula."
+              : "Dúvidas dos alunos e respostas do professor desta aula."}
           {openCount > 0 ? ` · ${openCount} em aberto` : null}
         </p>
       </div>

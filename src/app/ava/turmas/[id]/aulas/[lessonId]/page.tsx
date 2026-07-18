@@ -116,8 +116,6 @@ export default async function LessonPage({ params }: PageProps) {
     answeredByName: row.answeredByName,
   }));
 
-  const canAsk = session.user.role === "aluno" || manage;
-
   return (
     <div className="space-y-4">
       <Link
@@ -143,10 +141,11 @@ export default async function LessonPage({ params }: PageProps) {
           session.user.role === "admin" ||
           session.user.role === "professor"
         }
+        canEditBio={manage}
       />
       <LessonQuestions
         lessonId={lesson.id}
-        canAsk={canAsk}
+        canAsk={session.user.role === "aluno"}
         canAnswer={manage}
         initialQuestions={initialQuestions}
       />

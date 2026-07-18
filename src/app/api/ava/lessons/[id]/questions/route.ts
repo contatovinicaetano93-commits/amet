@@ -83,7 +83,7 @@ export async function GET(_request: Request, { params }: Params) {
       .orderBy(desc(lessonQuestions.createdAt));
 
     return NextResponse.json({
-      canAsk: session.user.role === "aluno" || ctx.manage,
+      canAsk: session.user.role === "aluno",
       canAnswer: ctx.manage,
       questions: rows.map((row) => ({
         id: row.id,
@@ -126,8 +126,10 @@ export async function POST(request: Request, { params }: Params) {
       return jsonError("Aula indisponível.", { status: 404 });
     }
 
-    if (session.user.role !== "aluno" && !ctx.manage) {
-      return jsonError("Sem permissão para perguntar.", { status: 403 });
+    if (session.user.role !== "aluno") {
+      return jsonError("Só alunos podem perguntar ao professor.", {
+        status: 403,
+      });
     }
 
     const body = await request.json().catch(() => null);
