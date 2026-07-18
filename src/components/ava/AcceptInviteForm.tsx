@@ -42,7 +42,9 @@ export function AcceptInviteForm({
         setError(data.error ?? "Não foi possível ativar o convite.");
         return;
       }
-      router.replace("/ava/login");
+
+      const role = encodeURIComponent(roleLabel);
+      router.replace(`/ava/login?activated=1&role=${role}`);
       router.refresh();
     });
   }
@@ -101,7 +103,7 @@ export function AcceptInviteForm({
         disabled={pending}
         className="w-full rounded-md bg-amet-indigo px-4 py-2.5 font-semibold text-white transition hover:bg-amet-blue disabled:opacity-60"
       >
-        {pending ? "Ativando…" : "Ativar conta"}
+        {pending ? "Ativando…" : `Ativar conta de ${roleLabel}`}
       </button>
     </form>
   );

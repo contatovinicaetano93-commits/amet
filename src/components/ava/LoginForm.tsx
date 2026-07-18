@@ -10,6 +10,8 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const activated = searchParams.get("activated") === "1";
+  const activatedRole = searchParams.get("role");
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,13 +25,21 @@ export function LoginForm() {
         setError(result.error);
         return;
       }
-      router.replace(callbackUrl);
+      router.replace(result.redirectTo ?? "/ava");
       router.refresh();
     });
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {activated ? (
+        <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          Conta ativada
+          {activatedRole ? ` como ${activatedRole}` : ""}. Entre com o e-mail e
+          a senha que acabou de definir.
+        </p>
+      ) : null}
+
       <label className="block space-y-1.5">
         <span className="text-sm font-medium text-amet-indigo">E-mail</span>
         <input

@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 
 import { LoginForm } from "@/components/ava/LoginForm";
 import { auth } from "@/lib/ava/auth";
+import { homePathForRole } from "@/lib/ava/navigation";
 
 export default async function AvaLoginPage() {
   const session = await auth();
   if (session?.user) {
-    redirect("/ava");
+    redirect(homePathForRole(session.user.role));
   }
 
   return (
@@ -25,7 +26,9 @@ export default async function AvaLoginPage() {
       </div>
 
       <div className="rounded-lg border border-amet-indigo/10 bg-white/90 p-6 shadow-[0_20px_50px_-35px_rgba(28,36,147,0.45)]">
-        <Suspense fallback={<p className="text-sm text-amet-indigo/60">Carregando…</p>}>
+        <Suspense
+          fallback={<p className="text-sm text-amet-indigo/60">Carregando…</p>}
+        >
           <LoginForm />
         </Suspense>
       </div>

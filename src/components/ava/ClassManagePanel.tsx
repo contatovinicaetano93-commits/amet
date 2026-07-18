@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import type { UserRole } from "@/lib/ava/schema";
+
 type LessonRow = {
   id: string;
   title: string;
@@ -27,6 +29,7 @@ type ClassManagePanelProps = {
   classId: string;
   className: string;
   subjectName: string;
+  viewerRole: UserRole;
   initialLessons: LessonRow[];
   initialStudents: StudentRow[];
   initialProgress: ProgressStudent[];
@@ -36,6 +39,7 @@ export function ClassManagePanel({
   classId,
   className,
   subjectName,
+  viewerRole,
   initialLessons,
   initialStudents,
   initialProgress,
@@ -180,6 +184,7 @@ export function ClassManagePanel({
     <div className="space-y-8">
       <div className="space-y-2">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-amet-purple">
+          {viewerRole === "admin" ? "Gestão da turma" : "Área do professor"} ·{" "}
           {subjectName}
         </p>
         <h1 className="text-3xl font-semibold text-amet-indigo">{className}</h1>
@@ -187,12 +192,14 @@ export function ClassManagePanel({
           <Link href="/ava" className="text-sm text-amet-blue hover:underline">
             ← Voltar ao AVA
           </Link>
-          <Link
-            href="/ava/admin"
-            className="text-sm text-amet-blue hover:underline"
-          >
-            Painel admin
-          </Link>
+          {viewerRole === "admin" ? (
+            <Link
+              href="/ava/admin"
+              className="text-sm text-amet-blue hover:underline"
+            >
+              Painel admin
+            </Link>
+          ) : null}
         </div>
       </div>
 

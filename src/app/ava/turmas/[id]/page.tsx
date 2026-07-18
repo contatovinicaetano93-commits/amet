@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { userCanAccessClass } from "@/lib/ava/access";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
+import { classManagePath } from "@/lib/ava/navigation";
 import { canManageClass } from "@/lib/ava/permissions";
 import {
   classes,
@@ -102,7 +103,7 @@ export default async function ClassPage({ params }: PageProps) {
           </Link>
           {manage ? (
             <Link
-              href={`/ava/admin/turmas/${id}`}
+              href={classManagePath(id)}
               className="text-sm text-amet-blue hover:underline"
             >
               Gerir aulas e progresso

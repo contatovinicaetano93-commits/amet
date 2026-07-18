@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { classManagePath } from "@/lib/ava/navigation";
 import { roleLabel } from "@/lib/ava/permissions";
 import type { UserRole } from "@/lib/ava/schema";
 
@@ -58,6 +59,7 @@ export function AdminPanel({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
+  const [inviteRole, setInviteRole] = useState<UserRole | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
     "idle",
   );
@@ -85,6 +87,7 @@ export function AdminPanel({
     };
   }) {
     setInviteUrl(data.inviteUrl ?? "");
+    setInviteRole(data.invite?.role ?? null);
     setCopyState("idle");
     setMessage(
       data.emailSent
@@ -113,17 +116,27 @@ export function AdminPanel({
     event.preventDefault();
     const formEl = event.currentTarget;
     const form = new FormData(formEl);
+    const role = String(form.get("role") ?? "aluno") as UserRole;
+    if (
+      role === "admin" &&
+      !window.confirm(
+        "Tem certeza? Esta pessoa terá acesso total de administrador.",
+      )
+    ) {
+      return;
+    }
     startTransition(async () => {
       setMessage("");
       setError("");
       setInviteUrl("");
+      setInviteRole(null);
       try {
         const response = await fetch("/api/ava/invites", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: form.get("email"),
-            role: form.get("role"),
+            role,
           }),
         });
         const data = await response.json().catch(() => ({}));
@@ -146,6 +159,7 @@ export function AdminPanel({
       setMessage("");
       setError("");
       setInviteUrl("");
+      setInviteRole(null);
       try {
         const response = await fetch("/api/ava/invites", {
           method: "POST",
@@ -293,7 +307,9 @@ export function AdminPanel({
       {inviteUrl ? (
         <div className="space-y-3 rounded-md border border-amet-indigo/15 bg-white px-4 py-4">
           <p className="text-sm font-medium text-amet-indigo">
-            Link do convite (copie e envie — o e-mail pode falhar)
+            Link do convite
+            {inviteRole ? ` · ${roleLabel(inviteRole)}` : ""} (copie e envie —
+            o e-mail pode falhar)
           </p>
           <code className="block break-all rounded-md bg-amet-indigo/5 px-3 py-2 text-xs text-amet-indigo">
             {inviteUrl}
@@ -529,7 +545,7 @@ export function AdminPanel({
                 </span>
               </span>
               <Link
-                href={`/ava/admin/turmas/${classRow.id}`}
+                href={classManagePath(classRow.id)}
                 className="font-medium text-amet-blue hover:underline"
               >
                 Gerir aulas

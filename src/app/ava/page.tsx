@@ -106,7 +106,7 @@ export default async function AvaHomePage() {
       : session.user.role === "professor"
         ? {
             title: "Você ainda não tem turmas",
-            body: "Quando o admin te atribuir a uma turma, ela aparece aqui para você publicar aulas.",
+            body: "Peça ao administrador para criar uma turma e atribuir você como professor. Depois ela aparece aqui para publicar aulas.",
             cta: null,
           }
         : {

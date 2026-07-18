@@ -9,14 +9,16 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const role = req.auth?.user?.role;
 
+  // Legacy manage URL: send everyone to the shared professor/admin surface.
+  const legacyManage = pathname.match(/^\/ava\/admin\/turmas\/([^/]+)\/?$/);
+  if (legacyManage) {
+    return NextResponse.redirect(
+      new URL(`/ava/turmas/${legacyManage[1]}/gerir`, req.nextUrl.origin),
+    );
+  }
+
   if (pathname.startsWith("/ava/admin")) {
-    const isClassManage = /^\/ava\/admin\/turmas\/[^/]+/.test(pathname);
-
     if (role === "admin") {
-      return NextResponse.next();
-    }
-
-    if (isClassManage && role === "professor") {
       return NextResponse.next();
     }
 

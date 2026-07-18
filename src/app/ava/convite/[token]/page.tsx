@@ -46,13 +46,14 @@ export default async function AcceptInvitePage({ params }: PageProps) {
     <div className="mx-auto max-w-md space-y-6">
       <div className="space-y-2">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-amet-purple">
-          Convite AVA
+          Convite AVA · {roleLabel(invite.role)}
         </p>
         <h1 className="text-3xl font-semibold text-amet-indigo">
-          Ative sua conta
+          Ative sua conta de {roleLabel(invite.role)}
         </h1>
         <p className="text-amet-indigo/70">
-          Defina seu nome e senha para começar a usar o ambiente virtual.
+          Defina seu nome e senha para começar a usar o ambiente virtual como{" "}
+          {roleLabel(invite.role).toLowerCase()}.
         </p>
       </div>
 
