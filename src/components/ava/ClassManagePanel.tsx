@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { FlowTree } from "@/components/ava/FlowTree";
 import { buildClassManageFlow } from "@/lib/ava/flows";
@@ -54,6 +54,10 @@ export function ClassManagePanel({
   const [lessons, setLessons] = useState(initialLessons);
   const [students] = useState(initialStudents);
   const [progress] = useState(initialProgress);
+
+  useEffect(() => {
+    setLessons(initialLessons);
+  }, [initialLessons]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
@@ -403,10 +407,13 @@ export function ClassManagePanel({
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Aulas</h2>
         {lessons.length === 0 ? (
-          <p className="rounded-md border border-dashed border-amet-indigo/15 bg-white/70 px-4 py-6 text-amet-indigo/70">
-            Nenhuma aula ainda. Siga o fluxo: criar aula → enviar vídeo →
-            publicar.
-          </p>
+          <div className="rounded-md border border-dashed border-amet-indigo/15 bg-white/70 px-4 py-6 text-amet-indigo/70">
+            <p>Nenhuma aula nesta turma ainda.</p>
+            <p className="mt-2 text-sm">
+              Crie abaixo ou confira se a aula publicada está em outra turma do
+              seu painel (cada turma tem suas próprias aulas).
+            </p>
+          </div>
         ) : (
           <ul className="space-y-3">
             {lessons.map((lesson) => (

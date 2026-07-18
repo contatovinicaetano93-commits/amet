@@ -96,7 +96,9 @@ export function ProfessorPanel({
                   <p className="mt-1 text-sm text-[var(--ava-muted)]">
                     {[
                       shiftDetail(classRow.shift),
-                      `${classRow.publishedCount}/${classRow.lessonCount} publicadas`,
+                      classRow.lessonCount === 0
+                        ? "Sem aulas ainda"
+                        : `${classRow.publishedCount}/${classRow.lessonCount} publicadas`,
                       `${classRow.studentCount} aluno${classRow.studentCount === 1 ? "" : "s"}`,
                     ]
                       .filter(Boolean)
@@ -105,9 +107,11 @@ export function ProfessorPanel({
                   <div className="mt-3 flex flex-wrap gap-4">
                     <Link
                       href={classManagePath(classRow.id)}
-                      className="ava-link text-sm"
+                      className="ava-link text-sm font-semibold"
                     >
-                      Gerir aulas
+                      {classRow.lessonCount === 0
+                        ? "Gerir aulas (criar)"
+                        : `Gerir aulas (${classRow.lessonCount})`}
                     </Link>
                     <Link
                       href={`/ava/turmas/${classRow.id}`}
