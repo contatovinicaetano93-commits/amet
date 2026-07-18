@@ -82,6 +82,12 @@ export function AdminPanel({
   const [editClassName, setEditClassName] = useState("");
   const [editClassShift, setEditClassShift] = useState<ShiftCode | "">("");
   const [editClassTeacherId, setEditClassTeacherId] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState<UserRole | "all">(
+    "all",
+  );
+  const [inviteRoleFilter, setInviteRoleFilter] = useState<UserRole | "all">(
+    "all",
+  );
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -555,6 +561,14 @@ export function AdminPanel({
     (user) => user.role === "professor" || user.role === "admin",
   );
   const students = users.filter((user) => user.role === "aluno");
+  const filteredUsers =
+    userRoleFilter === "all"
+      ? users
+      : users.filter((user) => user.role === userRoleFilter);
+  const filteredInvites =
+    inviteRoleFilter === "all"
+      ? invites
+      : invites.filter((invite) => invite.role === inviteRoleFilter);
 
   return (
     <div className="space-y-10">
@@ -620,34 +634,45 @@ export function AdminPanel({
         <form
           id="convidar"
           onSubmit={createInvite}
-          className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+          className="ava-panel scroll-mt-24 space-y-5"
         >
-          <h2 className="text-lg font-semibold">Convidar usuário</h2>
-          <p className="text-sm text-amet-indigo/65">
-            O sistema envia o link de ativação para o e-mail digitado. Se o
-            envio falhar, o link também aparece aqui para copiar.
-          </p>
-          <input
-            name="email"
-            type="email"
-            required
-            placeholder="E-mail"
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-          />
-          <select
-            name="role"
-            required
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-            defaultValue="aluno"
-          >
-            <option value="aluno">Aluno</option>
-            <option value="professor">Professor</option>
-            <option value="admin">Administrador</option>
-          </select>
+          <div className="space-y-1">
+            <p className="ava-kicker">Convites</p>
+            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
+              Convidar usuário
+            </h2>
+            <p className="text-sm text-[var(--ava-muted)]">
+              O sistema envia o link de ativação para o e-mail digitado. Se o
+              envio falhar, o link também aparece aqui para copiar.
+            </p>
+          </div>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">E-mail</span>
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="E-mail"
+              className="ava-input"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">Papel</span>
+            <select
+              name="role"
+              required
+              className="ava-input"
+              defaultValue="aluno"
+            >
+              <option value="aluno">Aluno</option>
+              <option value="professor">Professor</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </label>
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="ava-btn ava-btn-primary"
           >
             Criar convite
           </button>
@@ -829,46 +854,60 @@ export function AdminPanel({
         <form
           id="matricular"
           onSubmit={enrollStudent}
-          className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+          className="ava-panel scroll-mt-24 space-y-5"
         >
-          <h2 className="text-lg font-semibold">Matricular aluno</h2>
-          <select
-            name="classId"
-            required
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Turma
-            </option>
-            {classes.map((classRow) => (
-              <option key={classRow.id} value={classRow.id}>
-                {classRow.subjectName} — {classRow.name}
-                {shiftLabel(classRow.shift)
-                  ? ` · ${shiftLabel(classRow.shift)}`
-                  : ""}
+          <div className="space-y-1">
+            <p className="ava-kicker">Matrículas</p>
+            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
+              Matricular aluno
+            </h2>
+            <p className="text-sm text-[var(--ava-muted)]">
+              Escolha a turma e o aluno com conta ativa.
+            </p>
+          </div>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">Turma</span>
+            <select
+              name="classId"
+              required
+              className="ava-input"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Selecione a turma
               </option>
-            ))}
-          </select>
-          <select
-            name="studentId"
-            required
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Aluno
-            </option>
-            {students.map((student) => (
-              <option key={student.id} value={student.id}>
-                {student.name} ({student.email})
+              {classes.map((classRow) => (
+                <option key={classRow.id} value={classRow.id}>
+                  {classRow.subjectName} — {classRow.name}
+                  {shiftLabel(classRow.shift)
+                    ? ` · ${shiftLabel(classRow.shift)}`
+                    : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">Aluno</span>
+            <select
+              name="studentId"
+              required
+              className="ava-input"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Selecione o aluno
               </option>
-            ))}
-          </select>
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.name} ({student.email})
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="ava-btn ava-btn-primary"
           >
             Matricular
           </button>
@@ -876,13 +915,35 @@ export function AdminPanel({
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
-          <h2 className="mb-3 text-lg font-semibold">Usuários</h2>
-          <p className="mb-3 text-sm text-amet-indigo/65">
-            Remova alguém para tirar o acesso à ferramenta.
-          </p>
+        <div className="ava-panel space-y-4">
+          <div className="space-y-1">
+            <p className="ava-kicker">Acesso</p>
+            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
+              Usuários
+            </h2>
+            <p className="text-sm text-[var(--ava-muted)]">
+              Remova alguém para tirar o acesso à ferramenta.
+            </p>
+          </div>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">Papel</span>
+            <select
+              className="ava-input"
+              value={userRoleFilter}
+              onChange={(event) =>
+                setUserRoleFilter(
+                  (event.target.value || "all") as UserRole | "all",
+                )
+              }
+            >
+              <option value="all">Todos os papéis</option>
+              <option value="admin">Administrador</option>
+              <option value="professor">Professor</option>
+              <option value="aluno">Aluno</option>
+            </select>
+          </label>
           <ul className="space-y-2 text-sm">
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <li
                 key={user.id}
                 className="flex flex-wrap items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
@@ -911,13 +972,35 @@ export function AdminPanel({
           </ul>
         </div>
 
-        <div className="rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
-          <h2 className="mb-3 text-lg font-semibold">Convites</h2>
-          <p className="mb-3 text-sm text-amet-indigo/65">
-            Pendente: cancela o link. Usado: remove também a conta criada.
-          </p>
+        <div className="ava-panel space-y-4">
+          <div className="space-y-1">
+            <p className="ava-kicker">Convites</p>
+            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
+              Convites enviados
+            </h2>
+            <p className="text-sm text-[var(--ava-muted)]">
+              Pendente: cancela o link. Usado: remove também a conta criada.
+            </p>
+          </div>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">Papel</span>
+            <select
+              className="ava-input"
+              value={inviteRoleFilter}
+              onChange={(event) =>
+                setInviteRoleFilter(
+                  (event.target.value || "all") as UserRole | "all",
+                )
+              }
+            >
+              <option value="all">Todos os papéis</option>
+              <option value="admin">Administrador</option>
+              <option value="professor">Professor</option>
+              <option value="aluno">Aluno</option>
+            </select>
+          </label>
           <ul className="space-y-2 text-sm">
-            {invites.map((invite) => {
+            {filteredInvites.map((invite) => {
               const hasAccount = activeEmails.has(invite.email.toLowerCase());
               const statusLabel = !invite.usedAt
                 ? "Pendente"
@@ -965,15 +1048,15 @@ export function AdminPanel({
         </div>
       </section>
 
-      <section
-        id="turmas"
-        className="scroll-mt-24 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
-      >
-        <div className="mb-3 space-y-1">
-          <h2 className="text-lg font-semibold">Turmas</h2>
-          <p className="text-sm text-amet-indigo/65">
-            Edite nome, turno e professor. Ao atribuir um professor, a turma
-            aparece automaticamente no painel dele.
+      <section id="turmas" className="ava-panel scroll-mt-24 space-y-4">
+        <div className="space-y-1">
+          <p className="ava-kicker">Turmas</p>
+          <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
+            Turmas ativas
+          </h2>
+          <p className="text-sm text-[var(--ava-muted)]">
+            Edite nome, turno e professor nos dropdowns. Ao atribuir um
+            professor, a turma aparece automaticamente no painel dele.
           </p>
         </div>
         {classes.length === 0 ? (
