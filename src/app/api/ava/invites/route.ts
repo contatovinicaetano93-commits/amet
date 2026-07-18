@@ -129,12 +129,16 @@ export async function POST(request: Request) {
     });
 
     // Admin always receives the invite URL so onboarding isn't blocked by email delivery.
+    const warning = emailResult.ok
+      ? emailResult.warning
+      : emailResult.error;
+
     return NextResponse.json(
       {
         invite,
         inviteUrl,
-        emailSent: emailResult.ok,
-        warning: emailResult.ok ? undefined : emailResult.error,
+        emailSent: emailResult.ok && !warning,
+        warning,
       },
       { status: 201 },
     );

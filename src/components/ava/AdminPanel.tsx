@@ -57,7 +57,57 @@ export function AdminPanel({
   const [classes, setClasses] = useState(initialClasses);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [inviteUrl, setInviteUrl] = useState("");
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
+    "idle",
+  );
   const [pending, startTransition] = useTransition();
+
+  async function copyInviteUrl(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyState("copied");
+      window.setTimeout(() => setCopyState("idle"), 2000);
+    } catch {
+      setCopyState("failed");
+    }
+  }
+
+  function applyInviteResponse(data: {
+    emailSent?: boolean;
+    warning?: string;
+    inviteUrl?: string;
+    invite?: {
+      id: string;
+      email: string;
+      role: UserRole;
+      expiresAt: string;
+    };
+  }) {
+    setInviteUrl(data.inviteUrl ?? "");
+    setCopyState("idle");
+    setMessage(
+      data.emailSent
+        ? "Convite criado. Se o e-mail não chegar, use o link abaixo."
+        : "Convite criado. Copie o link abaixo e envie por WhatsApp/e-mail.",
+    );
+    setError(data.warning ? String(data.warning) : "");
+    if (data.invite) {
+      setInvites((current) => [
+        {
+          id: data.invite!.id,
+          email: data.invite!.email,
+          role: data.invite!.role,
+          expiresAt: data.invite!.expiresAt,
+          usedAt: null,
+        },
+        ...current.filter(
+          (invite) =>
+            invite.email !== data.invite!.email || invite.usedAt !== null,
+        ),
+      ]);
+    }
+  }
 
   function createInvite(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,6 +116,7 @@ export function AdminPanel({
     startTransition(async () => {
       setMessage("");
       setError("");
+      setInviteUrl("");
       try {
         const response = await fetch("/api/ava/invites", {
           method: "POST",
@@ -81,36 +132,38 @@ export function AdminPanel({
           return;
         }
 
-        const parts = [
-          data.emailSent
-            ? "Convite criado e e-mail enviado."
-            : "Convite criado.",
-          data.warning ? String(data.warning) : "",
-          data.inviteUrl
-            ? `Envie este link ao professor/aluno: ${data.inviteUrl}`
-            : "",
-        ].filter(Boolean);
-
-        setMessage(parts.join(" "));
-        if (data.warning) {
-          setError(String(data.warning));
-        }
-        if (data.invite) {
-          setInvites((current) => [
-            {
-              id: data.invite.id,
-              email: data.invite.email,
-              role: data.invite.role,
-              expiresAt: data.invite.expiresAt,
-              usedAt: null,
-            },
-            ...current,
-          ]);
-        }
+        applyInviteResponse(data);
         formEl.reset();
         router.refresh();
       } catch {
         setError("Falha de rede ao criar convite. Tente novamente.");
+      }
+    });
+  }
+
+  function regenerateInvite(invite: InviteRow) {
+    startTransition(async () => {
+      setMessage("");
+      setError("");
+      setInviteUrl("");
+      try {
+        const response = await fetch("/api/ava/invites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: invite.email,
+            role: invite.role,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao gerar novo link.");
+          return;
+        }
+        applyInviteResponse(data);
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao gerar novo link.");
       }
     });
   }
@@ -227,17 +280,37 @@ export function AdminPanel({
         </div>
       ) : null}
 
-      {(message || error) && (
-        <div
-          className={`rounded-md px-4 py-3 text-sm ${
-            error
-              ? "bg-red-50 text-red-700"
-              : "bg-emerald-50 text-emerald-800"
-          }`}
-        >
-          {error || message}
+      {message ? (
+        <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {message}
         </div>
-      )}
+      ) : null}
+      {error ? (
+        <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {error}
+        </div>
+      ) : null}
+      {inviteUrl ? (
+        <div className="space-y-3 rounded-md border border-amet-indigo/15 bg-white px-4 py-4">
+          <p className="text-sm font-medium text-amet-indigo">
+            Link do convite (copie e envie — o e-mail pode falhar)
+          </p>
+          <code className="block break-all rounded-md bg-amet-indigo/5 px-3 py-2 text-xs text-amet-indigo">
+            {inviteUrl}
+          </code>
+          <button
+            type="button"
+            onClick={() => void copyInviteUrl(inviteUrl)}
+            className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white"
+          >
+            {copyState === "copied"
+              ? "Link copiado"
+              : copyState === "failed"
+                ? "Copie manualmente"
+                : "Copiar link"}
+          </button>
+        </div>
+      ) : null}
 
       <section className="grid gap-6 lg:grid-cols-2">
         <form
@@ -245,6 +318,10 @@ export function AdminPanel({
           className="space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
         >
           <h2 className="text-lg font-semibold">Convidar usuário</h2>
+          <p className="text-sm text-amet-indigo/65">
+            Depois de criar, o link aparece nesta página para você copiar. Não
+            dependa só do e-mail.
+          </p>
           <input
             name="email"
             type="email"
@@ -267,7 +344,7 @@ export function AdminPanel({
             disabled={pending}
             className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
-            Enviar convite
+            Criar convite
           </button>
         </form>
 
@@ -416,8 +493,18 @@ export function AdminPanel({
                     {roleLabel(invite.role)}
                   </span>
                 </span>
-                <span className="text-amet-indigo/70">
+                <span className="flex items-center gap-2 text-amet-indigo/70">
                   {invite.usedAt ? "Usado" : "Pendente"}
+                  {!invite.usedAt ? (
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => regenerateInvite(invite)}
+                      className="rounded-md border border-amet-indigo/20 px-2 py-1 text-xs font-medium text-amet-indigo hover:bg-amet-indigo/5 disabled:opacity-60"
+                    >
+                      Gerar novo link
+                    </button>
+                  ) : null}
                 </span>
               </li>
             ))}
