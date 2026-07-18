@@ -60,6 +60,9 @@ export function ClassManagePanel({
   const [uploadingLessonId, setUploadingLessonId] = useState<string | null>(
     null,
   );
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   const manageFlow = buildClassManageFlow({
     lessonsCount: lessons.length,
@@ -69,6 +72,20 @@ export function ClassManagePanel({
 
   function refresh() {
     router.refresh();
+  }
+
+  function startEdit(lesson: LessonRow) {
+    setEditingLessonId(lesson.id);
+    setEditTitle(lesson.title);
+    setEditDescription(lesson.description ?? "");
+    setError("");
+    setMessage("");
+  }
+
+  function cancelEdit() {
+    setEditingLessonId(null);
+    setEditTitle("");
+    setEditDescription("");
   }
 
   function createLesson(event: React.FormEvent<HTMLFormElement>) {
@@ -224,6 +241,76 @@ export function ClassManagePanel({
     });
   }
 
+  function saveLessonEdit(lessonId: string) {
+    const title = editTitle.trim();
+    if (title.length < 2) {
+      setError("O título precisa ter ao menos 2 caracteres.");
+      return;
+    }
+    startTransition(async () => {
+      setError("");
+      setMessage("");
+      const response = await fetch(`/api/ava/lessons/${lessonId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description: editDescription.trim() || null,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(data.error ?? "Não foi possível salvar a aula.");
+        return;
+      }
+      setLessons((current) =>
+        current.map((lesson) =>
+          lesson.id === lessonId
+            ? {
+                ...lesson,
+                title: data.lesson?.title ?? title,
+                description:
+                  data.lesson?.description === undefined
+                    ? editDescription.trim() || null
+                    : data.lesson.description,
+              }
+            : lesson,
+        ),
+      );
+      cancelEdit();
+      setMessage("Aula atualizada.");
+      refresh();
+    });
+  }
+
+  function deleteLesson(lessonId: string, title: string) {
+    if (
+      !window.confirm(
+        `Excluir a aula “${title}”? Essa ação não pode ser desfeita.`,
+      )
+    ) {
+      return;
+    }
+    startTransition(async () => {
+      setError("");
+      setMessage("");
+      const response = await fetch(`/api/ava/lessons/${lessonId}`, {
+        method: "DELETE",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(data.error ?? "Não foi possível excluir a aula.");
+        return;
+      }
+      setLessons((current) =>
+        current.filter((lesson) => lesson.id !== lessonId),
+      );
+      if (editingLessonId === lessonId) cancelEdit();
+      setMessage("Aula excluída.");
+      refresh();
+    });
+  }
+
   return (
     <div className="space-y-8">
       <div className="space-y-2">
@@ -235,6 +322,10 @@ export function ClassManagePanel({
         {shiftDetail(shift) ? (
           <p className="text-sm text-[var(--ava-muted)]">{shiftDetail(shift)}</p>
         ) : null}
+        <p className="max-w-2xl text-sm text-[var(--ava-muted)]">
+          Nesta turma você tem gestão total das aulas: criar, editar, trocar
+          vídeo, publicar, despublicar e excluir.
+        </p>
         <div className="flex flex-wrap gap-3">
           <Link
             href={homePathForRole(viewerRole)}
@@ -323,60 +414,125 @@ export function ClassManagePanel({
                 key={lesson.id}
                 className="rounded-lg border border-amet-indigo/10 bg-white/90 p-4"
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-amet-indigo">
-                      {lesson.order + 1}. {lesson.title}
-                    </h3>
-                    {lesson.description ? (
-                      <p className="mt-1 text-sm text-amet-indigo/65">
-                        {lesson.description}
-                      </p>
-                    ) : null}
-                    <p className="mt-2 text-xs text-amet-indigo/55">
-                      {lesson.hasVideo ? "Vídeo enviado" : "Sem vídeo"} ·{" "}
-                      {lesson.published ? "Publicada" : "Rascunho"}
+                {editingLessonId === lesson.id ? (
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amet-indigo/55">
+                      Editando aula {lesson.order + 1}
                     </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      href={`/ava/turmas/${classId}/aulas/${lesson.id}`}
-                      className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm"
-                    >
-                      Abrir
-                    </Link>
-                    <button
-                      type="button"
-                      disabled={!lesson.hasVideo || pending}
-                      onClick={() =>
-                        void togglePublish(lesson.id, lesson.published)
+                    <input
+                      value={editTitle}
+                      onChange={(event) => setEditTitle(event.target.value)}
+                      required
+                      minLength={2}
+                      maxLength={160}
+                      className="ava-input"
+                      placeholder="Título da aula"
+                    />
+                    <textarea
+                      value={editDescription}
+                      onChange={(event) =>
+                        setEditDescription(event.target.value)
                       }
-                      className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm disabled:opacity-50"
-                    >
-                      {lesson.published ? "Despublicar" : "Publicar"}
-                    </button>
+                      rows={3}
+                      maxLength={2000}
+                      className="ava-input"
+                      placeholder="Bio / descrição da aula"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => saveLessonEdit(lesson.id)}
+                        className="ava-btn ava-btn-primary"
+                      >
+                        {pending ? "Salvando…" : "Salvar alterações"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={cancelEdit}
+                        className="ava-btn ava-btn-ghost"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold text-amet-indigo">
+                          {lesson.order + 1}. {lesson.title}
+                        </h3>
+                        {lesson.description ? (
+                          <p className="mt-1 text-sm text-amet-indigo/65">
+                            {lesson.description}
+                          </p>
+                        ) : null}
+                        <p className="mt-2 text-xs text-amet-indigo/55">
+                          {lesson.hasVideo ? "Vídeo enviado" : "Sem vídeo"} ·{" "}
+                          {lesson.published ? "Publicada" : "Rascunho"}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          href={`/ava/turmas/${classId}/aulas/${lesson.id}`}
+                          className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm"
+                        >
+                          Abrir
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => startEdit(lesson)}
+                          className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!lesson.hasVideo || pending}
+                          onClick={() =>
+                            void togglePublish(lesson.id, lesson.published)
+                          }
+                          className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm disabled:opacity-50"
+                        >
+                          {lesson.published ? "Despublicar" : "Publicar"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() =>
+                            deleteLesson(lesson.id, lesson.title)
+                          }
+                          className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
 
-                <label className="mt-4 block space-y-1.5 text-sm">
-                  <span className="font-medium text-amet-indigo">
-                    {uploadingLessonId === lesson.id
-                      ? "Enviando vídeo…"
-                      : lesson.hasVideo
-                        ? "Trocar vídeo (mp4/webm)"
-                        : "Enviar vídeo (mp4/webm)"}
-                  </span>
-                  <input
-                    type="file"
-                    accept="video/mp4,video/webm"
-                    disabled={uploadingLessonId === lesson.id || pending}
-                    className="block w-full text-sm text-amet-indigo/80 file:mr-3 file:rounded-md file:border-0 file:bg-amet-indigo file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
-                    onChange={(event) => {
-                      const selected = event.target.files?.[0];
-                      if (selected) void uploadVideo(lesson.id, selected);
-                    }}
-                  />
-                </label>
+                    <label className="mt-4 block space-y-1.5 text-sm">
+                      <span className="font-medium text-amet-indigo">
+                        {uploadingLessonId === lesson.id
+                          ? "Enviando vídeo…"
+                          : lesson.hasVideo
+                            ? "Trocar vídeo (mp4/webm)"
+                            : "Enviar vídeo (mp4/webm)"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm"
+                        disabled={uploadingLessonId === lesson.id || pending}
+                        className="block w-full text-sm text-amet-indigo/80 file:mr-3 file:rounded-md file:border-0 file:bg-amet-indigo file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+                        onChange={(event) => {
+                          const selected = event.target.files?.[0];
+                          if (selected) void uploadVideo(lesson.id, selected);
+                        }}
+                      />
+                    </label>
+                  </>
+                )}
               </li>
             ))}
           </ul>
