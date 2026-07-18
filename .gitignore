@@ -49,3 +49,6 @@ next-env.d.ts
 
 # scratch nested clone attempts
 /amei-ava/
+
+# local project notes (may contain secrets)
+notes/
