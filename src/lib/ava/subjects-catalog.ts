@@ -25,12 +25,12 @@ export async function ensureCanonicalSubjects(): Promise<void> {
     existing.map((row) => [normalizeSubjectKey(row.name), row]),
   );
 
-  // Migra nome legado mais comum para Estética.
+  // Migra nome legado mais comum para Estética — só se o slug alvo estiver livre.
   const legacyEstetica = existing.find((row) => {
     const key = normalizeSubjectKey(row.name);
-    return key === "esteticafacial" || key === "estetica-facial";
+    return key === "esteticafacial" || row.slug === "estetica-facial";
   });
-  if (legacyEstetica) {
+  if (legacyEstetica && !bySlug.has("estetica")) {
     await db
       .update(subjects)
       .set({ name: "Estética", slug: "estetica" })
@@ -52,10 +52,14 @@ export async function ensureCanonicalSubjects(): Promise<void> {
     if (byName.has(normalizeSubjectKey(subject.name))) continue;
 
     const slug = slugify(subject.name) || subject.slug;
-    await db.insert(subjects).values({
-      name: subject.name,
-      slug,
-    });
+    try {
+      await db.insert(subjects).values({
+        name: subject.name,
+        slug,
+      });
+    } catch {
+      // Ignora corrida/unique: a matéria já existe.
+    }
   }
 }
 

@@ -206,32 +206,38 @@ export function AdminPanel({
 
   function createSubject(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     startTransition(async () => {
       setMessage("");
       setError("");
-      const response = await fetch("/api/ava/subjects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.get("name") }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(data.error ?? "Falha ao criar matéria.");
-        return;
+      try {
+        const response = await fetch("/api/ava/subjects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: form.get("name") }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao criar matéria.");
+          return;
+        }
+        if (data.subject) {
+          setSubjects((current) => [...current, data.subject]);
+        }
+        setMessage("Matéria criada.");
+        formEl.reset();
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao criar matéria. Tente novamente.");
       }
-      if (data.subject) {
-        setSubjects((current) => [...current, data.subject]);
-      }
-      setMessage("Matéria criada.");
-      event.currentTarget.reset();
-      router.refresh();
     });
   }
 
   function createClass(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     const teacherId = String(form.get("teacherId") ?? "");
     const subjectId = String(form.get("subjectId") ?? selectedSubjectId);
     const name = String(form.get("name") ?? "");
@@ -243,67 +249,80 @@ export function AdminPanel({
     startTransition(async () => {
       setMessage("");
       setError("");
-      const response = await fetch("/api/ava/classes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subjectId,
-          name,
-          shift,
-          teacherId: teacherId || null,
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(data.error ?? "Falha ao criar turma.");
-        return;
+      try {
+        const response = await fetch("/api/ava/classes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subjectId,
+            name,
+            shift,
+            teacherId: teacherId || null,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao criar turma.");
+          return;
+        }
+        if (data.class) {
+          const subject = subjects.find((item) => item.id === subjectId);
+          const teacher = users.find((item) => item.id === teacherId);
+          setClasses((current) => [
+            ...current,
+            {
+              id: data.class.id,
+              name: data.class.name,
+              shift: data.class.shift ?? shift,
+              subjectId: data.class.subjectId,
+              subjectName: subject?.name ?? "Matéria",
+              teacherId: data.class.teacherId,
+              teacherName: teacher?.name ?? null,
+            },
+          ]);
+          setMessage(
+            `Turma criada${teacher ? ` com ${teacher.name}` : ""}. Abra Gerir aulas para publicar o conteúdo.`,
+          );
+        } else {
+          setMessage("Turma criada.");
+        }
+        setSelectedSubjectId("");
+        setSelectedShift("");
+        formEl.reset();
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao criar turma. Tente novamente.");
       }
-      if (data.class) {
-        const subject = subjects.find((item) => item.id === subjectId);
-        const teacher = users.find((item) => item.id === teacherId);
-        setClasses((current) => [
-          ...current,
-          {
-            id: data.class.id,
-            name: data.class.name,
-            shift: data.class.shift ?? shift,
-            subjectId: data.class.subjectId,
-            subjectName: subject?.name ?? "Matéria",
-            teacherId: data.class.teacherId,
-            teacherName: teacher?.name ?? null,
-          },
-        ]);
-      }
-      setMessage("Turma criada.");
-      setSelectedSubjectId("");
-      setSelectedShift("");
-      event.currentTarget.reset();
-      router.refresh();
     });
   }
 
   function enrollStudent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     startTransition(async () => {
       setMessage("");
       setError("");
-      const response = await fetch("/api/ava/enrollments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          classId: form.get("classId"),
-          studentId: form.get("studentId"),
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(data.error ?? "Falha ao matricular aluno.");
-        return;
+      try {
+        const response = await fetch("/api/ava/enrollments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            classId: form.get("classId"),
+            studentId: form.get("studentId"),
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao matricular aluno.");
+          return;
+        }
+        setMessage("Aluno matriculado.");
+        formEl.reset();
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao matricular. Tente novamente.");
       }
-      setMessage("Aluno matriculado.");
-      event.currentTarget.reset();
-      router.refresh();
     });
   }
 

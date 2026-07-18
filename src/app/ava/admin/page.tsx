@@ -26,7 +26,11 @@ export default async function AvaAdminPage() {
   if (!session?.user) redirect("/ava/login");
   if (session.user.role !== "admin") redirect("/ava");
 
-  await ensureCanonicalSubjects();
+  try {
+    await ensureCanonicalSubjects();
+  } catch (error) {
+    console.error("[ava-admin] ensureCanonicalSubjects failed:", error);
+  }
 
   const db = getDb();
   const teacher = alias(users, "teacher");
