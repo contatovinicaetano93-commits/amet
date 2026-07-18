@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { BrandLogo } from "@/components/BrandLogo";
+import { AmetMark } from "@/components/AmetMark";
 import { homePathForRole } from "@/lib/ava/navigation";
 import { roleLabel } from "@/lib/ava/permissions";
 import type { UserRole } from "@/lib/ava/schema";
@@ -15,60 +15,61 @@ type AvaShellProps = {
 };
 
 export function AvaShell({ children, user }: AvaShellProps) {
+  const homeHref = user ? homePathForRole(user.role) : "/ava/login";
+
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-[radial-gradient(circle_at_top_left,_rgba(179,85,201,0.12),_transparent_40%),radial-gradient(circle_at_bottom_right,_rgba(40,90,206,0.12),_transparent_45%),var(--amet-paper)]">
-      <header className="border-b border-amet-indigo/10 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link
-            href={user ? homePathForRole(user.role) : "/ava/login"}
-            className="shrink-0"
-          >
-            <BrandLogo
-              markClassName="h-9 w-9"
-              nameClassName="text-sm font-semibold tracking-[0.06em] text-amet-blue"
-            />
+    <div className="ava-shell flex min-h-full flex-1 flex-col">
+      <header className="border-b border-[var(--ava-line)] bg-[color-mix(in_srgb,#ffffff_72%,transparent)] backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+          <Link href={homeHref} className="group flex items-center gap-3">
+            <AmetMark className="h-9 w-9 transition duration-300 group-hover:scale-[1.03]" />
+            <span className="flex flex-col leading-none">
+              <span className="ava-display text-[1.35rem] text-amet-indigo">
+                AMET
+              </span>
+              <span className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[var(--ava-muted)]">
+                AVA
+              </span>
+            </span>
           </Link>
 
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-2 text-sm sm:gap-3">
             {user ? (
               <>
                 {user.role === "admin" ? (
                   <Link
                     href="/ava/admin"
-                    className="rounded-md px-3 py-1.5 font-medium text-amet-indigo transition hover:bg-amet-indigo/5"
+                    className="hidden rounded-sm px-3 py-1.5 font-medium text-amet-indigo/80 transition hover:bg-white/70 hover:text-amet-indigo sm:inline-flex"
                   >
-                    Painel admin
+                    Admin
                   </Link>
                 ) : null}
                 {user.role === "professor" ? (
                   <Link
                     href="/ava/professor"
-                    className="rounded-md px-3 py-1.5 font-medium text-amet-indigo transition hover:bg-amet-indigo/5"
+                    className="hidden rounded-sm px-3 py-1.5 font-medium text-amet-indigo/80 transition hover:bg-white/70 hover:text-amet-indigo sm:inline-flex"
                   >
-                    Painel professor
+                    Professor
                   </Link>
                 ) : null}
                 {user.role === "aluno" ? (
                   <Link
                     href="/ava"
-                    className="rounded-md px-3 py-1.5 font-medium text-amet-indigo transition hover:bg-amet-indigo/5"
+                    className="hidden rounded-sm px-3 py-1.5 font-medium text-amet-indigo/80 transition hover:bg-white/70 hover:text-amet-indigo sm:inline-flex"
                   >
-                    Minhas turmas
+                    Turmas
                   </Link>
                 ) : null}
-                <div className="text-right">
+                <div className="hidden text-right sm:block">
                   <p className="font-medium text-amet-indigo">
                     {user.name ?? user.email}
                   </p>
-                  <p className="text-xs text-amet-indigo/60">
+                  <p className="text-[0.7rem] uppercase tracking-[0.14em] text-[var(--ava-muted)]">
                     {roleLabel(user.role)}
                   </p>
                 </div>
                 <form action="/api/ava/logout" method="post">
-                  <button
-                    type="submit"
-                    className="rounded-md border border-amet-indigo/15 px-3 py-1.5 font-medium text-amet-indigo transition hover:border-amet-indigo/30 hover:bg-white"
-                  >
+                  <button type="submit" className="ava-btn ava-btn-ghost px-3 py-1.5">
                     Sair
                   </button>
                 </form>
@@ -78,7 +79,7 @@ export function AvaShell({ children, user }: AvaShellProps) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
         {children}
       </main>
     </div>

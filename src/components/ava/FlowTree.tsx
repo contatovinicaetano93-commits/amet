@@ -11,64 +11,58 @@ export function FlowTree({ tree, compact = false }: FlowTreeProps) {
   const remaining = tree.steps.filter((step) => !step.done).length;
 
   return (
-    <section
-      className={`rounded-lg border border-amet-blue/20 bg-gradient-to-br from-white to-amet-blue/5 ${
-        compact ? "p-4" : "p-5"
-      }`}
-    >
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-amet-purple">
-            Fluxo canônico
-          </p>
+    <section className={`ava-panel ${compact ? "space-y-4" : "space-y-5"}`}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <p className="ava-kicker">Percurso</p>
           <h2
-            className={`mt-1 font-semibold text-amet-indigo ${
-              compact ? "text-lg" : "text-xl"
+            className={`font-semibold tracking-tight text-amet-indigo ${
+              compact ? "text-xl" : "text-2xl"
             }`}
           >
             {tree.title}
           </h2>
-          <p className="text-sm text-amet-indigo/65">{tree.subtitle}</p>
+          <p className="text-sm text-[var(--ava-muted)]">{tree.subtitle}</p>
         </div>
-        <p className="text-xs font-medium text-amet-indigo/55">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ava-muted)]">
           {remaining === 0
-            ? "Fluxo completo"
-            : `${remaining} passo${remaining > 1 ? "s" : ""} em aberto`}
+            ? "Completo"
+            : `${remaining} passo${remaining > 1 ? "s" : ""}`}
         </p>
       </div>
 
-      <ol className="space-y-2">
+      <ol className="space-y-0">
         {tree.steps.map((step, index) => {
           const body = (
             <>
               <span
-                className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center border text-xs font-semibold ${
                   step.done
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "border-emerald-700/30 text-emerald-800"
                     : step.current
-                      ? "bg-amet-indigo text-white"
-                      : "bg-amet-indigo/10 text-amet-indigo"
+                      ? "border-amet-indigo bg-amet-indigo text-white"
+                      : "border-[var(--ava-line-strong)] text-[var(--ava-muted)]"
                 }`}
               >
                 {step.done ? "✓" : index + 1}
               </span>
               <div className="min-w-0">
                 <p className="font-medium text-amet-indigo">{step.title}</p>
-                <p className="text-sm text-amet-indigo/60">{step.detail}</p>
+                <p className="text-sm text-[var(--ava-muted)]">{step.detail}</p>
               </div>
             </>
           );
 
-          const className = `flex items-start gap-3 rounded-md border px-3 py-2.5 ${
-            step.current
-              ? "border-amet-indigo/25 bg-white shadow-sm"
-              : "border-amet-indigo/8 bg-white/80"
-          }`;
+          const className =
+            "flex items-start gap-3 border-t border-[var(--ava-line)] py-3 first:border-t-0";
 
           if (step.href && !step.done) {
             return (
               <li key={step.id}>
-                <Link href={step.href} className={`${className} transition hover:border-amet-blue/30`}>
+                <Link
+                  href={step.href}
+                  className={`${className} transition hover:bg-white/50`}
+                >
                   {body}
                 </Link>
               </li>

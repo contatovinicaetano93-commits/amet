@@ -9,7 +9,6 @@ import { getDb } from "@/lib/ava/db";
 import { buildStudentFlow } from "@/lib/ava/flows";
 import { homePathForRole } from "@/lib/ava/navigation";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
-import { roleLabel } from "@/lib/ava/permissions";
 import { classes, enrollments, subjects, users } from "@/lib/ava/schema";
 
 export default async function AvaHomePage() {
@@ -56,58 +55,61 @@ export default async function AvaHomePage() {
     hasOpenClass: classRows.length > 0,
   });
 
+  const firstName = session.user.name?.split(" ")[0] ?? "bem-vindo(a)";
+
   return (
-    <div className="space-y-8">
-      <section className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amet-purple">
-          Ambiente Virtual
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-amet-indigo sm:text-4xl">
-          Olá, {session.user.name?.split(" ")[0] ?? "bem-vindo(a)"}
+    <div className="space-y-12">
+      <section className="ava-fade-in space-y-4">
+        <p className="ava-kicker">Seu espaço de estudo</p>
+        <h1 className="ava-display text-4xl text-amet-indigo sm:text-5xl">
+          Olá, {firstName}
         </h1>
-        <p className="max-w-2xl text-amet-indigo/70">
-          Você está conectado como {roleLabel(session.user.role)}. Fluxo:
-          matrícula → turma → assistir → progresso → IA.
+        <p className="max-w-xl text-lg leading-relaxed text-[var(--ava-muted)]">
+          Continue pelas turmas matriculadas. Assista, acompanhe o progresso e
+          tire dúvidas com o professor.
         </p>
       </section>
 
-      <FlowTree tree={tree} compact />
+      <div className="ava-fade-in-delay">
+        <FlowTree tree={tree} compact />
+      </div>
 
       {loadError ? (
-        <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p className="border-l-2 border-amber-700/50 bg-amber-50/80 px-4 py-3 text-sm text-amber-950">
           Não foi possível carregar suas turmas agora. Atualize a página em
           instantes.
         </p>
       ) : null}
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-amet-indigo">Suas turmas</h2>
+      <section className="ava-fade-in-delay-2 space-y-5">
+        <div className="space-y-1">
+          <p className="ava-kicker">Matrículas</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-amet-indigo">
+            Suas turmas
+          </h2>
+        </div>
+
         {classRows.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-amet-indigo/20 bg-white/70 px-5 py-8">
+          <div className="ava-panel">
             <h3 className="text-lg font-semibold text-amet-indigo">
-              Nenhuma turma matriculada
+              Nenhuma turma ainda
             </h3>
-            <p className="mt-2 max-w-xl text-amet-indigo/70">
-              Assim que o admin te matricular, suas turmas e vídeo-aulas
-              aparecem neste espaço.
+            <p className="mt-2 max-w-xl text-[var(--ava-muted)]">
+              Assim que o admin te matricular, as turmas e vídeo-aulas aparecem
+              aqui.
             </p>
           </div>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul>
             {classRows.map((classRow) => (
               <li key={classRow.id}>
-                <Link
-                  href={`/ava/turmas/${classRow.id}`}
-                  className="block rounded-lg border border-amet-indigo/10 bg-white/90 p-5 transition hover:-translate-y-0.5 hover:border-amet-blue/30 hover:shadow-[0_18px_40px_-30px_rgba(28,36,147,0.55)]"
-                >
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-amet-purple">
-                    {classRow.subjectName}
-                  </p>
-                  <h3 className="mt-2 text-lg font-semibold text-amet-indigo">
+                <Link href={`/ava/turmas/${classRow.id}`} className="ava-row">
+                  <p className="ava-kicker">{classRow.subjectName}</p>
+                  <h3 className="mt-2 text-xl font-semibold tracking-tight text-amet-indigo">
                     {classRow.name}
                   </h3>
                   {classRow.teacherName ? (
-                    <p className="mt-2 text-sm text-amet-indigo/60">
+                    <p className="mt-1 text-sm text-[var(--ava-muted)]">
                       Prof. {classRow.teacherName}
                     </p>
                   ) : null}

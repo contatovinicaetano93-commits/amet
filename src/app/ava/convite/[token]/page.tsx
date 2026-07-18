@@ -43,21 +43,19 @@ export default async function AcceptInvitePage({ params }: PageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <div className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amet-purple">
-          Convite AVA · {roleLabel(invite.role)}
-        </p>
-        <h1 className="text-3xl font-semibold text-amet-indigo">
-          Ative sua conta de {roleLabel(invite.role)}
+    <div className="mx-auto grid max-w-lg gap-10 pt-4 sm:pt-10">
+      <section className="ava-fade-in space-y-4">
+        <p className="ava-kicker">Convite · {roleLabel(invite.role)}</p>
+        <h1 className="ava-display text-4xl text-amet-indigo sm:text-5xl">
+          Ative sua conta
         </h1>
-        <p className="text-amet-indigo/70">
-          Defina seu nome e senha para começar a usar o ambiente virtual como{" "}
+        <p className="max-w-md text-lg leading-relaxed text-[var(--ava-muted)]">
+          Defina nome e senha para entrar no AVA como{" "}
           {roleLabel(invite.role).toLowerCase()}.
         </p>
-      </div>
+      </section>
 
-      <div className="rounded-lg border border-amet-indigo/10 bg-white/90 p-6 shadow-[0_20px_50px_-35px_rgba(28,36,147,0.45)]">
+      <div className="ava-fade-in-delay ava-panel">
         <AcceptInviteForm
           token={token}
           email={invite.email}

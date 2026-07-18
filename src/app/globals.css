@@ -367,3 +367,214 @@ body {
     transform: scale(0.94);
   }
 }
+
+/* ── AVA Clínica editorial ── */
+:root {
+  --ava-canvas: #f2f3f7;
+  --ava-canvas-deep: #e8eaf1;
+  --ava-ink: var(--amet-indigo);
+  --ava-muted: color-mix(in srgb, var(--amet-indigo) 58%, #8b90a8);
+  --ava-line: color-mix(in srgb, var(--amet-indigo) 12%, transparent);
+  --ava-line-strong: color-mix(in srgb, var(--amet-indigo) 22%, transparent);
+  --ava-surface: color-mix(in srgb, #ffffff 88%, var(--ava-canvas));
+  --ava-accent: var(--amet-blue);
+}
+
+.ava-shell {
+  min-height: 100%;
+  color: var(--ava-ink);
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--amet-indigo) 6%, #f7f8fb) 0%,
+      var(--ava-canvas) 42%,
+      color-mix(in srgb, var(--amet-blue) 4%, var(--ava-canvas-deep)) 100%
+    );
+  background-attachment: fixed;
+}
+
+.ava-shell::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(var(--ava-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ava-line) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+}
+
+.ava-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ava-display {
+  font-family: var(--font-editorial), Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.ava-kicker {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--amet-indigo) 55%, #7a8098);
+}
+
+.ava-muted {
+  color: var(--ava-muted);
+}
+
+.ava-rule {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--ava-line-strong),
+    var(--ava-line) 40%,
+    transparent
+  );
+}
+
+.ava-input {
+  width: 100%;
+  border: 1px solid var(--ava-line-strong);
+  background: color-mix(in srgb, #ffffff 92%, var(--ava-canvas));
+  border-radius: 2px;
+  padding: 0.7rem 0.9rem;
+  color: var(--ava-ink);
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ava-input:focus {
+  border-color: color-mix(in srgb, var(--amet-blue) 55%, var(--ava-line-strong));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amet-blue) 16%, transparent);
+  background: #fff;
+}
+
+.ava-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  padding: 0.7rem 1.15rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.ava-btn:disabled {
+  opacity: 0.55;
+}
+
+.ava-btn-primary {
+  background: var(--amet-indigo);
+  color: #fff;
+}
+
+.ava-btn-primary:hover:not(:disabled) {
+  background: var(--amet-blue);
+  transform: translateY(-1px);
+}
+
+.ava-btn-ghost {
+  border: 1px solid var(--ava-line-strong);
+  background: transparent;
+  color: var(--ava-ink);
+}
+
+.ava-btn-ghost:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--amet-indigo) 35%, transparent);
+  background: color-mix(in srgb, #ffffff 70%, transparent);
+}
+
+.ava-link {
+  color: var(--ava-accent);
+  text-underline-offset: 0.2em;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.ava-link:hover {
+  color: var(--amet-indigo);
+  text-decoration: underline;
+}
+
+.ava-row {
+  display: block;
+  border-top: 1px solid var(--ava-line);
+  padding: 1.15rem 0.15rem;
+  transition: background 0.25s ease, padding 0.25s ease;
+}
+
+.ava-row:last-child {
+  border-bottom: 1px solid var(--ava-line);
+}
+
+a.ava-row:hover {
+  background: color-mix(in srgb, #ffffff 55%, transparent);
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
+}
+
+.ava-panel {
+  border-top: 1px solid var(--ava-line-strong);
+  padding-top: 1.5rem;
+}
+
+.ava-cinema {
+  overflow: hidden;
+  border-radius: 2px;
+  background: #05070f;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 18%, transparent) inset,
+    0 28px 70px -40px rgba(12, 18, 48, 0.7);
+}
+
+.ava-fade-in {
+  animation: ava-fade-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ava-fade-in-delay {
+  animation: ava-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+.ava-fade-in-delay-2 {
+  animation: ava-fade-up 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.22s both;
+}
+
+@keyframes ava-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ava-fade-in,
+  .ava-fade-in-delay,
+  .ava-fade-in-delay-2 {
+    animation: none;
+  }
+
+  .ava-btn-primary:hover:not(:disabled),
+  a.ava-row:hover {
+    transform: none;
+  }
+}

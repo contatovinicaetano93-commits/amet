@@ -35,76 +35,68 @@ export function ProfessorPanel({ teacherName, classes }: ProfessorPanelProps) {
   });
 
   return (
-    <div className="space-y-8">
-      <section className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amet-purple">
-          Painel do professor
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-amet-indigo sm:text-4xl">
+    <div className="space-y-12">
+      <section className="ava-fade-in space-y-4">
+        <p className="ava-kicker">Painel do professor</p>
+        <h1 className="ava-display text-4xl text-amet-indigo sm:text-5xl">
           Olá, {firstName}
         </h1>
-        <p className="max-w-2xl text-amet-indigo/70">
-          Fluxo: turmas → gerir → criar aula → upload → publicar → ver como
-          aluno.
+        <p className="max-w-xl text-lg leading-relaxed text-[var(--ava-muted)]">
+          Gerencie turmas, publique aulas e responda dúvidas dos alunos.
         </p>
       </section>
 
-      <FlowTree tree={tree} />
+      <div className="ava-fade-in-delay">
+        <FlowTree tree={tree} />
+      </div>
 
-      <section className="space-y-4">
+      <section className="ava-fade-in-delay-2 space-y-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-xl font-semibold text-amet-indigo">
-            Minhas turmas
-          </h2>
-          <p className="text-sm text-amet-indigo/55">
+          <div className="space-y-1">
+            <p className="ava-kicker">Turmas</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-amet-indigo">
+              Minhas turmas
+            </h2>
+          </div>
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ava-muted)]">
             {classes.length} turma{classes.length === 1 ? "" : "s"}
           </p>
         </div>
 
         {classes.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-amet-indigo/20 bg-white/80 px-5 py-8">
+          <div className="ava-panel">
             <h3 className="text-lg font-semibold text-amet-indigo">
               Nenhuma turma atribuída ainda
             </h3>
-            <p className="mt-2 max-w-xl text-amet-indigo/70">
+            <p className="mt-2 max-w-xl text-[var(--ava-muted)]">
               O administrador precisa criar a matéria, abrir a turma e atribuir
-              você como professor. Depois a turma aparece aqui.
+              você como professor.
             </p>
           </div>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul>
             {classes.map((classRow) => (
               <li key={classRow.id}>
-                <div className="flex h-full flex-col rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-amet-purple">
-                    {classRow.subjectName}
-                  </p>
-                  <h3 className="mt-2 text-lg font-semibold text-amet-indigo">
+                <div className="ava-row">
+                  <p className="ava-kicker">{classRow.subjectName}</p>
+                  <h3 className="mt-2 text-xl font-semibold tracking-tight text-amet-indigo">
                     {classRow.name}
                   </h3>
-                  <p className="mt-2 text-sm text-amet-indigo/60">
-                    {classRow.lessonCount} aula
-                    {classRow.lessonCount === 1 ? "" : "s"} ·{" "}
-                    {classRow.publishedCount} publicada
-                    {classRow.publishedCount === 1 ? "" : "s"} ·{" "}
-                    {classRow.studentCount} aluno
+                  <p className="mt-1 text-sm text-[var(--ava-muted)]">
+                    {classRow.publishedCount}/{classRow.lessonCount} publicadas
+                    · {classRow.studentCount} aluno
                     {classRow.studentCount === 1 ? "" : "s"}
                   </p>
-                  {classRow.lessonCount === 0 ? (
-                    <p className="mt-2 text-sm text-amet-indigo/70">
-                      Próximo passo: criar e publicar a primeira aula.
-                    </p>
-                  ) : null}
-                  <div className="mt-5 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-4">
                     <Link
                       href={classManagePath(classRow.id)}
-                      className="inline-flex rounded-md bg-amet-indigo px-3 py-2 text-sm font-semibold text-white hover:bg-amet-blue"
+                      className="ava-link text-sm"
                     >
                       Gerir aulas
                     </Link>
                     <Link
                       href={`/ava/turmas/${classRow.id}`}
-                      className="inline-flex rounded-md border border-amet-indigo/15 px-3 py-2 text-sm font-medium text-amet-indigo hover:bg-white"
+                      className="ava-link text-sm"
                     >
                       Ver como aluno
                     </Link>

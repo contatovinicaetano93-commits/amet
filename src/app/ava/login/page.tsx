@@ -12,22 +12,22 @@ export default async function AvaLoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <div className="mb-8 space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amet-purple">
-          AVA AMET
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-amet-indigo">
-          Entrar
+    <div className="mx-auto grid max-w-lg gap-10 pt-4 sm:pt-10">
+      <section className="ava-fade-in space-y-4">
+        <p className="ava-kicker">Ambiente virtual</p>
+        <h1 className="ava-display text-4xl text-amet-indigo sm:text-5xl">
+          AMET
         </h1>
-        <p className="text-amet-indigo/70">
-          Acesso por convite. Use o e-mail e a senha definidos no convite.
+        <p className="max-w-md text-lg leading-relaxed text-[var(--ava-muted)]">
+          Entre com o e-mail e a senha do seu convite para continuar os estudos.
         </p>
-      </div>
+      </section>
 
-      <div className="rounded-lg border border-amet-indigo/10 bg-white/90 p-6 shadow-[0_20px_50px_-35px_rgba(28,36,147,0.45)]">
+      <div className="ava-fade-in-delay ava-panel">
         <Suspense
-          fallback={<p className="text-sm text-amet-indigo/60">Carregando…</p>}
+          fallback={
+            <p className="text-sm text-[var(--ava-muted)]">Carregando…</p>
+          }
         >
           <LoginForm />
         </Suspense>

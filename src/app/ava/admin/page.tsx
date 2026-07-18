@@ -86,14 +86,14 @@ export default async function AvaAdminPage() {
   const firstClassId = classRows[0]?.id ?? null;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amet-purple">
-          Administração
-        </p>
-        <h1 className="text-3xl font-semibold text-amet-indigo">Painel AVA</h1>
-        <p className="text-amet-indigo/70">
-          Fluxo: convite → matéria → turma → matrícula → gerir aulas.
+    <div className="space-y-10">
+      <div className="ava-fade-in space-y-4">
+        <p className="ava-kicker">Administração</p>
+        <h1 className="ava-display text-4xl text-amet-indigo sm:text-5xl">
+          Painel AVA
+        </h1>
+        <p className="max-w-xl text-lg leading-relaxed text-[var(--ava-muted)]">
+          Convite → matéria → turma → matrícula → gerir aulas.
         </p>
       </div>
 

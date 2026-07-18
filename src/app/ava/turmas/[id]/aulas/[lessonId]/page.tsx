@@ -117,15 +117,12 @@ export default async function LessonPage({ params }: PageProps) {
   }));
 
   return (
-    <div className="space-y-4">
-      <Link
-        href={`/ava/turmas/${id}`}
-        className="text-sm text-amet-blue hover:underline"
-      >
+    <div className="space-y-10">
+      <Link href={`/ava/turmas/${id}`} className="ava-link text-sm">
         ← Voltar à turma
       </Link>
       {videoMissing && manage ? (
-        <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p className="border-l-2 border-amber-700/50 bg-amber-50/80 px-4 py-3 text-sm text-amber-950">
           O vídeo desta aula não está no storage (upload incompleto). Volte em
           Gerir aulas e envie o arquivo de novo.
         </p>

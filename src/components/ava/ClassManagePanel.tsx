@@ -224,11 +224,11 @@ export function ClassManagePanel({
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amet-purple">
+        <p className="ava-kicker">
           {viewerRole === "admin" ? "Gestão da turma" : "Área do professor"} ·{" "}
           {subjectName}
         </p>
-        <h1 className="text-3xl font-semibold text-amet-indigo">{className}</h1>
+        <h1 className="ava-display text-4xl text-amet-indigo">{className}</h1>
         <div className="flex flex-wrap gap-3">
           <Link
             href={homePathForRole(viewerRole)}

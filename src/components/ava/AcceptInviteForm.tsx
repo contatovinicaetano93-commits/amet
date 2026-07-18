@@ -50,50 +50,50 @@ export function AcceptInviteForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="rounded-md bg-amet-indigo/5 px-3 py-2 text-sm text-amet-indigo/80">
+    <form onSubmit={onSubmit} className="space-y-5">
+      <div className="space-y-1 text-sm text-[var(--ava-muted)]">
         <p>
-          E-mail: <strong>{email}</strong>
+          E-mail: <span className="font-medium text-amet-indigo">{email}</span>
         </p>
         <p>
-          Perfil: <strong>{roleLabel}</strong>
+          Perfil:{" "}
+          <span className="font-medium text-amet-indigo">{roleLabel}</span>
         </p>
       </div>
 
-      <label className="block space-y-1.5">
-        <span className="text-sm font-medium">Nome completo</span>
-        <input
-          name="name"
-          required
-          minLength={2}
-          className="w-full rounded-md border border-amet-indigo/15 bg-white px-3 py-2 outline-none ring-amet-blue/30 focus:ring-2"
-        />
+      <label className="block space-y-2">
+        <span className="text-sm font-medium text-amet-indigo">
+          Nome completo
+        </span>
+        <input name="name" required minLength={2} className="ava-input" />
       </label>
 
-      <label className="block space-y-1.5">
-        <span className="text-sm font-medium">Senha</span>
+      <label className="block space-y-2">
+        <span className="text-sm font-medium text-amet-indigo">Senha</span>
         <input
           name="password"
           type="password"
           required
           minLength={8}
-          className="w-full rounded-md border border-amet-indigo/15 bg-white px-3 py-2 outline-none ring-amet-blue/30 focus:ring-2"
+          className="ava-input"
         />
       </label>
 
-      <label className="block space-y-1.5">
-        <span className="text-sm font-medium">Confirmar senha</span>
+      <label className="block space-y-2">
+        <span className="text-sm font-medium text-amet-indigo">
+          Confirmar senha
+        </span>
         <input
           name="confirm"
           type="password"
           required
           minLength={8}
-          className="w-full rounded-md border border-amet-indigo/15 bg-white px-3 py-2 outline-none ring-amet-blue/30 focus:ring-2"
+          className="ava-input"
         />
       </label>
 
       {error ? (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="border-l-2 border-red-700/60 bg-red-50/80 px-3 py-2 text-sm text-red-800">
           {error}
         </p>
       ) : null}
@@ -101,7 +101,7 @@ export function AcceptInviteForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-amet-indigo px-4 py-2.5 font-semibold text-white transition hover:bg-amet-blue disabled:opacity-60"
+        className="ava-btn ava-btn-primary w-full py-3"
       >
         {pending ? "Ativando…" : `Ativar conta de ${roleLabel}`}
       </button>

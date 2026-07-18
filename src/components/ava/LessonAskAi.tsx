@@ -33,14 +33,15 @@ export function LessonAskAi({ lessonId }: LessonAskAiProps) {
   }
 
   return (
-    <section className="rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
-      <div className="mb-3 space-y-1">
-        <h2 className="text-lg font-semibold text-amet-indigo">
+    <section className="ava-panel space-y-4">
+      <div className="space-y-2">
+        <p className="ava-kicker">Assistente</p>
+        <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
           Pergunte sobre esta aula
         </h2>
-        <p className="text-sm text-amet-indigo/65">
-          Tire dúvidas com o assistente do AVA. Se a IA estiver offline, você
-          recebe um guia passo a passo.
+        <p className="text-sm text-[var(--ava-muted)]">
+          Apoio rápido. Se a IA estiver offline, você recebe um guia passo a
+          passo.
         </p>
       </div>
 
@@ -53,27 +54,27 @@ export function LessonAskAi({ lessonId }: LessonAskAiProps) {
           maxLength={1000}
           rows={3}
           placeholder="Ex.: Pode explicar o ponto principal desta aula?"
-          className="w-full rounded-md border border-amet-indigo/15 px-3 py-2 outline-none ring-amet-blue/30 focus:ring-2"
+          className="ava-input"
         />
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white transition hover:bg-amet-blue disabled:opacity-60"
+          className="ava-btn ava-btn-ghost"
         >
-          {pending ? "Pensando…" : "Perguntar"}
+          {pending ? "Pensando…" : "Perguntar ao assistente"}
         </button>
       </form>
 
       {error ? (
-        <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="border-l-2 border-red-700/60 bg-red-50/80 px-3 py-2 text-sm text-red-800">
           {error}
         </p>
       ) : null}
 
       {answer ? (
-        <div className="mt-4 space-y-2 rounded-md bg-amet-indigo/5 px-4 py-3 text-sm text-amet-indigo/90 whitespace-pre-wrap">
+        <div className="space-y-2 border-l-2 border-amet-indigo/20 pl-4 text-sm leading-relaxed text-amet-indigo/90 whitespace-pre-wrap">
           {provider ? (
-            <p className="text-xs uppercase tracking-[0.14em] text-amet-purple">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ava-muted)]">
               {provider === "openai" ? "Assistente IA" : "Guia assistido"}
             </p>
           ) : null}

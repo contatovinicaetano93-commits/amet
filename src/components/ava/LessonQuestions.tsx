@@ -93,17 +93,18 @@ export function LessonQuestions({
   const openCount = questions.filter((item) => !item.answer).length;
 
   return (
-    <section className="space-y-4 rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
-      <div className="space-y-1">
-        <h2 className="text-lg font-semibold text-amet-indigo">
+    <section className="ava-panel space-y-6">
+      <div className="space-y-2">
+        <p className="ava-kicker">Diálogo</p>
+        <h2 className="text-2xl font-semibold tracking-tight text-amet-indigo">
           Dúvidas com o professor
         </h2>
-        <p className="text-sm text-amet-indigo/65">
+        <p className="max-w-2xl text-sm text-[var(--ava-muted)]">
           {canAsk
             ? "Envie sua dúvida. Só alunos perguntam; o professor responde aqui."
             : canAnswer
               ? "Responda as dúvidas dos alunos desta aula."
-              : "Dúvidas dos alunos e respostas do professor desta aula."}
+              : "Perguntas dos alunos e respostas do professor."}
           {openCount > 0 ? ` · ${openCount} em aberto` : null}
         </p>
       </div>
@@ -118,12 +119,12 @@ export function LessonQuestions({
             maxLength={2000}
             rows={3}
             placeholder="Ex.: No minuto 4:20, como faço esse corte?"
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2 outline-none ring-amet-blue/30 focus:ring-2"
+            className="ava-input"
           />
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white transition hover:bg-amet-blue disabled:opacity-60"
+            className="ava-btn ava-btn-primary"
           >
             {pending ? "Enviando…" : "Enviar pergunta"}
           </button>
@@ -131,28 +132,28 @@ export function LessonQuestions({
       ) : null}
 
       {message ? (
-        <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+        <p className="border-l-2 border-emerald-700/60 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-900">
           {message}
         </p>
       ) : null}
       {error ? (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="border-l-2 border-red-700/60 bg-red-50/80 px-3 py-2 text-sm text-red-800">
           {error}
         </p>
       ) : null}
 
-      <ul className="space-y-3">
+      <ul>
         {questions.length === 0 ? (
-          <li className="rounded-md border border-dashed border-amet-indigo/15 px-4 py-6 text-sm text-amet-indigo/65">
+          <li className="border-t border-[var(--ava-line)] py-6 text-sm text-[var(--ava-muted)]">
             Nenhuma pergunta ainda nesta aula.
           </li>
         ) : (
           questions.map((question) => (
             <li
               key={question.id}
-              className="rounded-md border border-amet-indigo/10 bg-white px-4 py-3"
+              className="space-y-3 border-t border-[var(--ava-line)] py-5"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-amet-indigo/55">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-[0.12em] text-[var(--ava-muted)]">
                 <span>
                   {question.isMine ? "Você" : question.askerName}
                   {" · "}
@@ -161,27 +162,31 @@ export function LessonQuestions({
                 <span
                   className={
                     question.answer
-                      ? "font-medium text-emerald-700"
-                      : "font-medium text-amber-700"
+                      ? "font-semibold text-emerald-800"
+                      : "font-semibold text-amet-indigo/70"
                   }
                 >
-                  {question.answer ? "Respondida" : "Aguardando professor"}
+                  {question.answer ? "Respondida" : "Aguardando"}
                 </span>
               </div>
-              <p className="mt-2 text-sm text-amet-indigo">{question.body}</p>
+              <p className="text-[1.02rem] leading-relaxed text-amet-indigo">
+                {question.body}
+              </p>
 
               {question.answer ? (
-                <div className="mt-3 rounded-md bg-amet-indigo/5 px-3 py-2 text-sm text-amet-indigo/90">
-                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-amet-purple">
+                <div className="space-y-1 border-l-2 border-amet-indigo/25 pl-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ava-muted)]">
                     Resposta
                     {question.answeredByName
                       ? ` · ${question.answeredByName}`
                       : ""}
                   </p>
-                  <p className="mt-1 whitespace-pre-wrap">{question.answer}</p>
+                  <p className="whitespace-pre-wrap leading-relaxed text-amet-indigo/90">
+                    {question.answer}
+                  </p>
                 </div>
               ) : canAnswer ? (
-                <div className="mt-3 space-y-2">
+                <div className="space-y-2 pt-1">
                   <textarea
                     value={answerDrafts[question.id] ?? ""}
                     onChange={(event) =>
@@ -192,19 +197,19 @@ export function LessonQuestions({
                     }
                     rows={3}
                     placeholder="Escreva a resposta para o aluno…"
-                    className="w-full rounded-md border border-amet-indigo/15 px-3 py-2 text-sm outline-none ring-amet-blue/30 focus:ring-2"
+                    className="ava-input"
                   />
                   <button
                     type="button"
                     disabled={pending}
                     onClick={() => submitAnswer(question.id)}
-                    className="rounded-md bg-amet-indigo px-3 py-1.5 text-sm font-semibold text-white hover:bg-amet-blue disabled:opacity-60"
+                    className="ava-btn ava-btn-primary"
                   >
                     Publicar resposta
                   </button>
                 </div>
               ) : (
-                <p className="mt-2 text-sm text-amet-indigo/55">
+                <p className="text-sm text-[var(--ava-muted)]">
                   O professor ainda não respondeu.
                 </p>
               )}

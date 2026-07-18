@@ -73,10 +73,15 @@ export function LessonPlayer({
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-semibold text-amet-indigo">{title}</h1>
+    <div className="space-y-8">
+      <div className="ava-fade-in space-y-3">
+        <p className="ava-kicker">Vídeo-aula</p>
+        <h1 className="ava-display text-3xl text-amet-indigo sm:text-4xl">
+          {title}
+        </h1>
+      </div>
 
-      <div className="overflow-hidden rounded-lg border border-amet-indigo/10 bg-black shadow-[0_24px_60px_-40px_rgba(28,36,147,0.65)]">
+      <div className="ava-fade-in-delay ava-cinema">
         {videoUrl ? (
           <video
             key={videoUrl}
@@ -88,21 +93,22 @@ export function LessonPlayer({
             Seu navegador não suporta reprodução de vídeo.
           </video>
         ) : (
-          <div className="flex aspect-video items-center justify-center bg-amet-indigo/90 px-6 text-center text-white">
+          <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-white/75">
             Vídeo ainda não disponível para esta aula.
           </div>
         )}
       </div>
 
       {canEditBio ? (
-        <section className="space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-semibold text-amet-indigo">
-                Bio da aula
+        <section className="ava-fade-in-delay-2 ava-panel space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="space-y-1">
+              <p className="ava-kicker">Bio da aula</p>
+              <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
+                Informações do vídeo
               </h2>
-              <p className="text-sm text-amet-indigo/65">
-                Informações que os alunos veem junto ao vídeo.
+              <p className="text-sm text-[var(--ava-muted)]">
+                Orientação que os alunos leem junto à aula.
               </p>
             </div>
             {!editingBio ? (
@@ -114,7 +120,7 @@ export function LessonPlayer({
                   setMessage("");
                   setError("");
                 }}
-                className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm font-medium text-amet-indigo hover:bg-amet-indigo/5"
+                className="ava-btn ava-btn-ghost"
               >
                 {bio ? "Editar bio" : "Adicionar bio"}
               </button>
@@ -128,14 +134,14 @@ export function LessonPlayer({
                 onChange={(event) => setDraftBio(event.target.value)}
                 maxLength={2000}
                 rows={5}
-                placeholder="Ex.: objetivos da aula, materiais, avisos e o que revisar antes de assistir…"
-                className="w-full rounded-md border border-amet-indigo/15 px-3 py-2 text-sm outline-none ring-amet-blue/30 focus:ring-2"
+                placeholder="Objetivos, materiais, avisos e o que revisar antes de assistir…"
+                className="ava-input"
               />
               <div className="flex flex-wrap gap-2">
                 <button
                   type="submit"
                   disabled={pending}
-                  className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white hover:bg-amet-blue disabled:opacity-60"
+                  className="ava-btn ava-btn-primary"
                 >
                   {pending ? "Salvando…" : "Salvar bio"}
                 </button>
@@ -147,29 +153,26 @@ export function LessonPlayer({
                     setEditingBio(false);
                     setError("");
                   }}
-                  className="rounded-md border border-amet-indigo/15 px-4 py-2 text-sm text-amet-indigo disabled:opacity-60"
+                  className="ava-btn ava-btn-ghost"
                 >
                   Cancelar
                 </button>
               </div>
             </form>
           ) : bio ? (
-            <p className="whitespace-pre-wrap text-sm text-amet-indigo/80">
+            <p className="max-w-3xl whitespace-pre-wrap leading-relaxed text-amet-indigo/85">
               {bio}
             </p>
           ) : (
-            <p className="text-sm text-amet-indigo/55">
-              Nenhuma bio ainda. Adicione orientações, materiais ou avisos da
-              aula.
+            <p className="text-sm text-[var(--ava-muted)]">
+              Nenhuma bio ainda. Adicione orientações, materiais ou avisos.
             </p>
           )}
         </section>
       ) : bio ? (
-        <section className="space-y-1">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-amet-purple">
-            Sobre esta aula
-          </h2>
-          <p className="max-w-3xl whitespace-pre-wrap text-amet-indigo/75">
+        <section className="ava-fade-in-delay-2 ava-panel space-y-2">
+          <p className="ava-kicker">Sobre esta aula</p>
+          <p className="max-w-3xl whitespace-pre-wrap text-lg leading-relaxed text-amet-indigo/85">
             {bio}
           </p>
         </section>
@@ -181,23 +184,23 @@ export function LessonPlayer({
             type="button"
             disabled={pending}
             onClick={toggleCompleted}
-            className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white transition hover:bg-amet-blue disabled:opacity-60"
+            className="ava-btn ava-btn-primary"
           >
             {completed ? "Desmarcar conclusão" : "Marcar como concluída"}
           </button>
-          <span className="text-sm text-amet-indigo/65">
-            Status: {completed ? "Concluída" : "Em andamento"}
+          <span className="text-sm text-[var(--ava-muted)]">
+            {completed ? "Concluída" : "Em andamento"}
           </span>
         </div>
       ) : null}
 
       {message ? (
-        <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+        <p className="border-l-2 border-emerald-700/60 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-900">
           {message}
         </p>
       ) : null}
       {error ? (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="border-l-2 border-red-700/60 bg-red-50/80 px-3 py-2 text-sm text-red-800">
           {error}
         </p>
       ) : null}
