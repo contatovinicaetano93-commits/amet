@@ -412,21 +412,41 @@ export function AdminPanel({
         <form
           id="materia"
           onSubmit={createSubject}
-          className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+          className="ava-panel scroll-mt-24 space-y-3"
         >
-          <h2 className="text-lg font-semibold">Nova matéria</h2>
+          <div className="space-y-1">
+            <p className="ava-kicker">Matérias</p>
+            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
+              Matérias oficiais
+            </h2>
+            <p className="text-sm text-[var(--ava-muted)]">
+              Estética, Imagem, Hematologia e Análises Clínicas já estão
+              disponíveis. Só use este formulário se precisar de uma matéria
+              extra.
+            </p>
+          </div>
+          <ul className="space-y-1 text-sm text-amet-indigo">
+            {subjects.map((subject) => (
+              <li
+                key={subject.id}
+                className="border-t border-[var(--ava-line)] py-2 first:border-t-0"
+              >
+                {subject.name}
+              </li>
+            ))}
+          </ul>
           <input
             name="name"
             required
-            placeholder="Nome da matéria"
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
+            placeholder="Matéria extra (opcional)"
+            className="ava-input"
           />
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="ava-btn ava-btn-ghost"
           >
-            Criar matéria
+            Adicionar matéria
           </button>
         </form>
 

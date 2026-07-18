@@ -90,11 +90,11 @@ export function shiftDetail(shift: string | null | undefined): string | null {
 
 export const SHIFT_GUIDE = [
   {
-    courses: "Imagem / Hematologia / Estética",
+    courses: "Estética / Imagem / Hematologia",
     hours: "09h–13h · 19h–22h",
   },
   {
-    courses: "Análises",
+    courses: "Análises Clínicas",
     hours: "09h–13h · 14h–18h · 19h–22h",
   },
   {

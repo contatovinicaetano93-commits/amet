@@ -16,11 +16,17 @@ import {
   users,
 } from "@/lib/ava/schema";
 import { isR2Configured, missingR2EnvKeys } from "@/lib/ava/storage";
+import {
+  CANONICAL_SUBJECTS,
+  ensureCanonicalSubjects,
+} from "@/lib/ava/subjects-catalog";
 
 export default async function AvaAdminPage() {
   const session = await auth();
   if (!session?.user) redirect("/ava/login");
   if (session.user.role !== "admin") redirect("/ava");
+
+  await ensureCanonicalSubjects();
 
   const db = getDb();
   const teacher = alias(users, "teacher");
@@ -28,7 +34,7 @@ export default async function AvaAdminPage() {
   const [
     userRows,
     inviteRows,
-    subjectRows,
+    subjectRowsRaw,
     classRows,
     [enrollmentStats],
     [publishedStats],
@@ -85,6 +91,16 @@ export default async function AvaAdminPage() {
   ]);
 
   const firstClassId = classRows[0]?.id ?? null;
+
+  const canonicalOrder = new Map(
+    CANONICAL_SUBJECTS.map((subject, index) => [subject.slug, index]),
+  );
+  const subjectRows = [...subjectRowsRaw].sort((a, b) => {
+    const ai = canonicalOrder.get(a.slug) ?? 100;
+    const bi = canonicalOrder.get(b.slug) ?? 100;
+    if (ai !== bi) return ai - bi;
+    return a.name.localeCompare(b.name, "pt-BR");
+  });
 
   return (
     <div className="space-y-10">
