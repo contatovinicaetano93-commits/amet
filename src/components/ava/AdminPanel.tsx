@@ -9,6 +9,7 @@ import { roleLabel } from "@/lib/ava/permissions";
 import type { UserRole } from "@/lib/ava/schema";
 import {
   SHIFT_GUIDE,
+  SHIFTS,
   allowedShiftsForSubject,
   shiftCodes,
   shiftLabel,
