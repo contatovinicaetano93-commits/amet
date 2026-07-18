@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { AdminPanel } from "@/components/ava/AdminPanel";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
+import { inviteEmailCanDeliverBroadly } from "@/lib/ava/invite-email";
 import { classes, invites, subjects, users } from "@/lib/ava/schema";
 import { isR2Configured, missingR2EnvKeys } from "@/lib/ava/storage";
 
@@ -74,6 +75,7 @@ export default async function AvaAdminPage() {
         initialClasses={classRows}
         storageConfigured={isR2Configured()}
         missingStorageKeys={missingR2EnvKeys()}
+        emailConfigured={inviteEmailCanDeliverBroadly()}
       />
     </div>
   );

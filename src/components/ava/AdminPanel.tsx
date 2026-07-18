@@ -41,6 +41,7 @@ type AdminPanelProps = {
   initialClasses: ClassRow[];
   storageConfigured: boolean;
   missingStorageKeys: string[];
+  emailConfigured: boolean;
 };
 
 export function AdminPanel({
@@ -50,6 +51,7 @@ export function AdminPanel({
   initialClasses,
   storageConfigured,
   missingStorageKeys,
+  emailConfigured,
 }: AdminPanelProps) {
   const router = useRouter();
   const [users] = useState(initialUsers);
@@ -91,8 +93,8 @@ export function AdminPanel({
     setCopyState("idle");
     setMessage(
       data.emailSent
-        ? "Convite criado. Se o e-mail não chegar, use o link abaixo."
-        : "Convite criado. Copie o link abaixo e envie por WhatsApp/e-mail.",
+        ? `Convite criado e e-mail enviado para ${data.invite?.email ?? "o destinatário"} com o link de ativação.`
+        : "Convite criado. O e-mail não saiu — copie o link abaixo e envie manualmente.",
     );
     setError(data.warning ? String(data.warning) : "");
     if (data.invite) {
@@ -283,6 +285,19 @@ export function AdminPanel({
 
   return (
     <div className="space-y-10">
+      {!emailConfigured ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Envio de convite por e-mail ainda limitado. No Resend, verifique o
+          domínio <code className="font-mono text-xs">ametsaude.com.br</code> e
+          no Vercel use{" "}
+          <code className="font-mono text-xs">
+            RESEND_FROM_EMAIL=AMET Saúde &amp; Estética
+            &lt;noreply@ametsaude.com.br&gt;
+          </code>
+          . Enquanto isso, copie o link do convite.
+        </div>
+      ) : null}
+
       {!storageConfigured ? (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Upload de vídeo ainda não está pronto. Configure no Vercel:{" "}
@@ -335,8 +350,8 @@ export function AdminPanel({
         >
           <h2 className="text-lg font-semibold">Convidar usuário</h2>
           <p className="text-sm text-amet-indigo/65">
-            Depois de criar, o link aparece nesta página para você copiar. Não
-            dependa só do e-mail.
+            O sistema envia o link de ativação para o e-mail digitado. Se o
+            envio falhar, o link também aparece aqui para copiar.
           </p>
           <input
             name="email"

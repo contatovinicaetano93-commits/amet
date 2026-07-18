@@ -2,6 +2,10 @@ import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { getDb } from "@/lib/ava/db";
+import {
+  getInviteFromAddress,
+  inviteEmailCanDeliverBroadly,
+} from "@/lib/ava/invite-email";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
 import { isUpstashConfigured } from "@/lib/ava/rate-limit";
 import { isR2Configured, missingR2EnvKeys, probeR2Bucket } from "@/lib/ava/storage";
@@ -12,10 +16,13 @@ export async function GET(request: Request) {
   const started = Date.now();
   const url = new URL(request.url);
   const deep = url.searchParams.get("deep") === "1";
+  const from = getInviteFromAddress();
+  const emailReady = inviteEmailCanDeliverBroadly(from);
 
   const checks: Record<string, "ok" | "error" | "missing" | "skipped"> = {
     api: "ok",
     database: "error",
+    email: emailReady ? "ok" : process.env.RESEND_API_KEY ? "error" : "missing",
     upstash: isUpstashConfigured() ? "ok" : "missing",
     r2: isR2Configured() ? "ok" : "missing",
     sentry:
@@ -54,7 +61,12 @@ export async function GET(request: Request) {
     checks,
     details: {
       r2: r2Detail,
-      note: "upstash/sentry/r2 'missing' não derruba o AVA; database é obrigatório.",
+      email: emailReady
+        ? "Convites podem ser enviados para o e-mail digitado."
+        : from.includes("resend.dev")
+          ? "RESEND_FROM_EMAIL ainda usa resend.dev — só envia para o e-mail da conta Resend."
+          : "Configure RESEND_API_KEY e RESEND_FROM_EMAIL com domínio verificado.",
+      note: "upstash/sentry/r2/email 'missing|error' não derruba o AVA; database é obrigatório.",
     },
     latencyMs: Date.now() - started,
     ts: new Date().toISOString(),
