@@ -70,7 +70,11 @@ export function ClassManagePanel({
 
   function createLesson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
+    const videoFile = form.get("video");
+    const file = videoFile instanceof File && videoFile.size > 0 ? videoFile : null;
+
     startTransition(async () => {
       setMessage("");
       setError("");
@@ -88,8 +92,8 @@ export function ClassManagePanel({
         setError(data.error ?? "Falha ao criar aula.");
         return;
       }
-      setMessage("Aula criada. Envie o vídeo abaixo.");
-      event.currentTarget.reset();
+
+      formEl.reset();
       if (data.lesson) {
         setLessons((current) => [
           ...current,
@@ -103,11 +107,24 @@ export function ClassManagePanel({
           },
         ]);
       }
+
+      if (data.lesson && file) {
+        const uploaded = await uploadVideo(data.lesson.id, file);
+        if (!uploaded) {
+          setMessage(
+            "Aula criada, mas o vídeo não subiu. Tente novamente no cartão da aula.",
+          );
+        }
+      } else {
+        setMessage(
+          "Aula criada. Selecione o vídeo no cartão da aula abaixo para enviar.",
+        );
+      }
       refresh();
     });
   }
 
-  async function uploadVideo(lessonId: string, file: File) {
+  async function uploadVideo(lessonId: string, file: File): Promise<boolean> {
     setUploadingLessonId(lessonId);
     setError("");
     setMessage("");
@@ -124,7 +141,7 @@ export function ClassManagePanel({
       const intent = await intentRes.json().catch(() => ({}));
       if (!intentRes.ok) {
         setError(intent.error ?? "Falha ao preparar upload.");
-        return;
+        return false;
       }
 
       const putRes = await fetch(intent.uploadUrl, {
@@ -134,8 +151,10 @@ export function ClassManagePanel({
       });
 
       if (!putRes.ok) {
-        setError("Falha ao enviar o arquivo para o storage.");
-        return;
+        setError(
+          "Falha ao enviar o arquivo para o storage. Confira o CORS do bucket R2.",
+        );
+        return false;
       }
 
       const confirmRes = await fetch(
@@ -149,7 +168,7 @@ export function ClassManagePanel({
       const confirm = await confirmRes.json().catch(() => ({}));
       if (!confirmRes.ok) {
         setError(confirm.error ?? "Upload enviado, mas confirmação falhou.");
-        return;
+        return false;
       }
 
       setLessons((current) =>
@@ -161,6 +180,7 @@ export function ClassManagePanel({
       );
       setMessage("Vídeo enviado e aula publicada.");
       refresh();
+      return true;
     } finally {
       setUploadingLessonId(null);
     }
@@ -231,6 +251,10 @@ export function ClassManagePanel({
         className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
       >
         <h2 className="text-lg font-semibold">Nova vídeo-aula</h2>
+        <p className="text-sm text-amet-indigo/65">
+          Preencha o título, escolha o vídeo (mp4/webm) e clique em criar. O
+          upload começa em seguida.
+        </p>
         <input
           name="title"
           required
@@ -243,12 +267,27 @@ export function ClassManagePanel({
           rows={3}
           className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
         />
+        <label className="block space-y-1.5 text-sm">
+          <span className="font-medium text-amet-indigo">
+            Vídeo da aula (mp4 ou webm)
+          </span>
+          <input
+            name="video"
+            type="file"
+            accept="video/mp4,video/webm"
+            className="block w-full text-sm text-amet-indigo/80 file:mr-3 file:rounded-md file:border-0 file:bg-amet-indigo file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+          />
+        </label>
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || Boolean(uploadingLessonId)}
           className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
-          Criar aula
+          {uploadingLessonId
+            ? "Enviando vídeo…"
+            : pending
+              ? "Criando…"
+              : "Criar aula e enviar vídeo"}
         </button>
       </form>
 
@@ -301,19 +340,22 @@ export function ClassManagePanel({
                   </div>
                 </div>
 
-                <label className="mt-4 block text-sm">
-                  <span className="mb-1 block font-medium">
+                <label className="mt-4 block space-y-1.5 text-sm">
+                  <span className="font-medium text-amet-indigo">
                     {uploadingLessonId === lesson.id
                       ? "Enviando vídeo…"
-                      : "Upload de vídeo (mp4/webm)"}
+                      : lesson.hasVideo
+                        ? "Trocar vídeo (mp4/webm)"
+                        : "Enviar vídeo (mp4/webm)"}
                   </span>
                   <input
                     type="file"
                     accept="video/mp4,video/webm"
-                    disabled={uploadingLessonId === lesson.id}
+                    disabled={uploadingLessonId === lesson.id || pending}
+                    className="block w-full text-sm text-amet-indigo/80 file:mr-3 file:rounded-md file:border-0 file:bg-amet-indigo file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
                     onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void uploadVideo(lesson.id, file);
+                      const selected = event.target.files?.[0];
+                      if (selected) void uploadVideo(lesson.id, selected);
                     }}
                   />
                 </label>
