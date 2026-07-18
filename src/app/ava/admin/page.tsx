@@ -92,7 +92,7 @@ export default async function AvaAdminPage() {
 
   const firstClassId = classRows[0]?.id ?? null;
 
-  const canonicalOrder = new Map(
+  const canonicalOrder = new Map<string, number>(
     CANONICAL_SUBJECTS.map((subject, index) => [subject.slug, index]),
   );
   const subjectRows = [...subjectRowsRaw].sort((a, b) => {
