@@ -1,11 +1,47 @@
 import { homePathForRole } from "@/lib/ava/navigation";
 import type { UserRole } from "@/lib/ava/schema";
 
+/** Serializable active-route rules (safe to pass into Client Components). */
+export type AvaNavMatch = {
+  equals?: string[];
+  startsWith?: string[];
+  includes?: string[];
+  excludes?: string[];
+};
+
 export type AvaNavItem = {
   href: string;
   label: string;
-  match?: (pathname: string) => boolean;
+  match?: AvaNavMatch;
 };
+
+export function matchNavPath(
+  pathname: string,
+  match: AvaNavMatch | undefined,
+  href: string,
+): boolean {
+  if (!match) {
+    return pathname === href.split("#")[0];
+  }
+
+  const hasBase = Boolean(match.equals?.length || match.startsWith?.length);
+  const baseOk =
+    !hasBase ||
+    Boolean(
+      match.equals?.some((path) => pathname === path) ||
+        match.startsWith?.some((path) => pathname.startsWith(path)),
+    );
+
+  if (!baseOk) return false;
+  if (match.includes?.some((fragment) => !pathname.includes(fragment))) {
+    return false;
+  }
+  if (match.excludes?.some((fragment) => pathname.includes(fragment))) {
+    return false;
+  }
+
+  return true;
+}
 
 export function navItemsForRole(role: UserRole): AvaNavItem[] {
   switch (role) {
@@ -14,13 +50,15 @@ export function navItemsForRole(role: UserRole): AvaNavItem[] {
         {
           href: "/ava/admin",
           label: "Painel",
-          match: (pathname) =>
-            pathname === "/ava/admin" || pathname.startsWith("/ava/admin/"),
+          match: {
+            equals: ["/ava/admin"],
+            startsWith: ["/ava/admin/"],
+          },
         },
         {
           href: "/ava/admin#turma",
           label: "Turmas",
-          match: (pathname) => pathname.includes("/gerir"),
+          match: { includes: ["/gerir"] },
         },
         {
           href: "/ava/admin#convidar",
@@ -36,19 +74,23 @@ export function navItemsForRole(role: UserRole): AvaNavItem[] {
         {
           href: "/ava/professor",
           label: "Painel",
-          match: (pathname) => pathname === "/ava/professor",
+          match: { equals: ["/ava/professor"] },
         },
         {
           href: "/ava/professor",
           label: "Minhas turmas",
-          match: (pathname) =>
-            pathname.startsWith("/ava/turmas/") && pathname.includes("/gerir"),
+          match: {
+            startsWith: ["/ava/turmas/"],
+            includes: ["/gerir"],
+          },
         },
         {
           href: "/ava/professor",
           label: "Dúvidas",
-          match: (pathname) =>
-            pathname.includes("/aulas/") && !pathname.includes("/gerir"),
+          match: {
+            includes: ["/aulas/"],
+            excludes: ["/gerir"],
+          },
         },
       ];
     case "aluno":
@@ -56,19 +98,21 @@ export function navItemsForRole(role: UserRole): AvaNavItem[] {
         {
           href: "/ava",
           label: "Minhas turmas",
-          match: (pathname) => pathname === "/ava",
+          match: { equals: ["/ava"] },
         },
         {
           href: "/ava",
           label: "Aulas",
-          match: (pathname) =>
-            pathname.startsWith("/ava/turmas/") &&
-            !pathname.includes("/gerir"),
+          match: {
+            startsWith: ["/ava/turmas/"],
+            excludes: ["/gerir"],
+          },
         },
       ];
     default: {
       const _exhaustive: never = role;
-      return _exhaustive;
+      void _exhaustive;
+      return [];
     }
   }
 }
@@ -83,7 +127,8 @@ export function panelTitleForRole(role: UserRole): string {
       return "Área do aluno";
     default: {
       const _exhaustive: never = role;
-      return _exhaustive;
+      void _exhaustive;
+      return "AVA";
     }
   }
 }

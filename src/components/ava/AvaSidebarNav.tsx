@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import type { AvaNavItem } from "@/lib/ava/nav";
+import { matchNavPath, type AvaNavItem } from "@/lib/ava/nav";
 
 type AvaSidebarNavProps = {
   items: AvaNavItem[];
@@ -15,9 +15,7 @@ export function AvaSidebarNav({ items }: AvaSidebarNavProps) {
   return (
     <nav className="ava-side-nav" aria-label="Menu AVA">
       {items.map((item) => {
-        const active = item.match
-          ? item.match(pathname)
-          : pathname === item.href.split("#")[0];
+        const active = matchNavPath(pathname, item.match, item.href);
         return (
           <Link
             key={`${item.href}-${item.label}`}
