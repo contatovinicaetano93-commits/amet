@@ -138,13 +138,13 @@ export default async function AvaAdminPage() {
 
   return (
     <div className="space-y-10">
-      <div className="ava-fade-in space-y-4">
+      <div className="ava-fade-in space-y-3">
         <p className="ava-kicker">Administração</p>
-        <h1 className="ava-display text-4xl text-amet-indigo sm:text-5xl">
-          Painel AVA
+        <h1 className="ava-display text-3xl text-amet-indigo sm:text-4xl">
+          Hoje no AVA AMET
         </h1>
-        <p className="max-w-xl text-lg leading-relaxed text-[var(--ava-muted)]">
-          Convite → turma → matrícula → aulas. Acompanhe a operação abaixo.
+        <p className="max-w-2xl text-[var(--ava-muted)]">
+          Convites, turmas, matrículas e acompanhamento da operação.
         </p>
       </div>
 

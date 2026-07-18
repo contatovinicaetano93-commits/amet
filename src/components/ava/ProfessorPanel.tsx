@@ -45,13 +45,13 @@ export function ProfessorPanel({
 
   return (
     <div className="space-y-12">
-      <section className="ava-fade-in space-y-4">
+      <section className="ava-fade-in space-y-3">
         <p className="ava-kicker">Painel do professor</p>
-        <h1 className="ava-display text-4xl text-amet-indigo sm:text-5xl">
+        <h1 className="ava-display text-3xl text-amet-indigo sm:text-4xl">
           Olá, {firstName}
         </h1>
-        <p className="max-w-xl text-lg leading-relaxed text-[var(--ava-muted)]">
-          Gerencie turmas, publique aulas e responda dúvidas dos alunos.
+        <p className="max-w-2xl text-[var(--ava-muted)]">
+          Turmas liberadas, aulas e dúvidas dos alunos — tudo no mesmo fluxo.
         </p>
       </section>
 

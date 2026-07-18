@@ -14,54 +14,59 @@ export function FlowTree({ tree, compact = false }: FlowTreeProps) {
     <section className={`ava-panel ${compact ? "space-y-4" : "space-y-5"}`}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <p className="ava-kicker">Percurso</p>
+          <p className="ava-kicker">O que fazer agora</p>
           <h2
             className={`font-semibold tracking-tight text-amet-indigo ${
-              compact ? "text-xl" : "text-2xl"
+              compact ? "text-lg" : "text-xl"
             }`}
           >
             {tree.title}
           </h2>
           <p className="text-sm text-[var(--ava-muted)]">{tree.subtitle}</p>
         </div>
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ava-muted)]">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--ava-muted)]">
           {remaining === 0
             ? "Completo"
             : `${remaining} passo${remaining > 1 ? "s" : ""}`}
         </p>
       </div>
 
-      <ol className="space-y-0">
+      <ol className="space-y-2">
         {tree.steps.map((step, index) => {
           const body = (
             <>
               <span
-                className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center border text-xs font-semibold ${
+                className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                   step.done
-                    ? "border-emerald-700/30 text-emerald-800"
+                    ? "bg-emerald-50 text-emerald-800"
                     : step.current
-                      ? "border-amet-indigo bg-amet-indigo text-white"
-                      : "border-[var(--ava-line-strong)] text-[var(--ava-muted)]"
+                      ? "bg-amet-indigo text-white"
+                      : "bg-[rgba(40,90,206,0.08)] text-amet-indigo"
                 }`}
               >
                 {step.done ? "✓" : index + 1}
               </span>
-              <div className="min-w-0">
-                <p className="font-medium text-amet-indigo">{step.title}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-amet-indigo">{step.title}</p>
                 <p className="text-sm text-[var(--ava-muted)]">{step.detail}</p>
               </div>
+              {step.href && !step.done ? (
+                <span className="text-amet-blue" aria-hidden>
+                  ›
+                </span>
+              ) : null}
             </>
           );
 
           const className =
-            "flex items-start gap-3 border-t border-[var(--ava-line)] py-3 first:border-t-0";
+            "flex items-start gap-3 rounded-xl border border-[var(--ava-line)] bg-[var(--ava-canvas)] px-3 py-3";
 
           if (step.href && !step.done) {
             return (
               <li key={step.id}>
                 <Link
                   href={step.href}
-                  className={`${className} transition hover:bg-white/50`}
+                  className={`${className} transition hover:border-[rgba(40,90,206,0.35)] hover:bg-white`}
                 >
                   {body}
                 </Link>

@@ -62,14 +62,13 @@ export default async function AvaHomePage() {
 
   return (
     <div className="space-y-12">
-      <section className="ava-fade-in space-y-4">
-        <p className="ava-kicker">Seu espaço de estudo</p>
-        <h1 className="ava-display text-4xl text-amet-indigo sm:text-5xl">
+      <section className="ava-fade-in space-y-3">
+        <p className="ava-kicker">Área do aluno</p>
+        <h1 className="ava-display text-3xl text-amet-indigo sm:text-4xl">
           Olá, {firstName}
         </h1>
-        <p className="max-w-xl text-lg leading-relaxed text-[var(--ava-muted)]">
-          Continue pelas turmas matriculadas. Assista, acompanhe o progresso e
-          tire dúvidas com o professor.
+        <p className="max-w-2xl text-[var(--ava-muted)]">
+          Suas turmas, aulas e dúvidas com o professor.
         </p>
       </section>
 
