@@ -1,6 +1,7 @@
 import {
   GetObjectCommand,
   HeadBucketCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -81,14 +82,30 @@ export async function createUploadUrl(params: {
   }
 
   const client = getR2Client();
+  // Avoid signing ContentLength — Safari/browser PUTs are more reliable this way.
   const command = new PutObjectCommand({
     Bucket: getBucket(),
     Key: params.storageKey,
     ContentType: params.contentType,
-    ContentLength: params.contentLength,
   });
 
   return getSignedUrl(client, command, { expiresIn: 60 * 30 });
+}
+
+export async function objectExists(storageKey: string): Promise<boolean> {
+  if (!isR2Configured()) return false;
+  try {
+    const client = getR2Client();
+    await client.send(
+      new HeadObjectCommand({
+        Bucket: getBucket(),
+        Key: storageKey,
+      }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function createReadUrl(storageKey: string): Promise<string> {

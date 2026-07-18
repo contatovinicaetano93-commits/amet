@@ -7,7 +7,7 @@ import { getDb } from "@/lib/ava/db";
 import { canManageClass } from "@/lib/ava/permissions";
 import { lessonProgress, lessons } from "@/lib/ava/schema";
 import { lessonUpdateSchema } from "@/lib/ava/schemas";
-import { createReadUrl } from "@/lib/ava/storage";
+import { createReadUrl, objectExists } from "@/lib/ava/storage";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -134,6 +134,18 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
   }
 
+  if (parsed.data.published === true) {
+    if (!lesson.storageKey || !(await objectExists(lesson.storageKey))) {
+      return NextResponse.json(
+        {
+          error:
+            "Não dá para publicar sem vídeo no storage. Envie o mp4/webm de novo.",
+        },
+        { status: 409 },
+      );
+    }
+  }
+
   const [updated] = await db
     .update(lessons)
     .set({
@@ -153,7 +165,13 @@ export async function PATCH(request: Request, { params }: Params) {
     .where(eq(lessons.id, id))
     .returning();
 
-  return NextResponse.json({ lesson: updated });
+  return NextResponse.json({
+    lesson: {
+      ...updated,
+      published: updated.published === 1,
+      hasVideo: Boolean(updated.storageKey),
+    },
+  });
 }
 
 export async function DELETE(_request: Request, { params }: Params) {

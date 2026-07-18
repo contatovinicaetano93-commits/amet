@@ -6,6 +6,7 @@ import { requireSession } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
 import { canManageClass } from "@/lib/ava/permissions";
 import { lessons } from "@/lib/ava/schema";
+import { objectExists } from "@/lib/ava/storage";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -17,7 +18,13 @@ export async function POST(request: Request, { params }: Params) {
 
   const { id } = await params;
   const body = await request.json().catch(() => ({}));
-  const publish = Boolean(body?.publish);
+  const publish = Boolean(
+    body &&
+      (body.publish === true ||
+        body.published === true ||
+        body.publish === 1 ||
+        body.published === 1),
+  );
 
   const db = getDb();
   const [lesson] = await db
@@ -54,9 +61,24 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
   }
 
+  const exists = await objectExists(lesson.storageKey);
+  if (!exists) {
+    await db
+      .update(lessons)
+      .set({ published: 0, storageKey: null, contentType: null, sizeBytes: null })
+      .where(eq(lessons.id, id));
+    return NextResponse.json(
+      {
+        error:
+          "O vídeo não chegou ao storage (CORS/upload). Envie o arquivo de novo.",
+      },
+      { status: 409 },
+    );
+  }
+
   const [updated] = await db
     .update(lessons)
-    .set({ published: publish ? 1 : lesson.published })
+    .set({ published: publish ? 1 : 0 })
     .where(eq(lessons.id, id))
     .returning();
 

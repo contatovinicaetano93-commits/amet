@@ -188,22 +188,34 @@ export function ClassManagePanel({
 
   async function togglePublish(lessonId: string, published: boolean) {
     startTransition(async () => {
+      setError("");
+      setMessage("");
       const response = await fetch(`/api/ava/lessons/${lessonId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ published: !published }),
       });
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
         setError(data.error ?? "Falha ao atualizar publicação.");
         return;
       }
       setLessons((current) =>
         current.map((lesson) =>
           lesson.id === lessonId
-            ? { ...lesson, published: !published }
+            ? {
+                ...lesson,
+                published: Boolean(data.lesson?.published ?? !published),
+                hasVideo:
+                  data.lesson?.hasVideo === undefined
+                    ? lesson.hasVideo
+                    : Boolean(data.lesson.hasVideo),
+              }
             : lesson,
         ),
+      );
+      setMessage(
+        data.lesson?.published ? "Aula publicada." : "Aula despublicada.",
       );
       refresh();
     });

@@ -10,7 +10,7 @@ import { getDb } from "@/lib/ava/db";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
 import { canManageClass } from "@/lib/ava/permissions";
 import { lessonProgress, lessons } from "@/lib/ava/schema";
-import { createReadUrl } from "@/lib/ava/storage";
+import { createReadUrl, objectExists } from "@/lib/ava/storage";
 
 type PageProps = {
   params: Promise<{ id: string; lessonId: string }>;
@@ -51,14 +51,20 @@ export default async function LessonPage({ params }: PageProps) {
   }
 
   let videoUrl: string | null = null;
+  let videoMissing = false;
   if (lesson.storageKey) {
-    try {
-      videoUrl = await createReadUrl(lesson.storageKey);
-    } catch (error) {
-      avaLog.error("lesson.signed_url_failed", {
-        lessonId,
-        message: errorMessage(error),
-      });
+    const exists = await objectExists(lesson.storageKey);
+    if (!exists) {
+      videoMissing = true;
+    } else {
+      try {
+        videoUrl = await createReadUrl(lesson.storageKey);
+      } catch (error) {
+        avaLog.error("lesson.signed_url_failed", {
+          lessonId,
+          message: errorMessage(error),
+        });
+      }
     }
   }
 
@@ -81,6 +87,12 @@ export default async function LessonPage({ params }: PageProps) {
       >
         ← Voltar à turma
       </Link>
+      {videoMissing && manage ? (
+        <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          O vídeo desta aula não está no storage (upload incompleto). Volte em
+          Gerir aulas e envie o arquivo de novo.
+        </p>
+      ) : null}
       <LessonPlayer
         lessonId={lesson.id}
         title={lesson.title}
