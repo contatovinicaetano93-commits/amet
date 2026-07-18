@@ -327,8 +327,9 @@ export function ClassManagePanel({
           <p className="text-sm text-[var(--ava-muted)]">{shiftDetail(shift)}</p>
         ) : null}
         <p className="max-w-2xl text-sm text-[var(--ava-muted)]">
-          Nesta turma você tem gestão total das aulas: criar, editar, trocar
-          vídeo, publicar, despublicar e excluir.
+          {viewerRole === "admin"
+            ? "Como administrador você tem gestão total desta turma: criar, editar, trocar vídeo, publicar, despublicar e excluir aulas."
+            : "Nesta turma você tem gestão total das aulas: criar, editar, trocar vídeo, publicar, despublicar e excluir."}
         </p>
         <div className="flex flex-wrap gap-3">
           <Link

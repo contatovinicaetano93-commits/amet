@@ -56,7 +56,7 @@ export function navItemsForRole(role: UserRole): AvaNavItem[] {
           },
         },
         {
-          href: "/ava/admin#turma",
+          href: "/ava/admin#turmas",
           label: "Turmas",
           match: { includes: ["/gerir"] },
         },

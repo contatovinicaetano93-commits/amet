@@ -110,7 +110,9 @@ export default async function ClassPage({ params }: PageProps) {
           </Link>
           {manage ? (
             <Link href={classManagePath(id)} className="ava-link text-sm">
-              Gerir aulas e progresso
+              {session.user.role === "admin"
+                ? "Editar aulas desta turma"
+                : "Gerir aulas e progresso"}
             </Link>
           ) : null}
         </div>

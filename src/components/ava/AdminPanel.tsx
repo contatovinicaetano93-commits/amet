@@ -708,17 +708,23 @@ export function AdminPanel({
         id="turmas"
         className="scroll-mt-24 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
       >
-        <h2 className="mb-3 text-lg font-semibold">Turmas</h2>
+        <div className="mb-3 space-y-1">
+          <h2 className="text-lg font-semibold">Turmas</h2>
+          <p className="text-sm text-amet-indigo/65">
+            Como admin você pode criar, editar, trocar vídeo, publicar e
+            excluir aulas de qualquer turma.
+          </p>
+        </div>
         {classes.length === 0 ? (
           <p className="text-sm text-amet-indigo/60">
             Nenhuma turma ainda. Crie matéria e turma no fluxo acima.
           </p>
         ) : null}
-        <ul className="space-y-2 text-sm">
+        <ul className="space-y-3 text-sm">
           {classes.map((classRow) => (
             <li
               key={classRow.id}
-              className="flex flex-wrap items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amet-indigo/10 bg-amet-paper/40 px-3 py-3"
             >
               <span>
                 {classRow.subjectName} — {classRow.name}
@@ -730,12 +736,20 @@ export function AdminPanel({
                     : "Sem professor"}
                 </span>
               </span>
-              <Link
-                href={classManagePath(classRow.id)}
-                className="font-medium text-amet-blue hover:underline"
-              >
-                Gerir aulas
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={classManagePath(classRow.id)}
+                  className="rounded-md bg-amet-indigo px-3 py-1.5 text-sm font-semibold text-white hover:bg-amet-blue"
+                >
+                  Editar aulas
+                </Link>
+                <Link
+                  href={`/ava/turmas/${classRow.id}`}
+                  className="rounded-md border border-amet-indigo/15 px-3 py-1.5 text-sm font-medium text-amet-indigo hover:bg-white"
+                >
+                  Ver turma
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

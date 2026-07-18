@@ -10,6 +10,7 @@ import { userCanAccessClass } from "@/lib/ava/access";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
+import { classManagePath } from "@/lib/ava/navigation";
 import { canManageClass } from "@/lib/ava/permissions";
 import {
   classes,
@@ -132,9 +133,16 @@ export default async function LessonPage({ params }: PageProps) {
   return (
     <div className="space-y-10">
       <div className="space-y-2">
-        <Link href={`/ava/turmas/${id}`} className="ava-link text-sm">
-          ← Voltar à turma
-        </Link>
+        <div className="flex flex-wrap gap-4">
+          <Link href={`/ava/turmas/${id}`} className="ava-link text-sm">
+            ← Voltar à turma
+          </Link>
+          {manage ? (
+            <Link href={classManagePath(id)} className="ava-link text-sm">
+              Editar aulas (título, vídeo, publicação)
+            </Link>
+          ) : null}
+        </div>
         {classMeta ? (
           <p className="text-sm text-[var(--ava-muted)]">
             {classMeta.name}

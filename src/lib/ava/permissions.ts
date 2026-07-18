@@ -17,8 +17,9 @@ export function canManageClass(
   teacherId: string | null | undefined,
   userId: string | undefined,
 ): boolean {
-  if (!userId) return false;
+  // Admin manages every class (create/edit/publish/delete lessons).
   if (role === "admin") return true;
+  if (!userId) return false;
   if (role === "professor" && teacherId === userId) return true;
   return false;
 }
