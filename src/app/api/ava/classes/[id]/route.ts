@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { userCanAccessClass } from "@/lib/ava/access";
 import { requireRole, requireSession } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
+import { jsonError } from "@/lib/ava/http";
+import { avaLog } from "@/lib/ava/observability";
 import { canManageClass } from "@/lib/ava/permissions";
 import {
   classes,
@@ -180,4 +182,50 @@ export async function PATCH(request: Request, { params }: Params) {
     .returning();
 
   return NextResponse.json({ class: updated });
+}
+
+export async function DELETE(_request: Request, { params }: Params) {
+  const session = await requireRole(["admin"]);
+  if (!session) {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const db = getDb();
+  const [existing] = await db
+    .select({
+      id: classes.id,
+      name: classes.name,
+      subjectName: subjects.name,
+    })
+    .from(classes)
+    .innerJoin(subjects, eq(subjects.id, classes.subjectId))
+    .where(eq(classes.id, id))
+    .limit(1);
+
+  if (!existing) {
+    return jsonError("Turma não encontrada.", {
+      status: 404,
+      event: "class.delete_missing",
+    });
+  }
+
+  // Lessons and enrollments cascade via FK.
+  await db.delete(classes).where(eq(classes.id, id));
+
+  avaLog.info("class.deleted", {
+    classId: existing.id,
+    name: existing.name,
+    subjectName: existing.subjectName,
+    adminId: session.user.id,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    removedClass: {
+      id: existing.id,
+      name: existing.name,
+      subjectName: existing.subjectName,
+    },
+  });
 }

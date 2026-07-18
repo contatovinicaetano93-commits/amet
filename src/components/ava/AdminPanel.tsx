@@ -377,6 +377,39 @@ export function AdminPanel({
     });
   }
 
+  function deleteClass(classRow: ClassRow) {
+    if (
+      !window.confirm(
+        `Remover a turma "${classRow.subjectName} — ${classRow.name}"? Aulas, matrículas e progresso dessa turma serão apagados.`,
+      )
+    ) {
+      return;
+    }
+    startTransition(async () => {
+      setMessage("");
+      setError("");
+      try {
+        const response = await fetch(`/api/ava/classes/${classRow.id}`, {
+          method: "DELETE",
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? "Falha ao remover turma.");
+          return;
+        }
+        setClasses((current) =>
+          current.filter((item) => item.id !== classRow.id),
+        );
+        setMessage(
+          `Turma "${classRow.subjectName} — ${classRow.name}" removida.`,
+        );
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao remover turma.");
+      }
+    });
+  }
+
   function enrollStudent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formEl = event.currentTarget;
@@ -820,8 +853,7 @@ export function AdminPanel({
         <div className="mb-3 space-y-1">
           <h2 className="text-lg font-semibold">Turmas</h2>
           <p className="text-sm text-amet-indigo/65">
-            Como admin você pode criar, editar, trocar vídeo, publicar e
-            excluir aulas de qualquer turma.
+            Como admin você pode criar, editar aulas e remover turmas inteiras.
           </p>
         </div>
         {classes.length === 0 ? (
@@ -858,6 +890,14 @@ export function AdminPanel({
                 >
                   Ver turma
                 </Link>
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => deleteClass(classRow)}
+                  className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+                >
+                  Remover
+                </button>
               </div>
             </li>
           ))}
