@@ -233,9 +233,13 @@ export function AdminPanel({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const teacherId = String(form.get("teacherId") ?? "");
-    const subjectId = String(form.get("subjectId") ?? "");
+    const subjectId = String(form.get("subjectId") ?? selectedSubjectId);
     const name = String(form.get("name") ?? "");
-    const shift = String(form.get("shift") ?? "");
+    const shift = selectedShift || String(form.get("shift") ?? "");
+    if (!subjectId || !shift) {
+      setError("Selecione a matéria e o turno da turma.");
+      return;
+    }
     startTransition(async () => {
       setMessage("");
       setError("");
@@ -429,86 +433,134 @@ export function AdminPanel({
         <form
           id="turma"
           onSubmit={createClass}
-          className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
+          className="ava-panel scroll-mt-24 space-y-5"
         >
-          <h2 className="text-lg font-semibold">Nova turma</h2>
-          <p className="text-sm text-amet-indigo/65">
-            Escolha matéria e turno. Sábado é sempre 09h–13h.
-          </p>
-          <ul className="space-y-1 text-xs text-amet-indigo/60">
+          <div className="space-y-1">
+            <p className="ava-kicker">Turmas</p>
+            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
+              Nova turma
+            </h2>
+            <p className="text-sm text-[var(--ava-muted)]">
+              Matéria + turno. No sábado, qualquer curso é só 09h–13h.
+            </p>
+          </div>
+
+          <div className="grid gap-2 text-xs text-[var(--ava-muted)] sm:grid-cols-3">
             {SHIFT_GUIDE.map((item) => (
-              <li key={item.courses}>
-                <span className="font-medium text-amet-indigo/75">
+              <div
+                key={item.courses}
+                className="border-t border-[var(--ava-line)] pt-2"
+              >
+                <p className="font-semibold text-amet-indigo/80">
                   {item.courses}
-                </span>
-                {": "}
-                {item.hours}
-              </li>
+                </p>
+                <p className="mt-1">{item.hours}</p>
+              </div>
             ))}
-          </ul>
-          <select
-            name="subjectId"
-            required
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-            value={selectedSubjectId}
-            onChange={(event) => {
-              setSelectedSubjectId(event.target.value);
-              setSelectedShift("");
-            }}
-          >
-            <option value="" disabled>
-              Matéria
-            </option>
-            {subjects.map((subject) => (
-              <option key={subject.id} value={subject.id}>
-                {subject.name}
+          </div>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">Matéria</span>
+            <select
+              name="subjectId"
+              required
+              className="ava-input"
+              value={selectedSubjectId}
+              onChange={(event) => {
+                setSelectedSubjectId(event.target.value);
+                setSelectedShift("");
+              }}
+            >
+              <option value="" disabled>
+                Selecione a matéria
               </option>
-            ))}
-          </select>
-          <select
-            name="shift"
-            required
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-            value={selectedShift}
-            onChange={(event) =>
-              setSelectedShift(event.target.value as ShiftCode | "")
-            }
-            disabled={!selectedSubjectId}
-          >
-            <option value="" disabled>
+              {subjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium text-amet-indigo">
               Turno
-            </option>
-            {availableShifts.map((code) => (
-              <option key={code} value={code}>
-                {SHIFTS[code].label} · {SHIFTS[code].hours}
-                {code === "sabado" ? "" : ` (${SHIFTS[code].dayLabel})`}
-              </option>
-            ))}
-          </select>
-          <input
-            name="name"
-            required
-            placeholder="Nome da turma"
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-          />
-          <select
-            name="teacherId"
-            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-            defaultValue=""
-          >
-            <option value="">Sem professor</option>
-            {teachers.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
-                {teacher.name}
-              </option>
-            ))}
-          </select>
+            </legend>
+            <input type="hidden" name="shift" value={selectedShift} />
+            {!selectedSubjectId ? (
+              <p className="border border-dashed border-[var(--ava-line-strong)] px-3 py-4 text-sm text-[var(--ava-muted)]">
+                Selecione a matéria para ver os turnos disponíveis.
+              </p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {availableShifts.map((code) => {
+                  const info = SHIFTS[code];
+                  const active = selectedShift === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setSelectedShift(code)}
+                      className={`border px-3 py-3 text-left transition ${
+                        active
+                          ? "border-amet-indigo bg-amet-indigo text-white"
+                          : "border-[var(--ava-line-strong)] bg-white/70 text-amet-indigo hover:border-amet-indigo/40"
+                      }`}
+                    >
+                      <span className="block text-sm font-semibold">
+                        {info.label}
+                      </span>
+                      <span
+                        className={`mt-1 block text-xs ${
+                          active ? "text-white/80" : "text-[var(--ava-muted)]"
+                        }`}
+                      >
+                        {info.hours}
+                        {code === "sabado" ? "" : ` · ${info.dayLabel}`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </fieldset>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">
+              Nome da turma
+            </span>
+            <input
+              name="name"
+              required
+              placeholder="Ex.: Estética Facial — Manhã"
+              className="ava-input"
+            />
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-amet-indigo">
+              Professor
+            </span>
+            <select
+              name="teacherId"
+              className="ava-input"
+              defaultValue=""
+            >
+              <option value="">Sem professor</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <button
             type="submit"
-            disabled={pending}
-            className="rounded-md bg-amet-indigo px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            disabled={pending || !selectedSubjectId || !selectedShift}
+            className="ava-btn ava-btn-primary"
           >
-            Criar turma
+            {pending ? "Criando…" : "Criar turma"}
           </button>
         </form>
 
