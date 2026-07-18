@@ -1,12 +1,11 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { loginAction } from "@/app/ava/login/actions";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -23,10 +22,8 @@ export function LoginForm() {
       const result = await loginAction(form, callbackUrl);
       if (result?.error) {
         setError(result.error);
-        return;
       }
-      router.replace(result.redirectTo ?? "/ava");
-      router.refresh();
+      // Sucesso: o server action redireciona com a sessão já gravada.
     });
   }
 

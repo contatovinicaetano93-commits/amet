@@ -29,14 +29,22 @@ export function AvaShell({ children, user }: AvaShellProps) {
             <span className="hidden text-amet-indigo/70 sm:inline">AVA</span>
             {user ? (
               <>
-                {user.role === "admin" && (
+                {user.role === "admin" ? (
                   <Link
                     href="/ava/admin"
                     className="rounded-md px-3 py-1.5 font-medium text-amet-indigo transition hover:bg-amet-indigo/5"
                   >
                     Admin
                   </Link>
-                )}
+                ) : null}
+                {user.role === "professor" ? (
+                  <Link
+                    href="/ava/professor"
+                    className="rounded-md px-3 py-1.5 font-medium text-amet-indigo transition hover:bg-amet-indigo/5"
+                  >
+                    Painel
+                  </Link>
+                ) : null}
                 <div className="text-right">
                   <p className="font-medium text-amet-indigo">
                     {user.name ?? user.email}

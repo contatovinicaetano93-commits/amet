@@ -5,7 +5,7 @@ export function homePathForRole(role: UserRole): string {
     case "admin":
       return "/ava/admin";
     case "professor":
-      return "/ava";
+      return "/ava/professor";
     case "aluno":
       return "/ava";
     default: {

@@ -23,6 +23,20 @@ export default auth((req) => {
     }
 
     if (role) {
+      const dest =
+        role === "professor" ? "/ava/professor" : "/ava";
+      return NextResponse.redirect(new URL(dest, req.nextUrl.origin));
+    }
+  }
+
+  if (pathname.startsWith("/ava/professor")) {
+    if (role === "professor") {
+      return NextResponse.next();
+    }
+    if (role === "admin") {
+      return NextResponse.redirect(new URL("/ava/admin", req.nextUrl.origin));
+    }
+    if (role) {
       return NextResponse.redirect(new URL("/ava", req.nextUrl.origin));
     }
   }
