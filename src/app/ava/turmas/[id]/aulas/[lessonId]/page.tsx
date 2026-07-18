@@ -12,11 +12,13 @@ import { getDb } from "@/lib/ava/db";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
 import { canManageClass } from "@/lib/ava/permissions";
 import {
+  classes,
   lessonProgress,
   lessonQuestions,
   lessons,
   users,
 } from "@/lib/ava/schema";
+import { shiftDetail } from "@/lib/ava/shifts";
 import { createReadUrl, objectExists } from "@/lib/ava/storage";
 
 type PageProps = {
@@ -46,6 +48,15 @@ export default async function LessonPage({ params }: PageProps) {
     .limit(1);
 
   if (!lesson) notFound();
+
+  const [classMeta] = await db
+    .select({
+      name: classes.name,
+      shift: classes.shift,
+    })
+    .from(classes)
+    .where(eq(classes.id, id))
+    .limit(1);
 
   const manage = canManageClass(
     session.user.role,
@@ -116,11 +127,21 @@ export default async function LessonPage({ params }: PageProps) {
     answeredByName: row.answeredByName,
   }));
 
+  const classShift = shiftDetail(classMeta?.shift);
+
   return (
     <div className="space-y-10">
-      <Link href={`/ava/turmas/${id}`} className="ava-link text-sm">
-        ← Voltar à turma
-      </Link>
+      <div className="space-y-2">
+        <Link href={`/ava/turmas/${id}`} className="ava-link text-sm">
+          ← Voltar à turma
+        </Link>
+        {classMeta ? (
+          <p className="text-sm text-[var(--ava-muted)]">
+            {classMeta.name}
+            {classShift ? ` · ${classShift}` : ""}
+          </p>
+        ) : null}
+      </div>
       {videoMissing && manage ? (
         <p className="border-l-2 border-amber-700/50 bg-amber-50/80 px-4 py-3 text-sm text-amber-950">
           O vídeo desta aula não está no storage (upload incompleto). Volte em

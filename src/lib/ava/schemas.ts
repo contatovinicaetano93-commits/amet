@@ -1,6 +1,9 @@
 import { z } from "zod";
 
+import { shiftCodes } from "@/lib/ava/shifts";
 import { ALLOWED_VIDEO_TYPES, MAX_VIDEO_BYTES } from "@/lib/ava/storage";
+
+export const shiftCodeSchema = z.enum(shiftCodes);
 
 export const userRoleSchema = z.enum(["admin", "professor", "aluno"]);
 
@@ -27,11 +30,13 @@ export const subjectCreateSchema = z.object({
 export const classCreateSchema = z.object({
   subjectId: z.uuid(),
   name: z.string().trim().min(2).max(120),
+  shift: shiftCodeSchema,
   teacherId: z.uuid().nullable().optional(),
 });
 
 export const classUpdateSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
+  shift: shiftCodeSchema.optional(),
   teacherId: z.uuid().nullable().optional(),
 });
 

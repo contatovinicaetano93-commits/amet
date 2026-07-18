@@ -15,6 +15,7 @@ import {
   subjects,
   users,
 } from "@/lib/ava/schema";
+import { shiftDetail } from "@/lib/ava/shifts";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -41,6 +42,7 @@ export default async function ClassPage({ params }: PageProps) {
     .select({
       id: classes.id,
       name: classes.name,
+      shift: classes.shift,
       subjectName: subjects.name,
       teacherName: teacher.name,
       teacherId: classes.teacherId,
@@ -92,6 +94,9 @@ export default async function ClassPage({ params }: PageProps) {
           {detail.name}
         </h1>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--ava-muted)]">
+          {shiftDetail(detail.shift) ? (
+            <span>{shiftDetail(detail.shift)}</span>
+          ) : null}
           {detail.teacherName ? <span>Prof. {detail.teacherName}</span> : null}
           {visible.length > 0 ? (
             <span>

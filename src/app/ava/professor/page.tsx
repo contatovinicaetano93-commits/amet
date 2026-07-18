@@ -23,6 +23,7 @@ export default async function ProfessorPage() {
   let classRows: Array<{
     id: string;
     name: string;
+    shift: string | null;
     subjectName: string;
     lessonCount: number;
     publishedCount: number;
@@ -35,6 +36,7 @@ export default async function ProfessorPage() {
       .select({
         id: classes.id,
         name: classes.name,
+        shift: classes.shift,
         subjectName: subjects.name,
       })
       .from(classes)

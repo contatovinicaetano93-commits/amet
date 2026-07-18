@@ -30,6 +30,7 @@ export default async function ClassManagePage({ params }: PageProps) {
     | {
         id: string;
         name: string;
+        shift: string | null;
         subjectName: string;
         teacherId: string | null;
       }
@@ -41,6 +42,7 @@ export default async function ClassManagePage({ params }: PageProps) {
       .select({
         id: classes.id,
         name: classes.name,
+        shift: classes.shift,
         subjectName: subjects.name,
         teacherId: classes.teacherId,
       })
@@ -102,6 +104,7 @@ export default async function ClassManagePage({ params }: PageProps) {
       classId={row.id}
       className={row.name}
       subjectName={row.subjectName}
+      shift={row.shift}
       viewerRole={session.user.role}
       initialLessons={lessonRows.map((lesson) => ({
         id: lesson.id,

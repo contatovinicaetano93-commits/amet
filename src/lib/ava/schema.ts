@@ -68,6 +68,8 @@ export const classes = pgTable("ava_classes", {
     .notNull()
     .references(() => subjects.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  /** manha | tarde | noite | sabado — ver src/lib/ava/shifts.ts */
+  shift: text("shift"),
   teacherId: uuid("teacher_id").references(() => users.id, {
     onDelete: "set null",
   }),

@@ -11,6 +11,7 @@ import {
   users,
 } from "@/lib/ava/schema";
 import { classCreateSchema } from "@/lib/ava/schemas";
+import { isShiftAllowedForSubject } from "@/lib/ava/shifts";
 
 export async function GET() {
   const session = await requireSession();
@@ -26,6 +27,7 @@ export async function GET() {
       .select({
         id: classes.id,
         name: classes.name,
+        shift: classes.shift,
         subjectId: classes.subjectId,
         subjectName: subjects.name,
         teacherId: classes.teacherId,
@@ -45,6 +47,7 @@ export async function GET() {
       .select({
         id: classes.id,
         name: classes.name,
+        shift: classes.shift,
         subjectId: classes.subjectId,
         subjectName: subjects.name,
         teacherId: classes.teacherId,
@@ -64,6 +67,7 @@ export async function GET() {
     .select({
       id: classes.id,
       name: classes.name,
+      shift: classes.shift,
       subjectId: classes.subjectId,
       subjectName: subjects.name,
       teacherId: classes.teacherId,
@@ -97,13 +101,20 @@ export async function POST(request: Request) {
 
   const db = getDb();
   const [subject] = await db
-    .select({ id: subjects.id })
+    .select({ id: subjects.id, name: subjects.name })
     .from(subjects)
     .where(eq(subjects.id, parsed.data.subjectId))
     .limit(1);
 
   if (!subject) {
     return NextResponse.json({ error: "Matéria não encontrada." }, { status: 404 });
+  }
+
+  if (!isShiftAllowedForSubject(subject.name, parsed.data.shift)) {
+    return NextResponse.json(
+      { error: "Turno inválido para esta matéria." },
+      { status: 400 },
+    );
   }
 
   if (parsed.data.teacherId) {
@@ -126,6 +137,7 @@ export async function POST(request: Request) {
     .values({
       subjectId: parsed.data.subjectId,
       name: parsed.data.name,
+      shift: parsed.data.shift,
       teacherId: parsed.data.teacherId ?? null,
     })
     .returning();

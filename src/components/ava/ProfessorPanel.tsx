@@ -3,10 +3,12 @@ import Link from "next/link";
 import { FlowTree } from "@/components/ava/FlowTree";
 import { buildProfessorFlow } from "@/lib/ava/flows";
 import { classManagePath } from "@/lib/ava/navigation";
+import { shiftDetail } from "@/lib/ava/shifts";
 
 type ClassRow = {
   id: string;
   name: string;
+  shift: string | null;
   subjectName: string;
   lessonCount: number;
   publishedCount: number;
@@ -83,9 +85,13 @@ export function ProfessorPanel({ teacherName, classes }: ProfessorPanelProps) {
                     {classRow.name}
                   </h3>
                   <p className="mt-1 text-sm text-[var(--ava-muted)]">
-                    {classRow.publishedCount}/{classRow.lessonCount} publicadas
-                    · {classRow.studentCount} aluno
-                    {classRow.studentCount === 1 ? "" : "s"}
+                    {[
+                      shiftDetail(classRow.shift),
+                      `${classRow.publishedCount}/${classRow.lessonCount} publicadas`,
+                      `${classRow.studentCount} aluno${classRow.studentCount === 1 ? "" : "s"}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-4">
                     <Link

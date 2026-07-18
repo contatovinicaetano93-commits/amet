@@ -10,6 +10,7 @@ import { buildStudentFlow } from "@/lib/ava/flows";
 import { homePathForRole } from "@/lib/ava/navigation";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
 import { classes, enrollments, subjects, users } from "@/lib/ava/schema";
+import { shiftDetail } from "@/lib/ava/shifts";
 
 export default async function AvaHomePage() {
   const session = await auth();
@@ -24,6 +25,7 @@ export default async function AvaHomePage() {
   let classRows: Array<{
     id: string;
     name: string;
+    shift: string | null;
     subjectName: string;
     teacherName: string | null;
   }> = [];
@@ -36,6 +38,7 @@ export default async function AvaHomePage() {
       .select({
         id: classes.id,
         name: classes.name,
+        shift: classes.shift,
         subjectName: subjects.name,
         teacherName: teacher.name,
       })
@@ -108,11 +111,16 @@ export default async function AvaHomePage() {
                   <h3 className="mt-2 text-xl font-semibold tracking-tight text-amet-indigo">
                     {classRow.name}
                   </h3>
-                  {classRow.teacherName ? (
-                    <p className="mt-1 text-sm text-[var(--ava-muted)]">
-                      Prof. {classRow.teacherName}
-                    </p>
-                  ) : null}
+                  <p className="mt-1 text-sm text-[var(--ava-muted)]">
+                    {[
+                      shiftDetail(classRow.shift),
+                      classRow.teacherName
+                        ? `Prof. ${classRow.teacherName}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
                 </Link>
               </li>
             ))}

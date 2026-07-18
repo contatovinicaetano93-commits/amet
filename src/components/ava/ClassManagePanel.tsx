@@ -8,6 +8,7 @@ import { FlowTree } from "@/components/ava/FlowTree";
 import { buildClassManageFlow } from "@/lib/ava/flows";
 import { homePathForRole } from "@/lib/ava/navigation";
 import type { UserRole } from "@/lib/ava/schema";
+import { shiftDetail } from "@/lib/ava/shifts";
 
 type LessonRow = {
   id: string;
@@ -32,6 +33,7 @@ type ClassManagePanelProps = {
   classId: string;
   className: string;
   subjectName: string;
+  shift: string | null;
   viewerRole: UserRole;
   initialLessons: LessonRow[];
   initialStudents: StudentRow[];
@@ -42,6 +44,7 @@ export function ClassManagePanel({
   classId,
   className,
   subjectName,
+  shift,
   viewerRole,
   initialLessons,
   initialStudents,
@@ -229,6 +232,9 @@ export function ClassManagePanel({
           {subjectName}
         </p>
         <h1 className="ava-display text-4xl text-amet-indigo">{className}</h1>
+        {shiftDetail(shift) ? (
+          <p className="text-sm text-[var(--ava-muted)]">{shiftDetail(shift)}</p>
+        ) : null}
         <div className="flex flex-wrap gap-3">
           <Link
             href={homePathForRole(viewerRole)}

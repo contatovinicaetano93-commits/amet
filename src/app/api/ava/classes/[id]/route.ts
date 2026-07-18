@@ -14,6 +14,7 @@ import {
   users,
 } from "@/lib/ava/schema";
 import { classUpdateSchema } from "@/lib/ava/schemas";
+import { isShiftAllowedForSubject } from "@/lib/ava/shifts";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -41,6 +42,7 @@ export async function GET(_request: Request, { params }: Params) {
     .select({
       id: classes.id,
       name: classes.name,
+      shift: classes.shift,
       subjectId: classes.subjectId,
       subjectName: subjects.name,
       teacherId: classes.teacherId,
@@ -126,13 +128,30 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const db = getDb();
   const [existing] = await db
-    .select()
+    .select({
+      id: classes.id,
+      name: classes.name,
+      shift: classes.shift,
+      teacherId: classes.teacherId,
+      subjectName: subjects.name,
+    })
     .from(classes)
+    .innerJoin(subjects, eq(subjects.id, classes.subjectId))
     .where(eq(classes.id, id))
     .limit(1);
 
   if (!existing) {
     return NextResponse.json({ error: "Turma não encontrada." }, { status: 404 });
+  }
+
+  if (
+    parsed.data.shift &&
+    !isShiftAllowedForSubject(existing.subjectName, parsed.data.shift)
+  ) {
+    return NextResponse.json(
+      { error: "Turno inválido para esta matéria." },
+      { status: 400 },
+    );
   }
 
   if (parsed.data.teacherId) {
@@ -151,6 +170,7 @@ export async function PATCH(request: Request, { params }: Params) {
     .update(classes)
     .set({
       name: parsed.data.name ?? existing.name,
+      shift: parsed.data.shift ?? existing.shift,
       teacherId:
         parsed.data.teacherId === undefined
           ? existing.teacherId

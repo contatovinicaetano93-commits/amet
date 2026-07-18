@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 
 import { classManagePath } from "@/lib/ava/navigation";
 import { roleLabel } from "@/lib/ava/permissions";
 import type { UserRole } from "@/lib/ava/schema";
+import {
+  SHIFT_GUIDE,
+  SHIFTS,
+  allowedShiftsForSubject,
+  shiftLabel,
+  type ShiftCode,
+} from "@/lib/ava/shifts";
 
 type UserRow = {
   id: string;
@@ -28,6 +35,7 @@ type SubjectRow = { id: string; name: string; slug: string };
 type ClassRow = {
   id: string;
   name: string;
+  shift: string | null;
   subjectId: string;
   subjectName: string;
   teacherId: string | null;
@@ -65,7 +73,19 @@ export function AdminPanel({
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
     "idle",
   );
+  const [selectedSubjectId, setSelectedSubjectId] = useState("");
+  const [selectedShift, setSelectedShift] = useState<ShiftCode | "">("");
   const [pending, startTransition] = useTransition();
+
+  const selectedSubjectName =
+    subjects.find((item) => item.id === selectedSubjectId)?.name ?? "";
+  const availableShifts = useMemo(
+    () =>
+      selectedSubjectName
+        ? allowedShiftsForSubject(selectedSubjectName)
+        : ([] as ShiftCode[]),
+    [selectedSubjectName],
+  );
 
   async function copyInviteUrl(url: string) {
     try {
@@ -215,6 +235,7 @@ export function AdminPanel({
     const teacherId = String(form.get("teacherId") ?? "");
     const subjectId = String(form.get("subjectId") ?? "");
     const name = String(form.get("name") ?? "");
+    const shift = String(form.get("shift") ?? "");
     startTransition(async () => {
       setMessage("");
       setError("");
@@ -224,6 +245,7 @@ export function AdminPanel({
         body: JSON.stringify({
           subjectId,
           name,
+          shift,
           teacherId: teacherId || null,
         }),
       });
@@ -240,6 +262,7 @@ export function AdminPanel({
           {
             id: data.class.id,
             name: data.class.name,
+            shift: data.class.shift ?? shift,
             subjectId: data.class.subjectId,
             subjectName: subject?.name ?? "Matéria",
             teacherId: data.class.teacherId,
@@ -248,6 +271,8 @@ export function AdminPanel({
         ]);
       }
       setMessage("Turma criada.");
+      setSelectedSubjectId("");
+      setSelectedShift("");
       event.currentTarget.reset();
       router.refresh();
     });
@@ -407,11 +432,29 @@ export function AdminPanel({
           className="scroll-mt-24 space-y-3 rounded-lg border border-amet-indigo/10 bg-white/90 p-5"
         >
           <h2 className="text-lg font-semibold">Nova turma</h2>
+          <p className="text-sm text-amet-indigo/65">
+            Escolha matéria e turno. Sábado é sempre 09h–13h.
+          </p>
+          <ul className="space-y-1 text-xs text-amet-indigo/60">
+            {SHIFT_GUIDE.map((item) => (
+              <li key={item.courses}>
+                <span className="font-medium text-amet-indigo/75">
+                  {item.courses}
+                </span>
+                {": "}
+                {item.hours}
+              </li>
+            ))}
+          </ul>
           <select
             name="subjectId"
             required
             className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
-            defaultValue=""
+            value={selectedSubjectId}
+            onChange={(event) => {
+              setSelectedSubjectId(event.target.value);
+              setSelectedShift("");
+            }}
           >
             <option value="" disabled>
               Matéria
@@ -419,6 +462,26 @@ export function AdminPanel({
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
+              </option>
+            ))}
+          </select>
+          <select
+            name="shift"
+            required
+            className="w-full rounded-md border border-amet-indigo/15 px-3 py-2"
+            value={selectedShift}
+            onChange={(event) =>
+              setSelectedShift(event.target.value as ShiftCode | "")
+            }
+            disabled={!selectedSubjectId}
+          >
+            <option value="" disabled>
+              Turno
+            </option>
+            {availableShifts.map((code) => (
+              <option key={code} value={code}>
+                {SHIFTS[code].label} · {SHIFTS[code].hours}
+                {code === "sabado" ? "" : ` (${SHIFTS[code].dayLabel})`}
               </option>
             ))}
           </select>
@@ -467,6 +530,9 @@ export function AdminPanel({
             {classes.map((classRow) => (
               <option key={classRow.id} value={classRow.id}>
                 {classRow.subjectName} — {classRow.name}
+                {shiftLabel(classRow.shift)
+                  ? ` · ${shiftLabel(classRow.shift)}`
+                  : ""}
               </option>
             ))}
           </select>
@@ -566,6 +632,8 @@ export function AdminPanel({
               <span>
                 {classRow.subjectName} — {classRow.name}
                 <span className="block text-amet-indigo/55">
+                  {shiftLabel(classRow.shift) ?? "Sem turno"}
+                  {" · "}
                   {classRow.teacherName
                     ? `Prof. ${classRow.teacherName}`
                     : "Sem professor"}

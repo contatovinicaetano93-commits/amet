@@ -59,6 +59,7 @@ export default async function AvaAdminPage() {
       .select({
         id: classes.id,
         name: classes.name,
+        shift: classes.shift,
         subjectId: classes.subjectId,
         subjectName: subjects.name,
         teacherId: classes.teacherId,
