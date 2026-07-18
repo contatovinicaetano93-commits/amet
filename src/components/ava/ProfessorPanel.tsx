@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CollapsibleCard } from "@/components/ava/CollapsibleCard";
 import { DoubtsInbox } from "@/components/ava/DoubtsInbox";
 import { FlowTree } from "@/components/ava/FlowTree";
 import { buildProfessorFlow } from "@/lib/ava/flows";
@@ -61,71 +62,65 @@ export function ProfessorPanel({
 
       <DoubtsInbox doubts={openDoubts} />
 
-      <section className="ava-fade-in-delay-2 space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="space-y-1">
-            <p className="ava-kicker">Turmas</p>
-            <h2 className="text-2xl font-semibold tracking-tight text-amet-indigo">
-              Minhas turmas
-            </h2>
-          </div>
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ava-muted)]">
-            {classes.length} turma{classes.length === 1 ? "" : "s"}
-          </p>
-        </div>
-
-        {classes.length === 0 ? (
-          <div className="ava-panel">
-            <h3 className="text-lg font-semibold text-amet-indigo">
-              Nenhuma turma atribuída ainda
-            </h3>
-            <p className="mt-2 max-w-xl text-[var(--ava-muted)]">
-              O administrador precisa criar a matéria, abrir a turma e atribuir
-              você como professor.
-            </p>
-          </div>
-        ) : (
-          <ul>
-            {classes.map((classRow) => (
-              <li key={classRow.id}>
-                <div className="ava-row">
-                  <p className="ava-kicker">{classRow.subjectName}</p>
-                  <h3 className="mt-2 text-xl font-semibold tracking-tight text-amet-indigo">
-                    {classRow.name}
-                  </h3>
-                  <p className="mt-1 text-sm text-[var(--ava-muted)]">
-                    {[
-                      shiftDetail(classRow.shift),
-                      classRow.lessonCount === 0
-                        ? "Sem aulas ainda"
-                        : `${classRow.publishedCount}/${classRow.lessonCount} publicadas`,
-                      `${classRow.studentCount} aluno${classRow.studentCount === 1 ? "" : "s"}`,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-4">
-                    <Link
-                      href={classManagePath(classRow.id)}
-                      className="ava-link text-sm font-semibold"
-                    >
-                      {classRow.lessonCount === 0
-                        ? "Gerir aulas (criar)"
-                        : `Gerir aulas (${classRow.lessonCount})`}
-                    </Link>
-                    <Link
-                      href={`/ava/turmas/${classRow.id}`}
-                      className="ava-link text-sm"
-                    >
-                      Ver como aluno
-                    </Link>
+      <div className="ava-fade-in-delay-2">
+        <CollapsibleCard
+          kicker="Turmas"
+          title="Minhas turmas"
+          description={`${classes.length} turma${classes.length === 1 ? "" : "s"} atribuída${classes.length === 1 ? "" : "s"}`}
+        >
+          {classes.length === 0 ? (
+            <div>
+              <h3 className="text-lg font-semibold text-amet-indigo">
+                Nenhuma turma atribuída ainda
+              </h3>
+              <p className="mt-2 max-w-xl text-[var(--ava-muted)]">
+                O administrador precisa criar a matéria, abrir a turma e
+                atribuir você como professor.
+              </p>
+            </div>
+          ) : (
+            <ul>
+              {classes.map((classRow) => (
+                <li key={classRow.id}>
+                  <div className="ava-row">
+                    <p className="ava-kicker">{classRow.subjectName}</p>
+                    <h3 className="mt-2 text-xl font-semibold tracking-tight text-amet-indigo">
+                      {classRow.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-[var(--ava-muted)]">
+                      {[
+                        shiftDetail(classRow.shift),
+                        classRow.lessonCount === 0
+                          ? "Sem aulas ainda"
+                          : `${classRow.publishedCount}/${classRow.lessonCount} publicadas`,
+                        `${classRow.studentCount} aluno${classRow.studentCount === 1 ? "" : "s"}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-4">
+                      <Link
+                        href={classManagePath(classRow.id)}
+                        className="ava-link text-sm font-semibold"
+                      >
+                        {classRow.lessonCount === 0
+                          ? "Gerir aulas (criar)"
+                          : `Gerir aulas (${classRow.lessonCount})`}
+                      </Link>
+                      <Link
+                        href={`/ava/turmas/${classRow.id}`}
+                        className="ava-link text-sm"
+                      >
+                        Ver como aluno
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CollapsibleCard>
+      </div>
     </div>
   );
 }

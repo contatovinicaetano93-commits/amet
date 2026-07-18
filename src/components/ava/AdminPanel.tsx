@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
+import { CollapsibleCard } from "@/components/ava/CollapsibleCard";
 import { classManagePath } from "@/lib/ava/navigation";
 import { roleLabel } from "@/lib/ava/permissions";
 import type { UserRole } from "@/lib/ava/schema";
@@ -82,12 +83,6 @@ export function AdminPanel({
   const [editClassName, setEditClassName] = useState("");
   const [editClassShift, setEditClassShift] = useState<ShiftCode | "">("");
   const [editClassTeacherId, setEditClassTeacherId] = useState("");
-  const [userRoleFilter, setUserRoleFilter] = useState<UserRole | "all">(
-    "all",
-  );
-  const [inviteRoleFilter, setInviteRoleFilter] = useState<UserRole | "all">(
-    "all",
-  );
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -561,14 +556,6 @@ export function AdminPanel({
     (user) => user.role === "professor" || user.role === "admin",
   );
   const students = users.filter((user) => user.role === "aluno");
-  const filteredUsers =
-    userRoleFilter === "all"
-      ? users
-      : users.filter((user) => user.role === userRoleFilter);
-  const filteredInvites =
-    inviteRoleFilter === "all"
-      ? invites
-      : invites.filter((invite) => invite.role === inviteRoleFilter);
 
   return (
     <div className="space-y-10">
@@ -631,319 +618,272 @@ export function AdminPanel({
       ) : null}
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <form
+        <CollapsibleCard
           id="convidar"
-          onSubmit={createInvite}
-          className="ava-panel scroll-mt-24 space-y-5"
+          kicker="Convites"
+          title="Convidar usuário"
+          description="Envie o link de ativação por e-mail ou copie o link."
         >
-          <div className="space-y-1">
-            <p className="ava-kicker">Convites</p>
-            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
-              Convidar usuário
-            </h2>
-            <p className="text-sm text-[var(--ava-muted)]">
-              O sistema envia o link de ativação para o e-mail digitado. Se o
-              envio falhar, o link também aparece aqui para copiar.
-            </p>
-          </div>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">E-mail</span>
-            <input
-              name="email"
-              type="email"
-              required
-              placeholder="E-mail"
-              className="ava-input"
-            />
-          </label>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">Papel</span>
-            <select
-              name="role"
-              required
-              className="ava-input"
-              defaultValue="aluno"
+          <form onSubmit={createInvite} className="space-y-5">
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-amet-indigo">E-mail</span>
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="E-mail"
+                className="ava-input"
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-amet-indigo">Papel</span>
+              <select
+                name="role"
+                required
+                className="ava-input"
+                defaultValue="aluno"
+              >
+                <option value="aluno">Aluno</option>
+                <option value="professor">Professor</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </label>
+            <button
+              type="submit"
+              disabled={pending}
+              className="ava-btn ava-btn-primary"
             >
-              <option value="aluno">Aluno</option>
-              <option value="professor">Professor</option>
-              <option value="admin">Administrador</option>
-            </select>
-          </label>
-          <button
-            type="submit"
-            disabled={pending}
-            className="ava-btn ava-btn-primary"
-          >
-            Criar convite
-          </button>
-        </form>
+              Criar convite
+            </button>
+          </form>
+        </CollapsibleCard>
 
-        <form
+        <CollapsibleCard
           id="materia"
-          onSubmit={createSubject}
-          className="ava-panel scroll-mt-24 space-y-3"
+          kicker="Matérias"
+          title="Matérias oficiais"
+          description="Estética, Imagem, Hematologia e Análises Clínicas já estão disponíveis."
+          defaultOpen={false}
         >
-          <div className="space-y-1">
-            <p className="ava-kicker">Matérias</p>
-            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
-              Matérias oficiais
-            </h2>
-            <p className="text-sm text-[var(--ava-muted)]">
-              Estética, Imagem, Hematologia e Análises Clínicas já estão
-              disponíveis. Só use este formulário se precisar de uma matéria
-              extra.
-            </p>
-          </div>
-          <ul className="space-y-1 text-sm text-amet-indigo">
-            {subjects.map((subject) => (
-              <li
-                key={subject.id}
-                className="border-t border-[var(--ava-line)] py-2 first:border-t-0"
-              >
-                {subject.name}
-              </li>
-            ))}
-          </ul>
-          <input
-            name="name"
-            required
-            placeholder="Matéria extra (opcional)"
-            className="ava-input"
-          />
-          <button
-            type="submit"
-            disabled={pending}
-            className="ava-btn ava-btn-ghost"
-          >
-            Adicionar matéria
-          </button>
-        </form>
-
-        <form
-          id="turma"
-          onSubmit={createClass}
-          className="ava-panel scroll-mt-24 space-y-5"
-        >
-          <div className="space-y-1">
-            <p className="ava-kicker">Turmas</p>
-            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
-              Nova turma
-            </h2>
-            <p className="text-sm text-[var(--ava-muted)]">
-              Matéria + turno. No sábado, qualquer curso é só 09h–13h.
-            </p>
-          </div>
-
-          <div className="grid gap-2 text-xs text-[var(--ava-muted)] sm:grid-cols-3">
-            {SHIFT_GUIDE.map((item) => (
-              <div
-                key={item.courses}
-                className="border-t border-[var(--ava-line)] pt-2"
-              >
-                <p className="font-semibold text-amet-indigo/80">
-                  {item.courses}
-                </p>
-                <p className="mt-1">{item.hours}</p>
-              </div>
-            ))}
-          </div>
-
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">Matéria</span>
-            <select
-              name="subjectId"
-              required
-              className="ava-input"
-              value={selectedSubjectId}
-              onChange={(event) => {
-                setSelectedSubjectId(event.target.value);
-                setSelectedShift("");
-              }}
-            >
-              <option value="" disabled>
-                Selecione a matéria
-              </option>
+          <form onSubmit={createSubject} className="space-y-3">
+            <ul className="space-y-1 text-sm text-amet-indigo">
               {subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
+                <li
+                  key={subject.id}
+                  className="border-t border-[var(--ava-line)] py-2 first:border-t-0"
+                >
                   {subject.name}
-                </option>
+                </li>
               ))}
-            </select>
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">Turno</span>
-            <select
-              name="shift"
-              required
-              className="ava-input"
-              value={selectedShift}
-              disabled={!selectedSubjectId}
-              onChange={(event) =>
-                setSelectedShift((event.target.value || "") as ShiftCode | "")
-              }
-            >
-              <option value="" disabled>
-                {selectedSubjectId
-                  ? "Selecione o turno"
-                  : "Selecione a matéria primeiro"}
-              </option>
-              {availableShifts.map((code) => {
-                const info = SHIFTS[code];
-                return (
-                  <option key={code} value={code}>
-                    {info.label} ({info.hours}
-                    {code === "sabado" ? "" : ` · ${info.dayLabel}`})
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">
-              Nome da turma
-            </span>
+            </ul>
             <input
               name="name"
               required
-              placeholder="Ex.: Estética Facial — Manhã"
+              placeholder="Matéria extra (opcional)"
               className="ava-input"
             />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">
-              Professor
-            </span>
-            <select
-              name="teacherId"
-              className="ava-input"
-              defaultValue=""
+            <button
+              type="submit"
+              disabled={pending}
+              className="ava-btn ava-btn-ghost"
             >
-              <option value="">Sem professor</option>
-              {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.name} ({teacher.email})
-                  {teacher.role === "admin" ? " · admin" : ""}
-                </option>
-              ))}
-            </select>
-            {teachers.filter((teacher) => teacher.role === "professor")
-              .length === 0 ? (
-              <p className="text-xs text-amet-indigo/60">
-                Nenhum professor com conta ativa. Convide em{" "}
-                <a href="#convidar" className="font-medium text-amet-blue underline">
-                  Convites
-                </a>{" "}
-                e peça para a pessoa abrir o link e ativar a conta — só então
-                ela aparece aqui.
-              </p>
-            ) : null}
-          </label>
+              Adicionar matéria
+            </button>
+          </form>
+        </CollapsibleCard>
 
-          <button
-            type="submit"
-            disabled={pending || !selectedSubjectId || !selectedShift}
-            className="ava-btn ava-btn-primary"
-          >
-            {pending ? "Criando…" : "Criar turma"}
-          </button>
-        </form>
-
-        <form
-          id="matricular"
-          onSubmit={enrollStudent}
-          className="ava-panel scroll-mt-24 space-y-5"
+        <CollapsibleCard
+          id="turma"
+          kicker="Turmas"
+          title="Nova turma"
+          description="Matéria + turno. No sábado, qualquer curso é só 09h–13h."
         >
-          <div className="space-y-1">
-            <p className="ava-kicker">Matrículas</p>
-            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
-              Matricular aluno
-            </h2>
-            <p className="text-sm text-[var(--ava-muted)]">
-              Escolha a turma e o aluno com conta ativa.
-            </p>
-          </div>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">Turma</span>
-            <select
-              name="classId"
-              required
-              className="ava-input"
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Selecione a turma
-              </option>
-              {classes.map((classRow) => (
-                <option key={classRow.id} value={classRow.id}>
-                  {classRow.subjectName} — {classRow.name}
-                  {shiftLabel(classRow.shift)
-                    ? ` · ${shiftLabel(classRow.shift)}`
-                    : ""}
-                </option>
+          <form onSubmit={createClass} className="space-y-5">
+            <div className="grid gap-2 text-xs text-[var(--ava-muted)] sm:grid-cols-3">
+              {SHIFT_GUIDE.map((item) => (
+                <div
+                  key={item.courses}
+                  className="border-t border-[var(--ava-line)] pt-2"
+                >
+                  <p className="font-semibold text-amet-indigo/80">
+                    {item.courses}
+                  </p>
+                  <p className="mt-1">{item.hours}</p>
+                </div>
               ))}
-            </select>
-          </label>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">Aluno</span>
-            <select
-              name="studentId"
-              required
-              className="ava-input"
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Selecione o aluno
-              </option>
-              {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.name} ({student.email})
+            </div>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-amet-indigo">
+                Matéria
+              </span>
+              <select
+                name="subjectId"
+                required
+                className="ava-input"
+                value={selectedSubjectId}
+                onChange={(event) => {
+                  setSelectedSubjectId(event.target.value);
+                  setSelectedShift("");
+                }}
+              >
+                <option value="" disabled>
+                  Selecione a matéria
                 </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="submit"
-            disabled={pending}
-            className="ava-btn ava-btn-primary"
-          >
-            Matricular
-          </button>
-        </form>
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-amet-indigo">Turno</span>
+              <select
+                name="shift"
+                required
+                className="ava-input"
+                value={selectedShift}
+                disabled={!selectedSubjectId}
+                onChange={(event) =>
+                  setSelectedShift((event.target.value || "") as ShiftCode | "")
+                }
+              >
+                <option value="" disabled>
+                  {selectedSubjectId
+                    ? "Selecione o turno"
+                    : "Selecione a matéria primeiro"}
+                </option>
+                {availableShifts.map((code) => {
+                  const info = SHIFTS[code];
+                  return (
+                    <option key={code} value={code}>
+                      {info.label} ({info.hours}
+                      {code === "sabado" ? "" : ` · ${info.dayLabel}`})
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-amet-indigo">
+                Nome da turma
+              </span>
+              <input
+                name="name"
+                required
+                placeholder="Ex.: Estética Facial — Manhã"
+                className="ava-input"
+              />
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-amet-indigo">
+                Professor
+              </span>
+              <select name="teacherId" className="ava-input" defaultValue="">
+                <option value="">Sem professor</option>
+                {teachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.name} ({teacher.email})
+                    {teacher.role === "admin" ? " · admin" : ""}
+                  </option>
+                ))}
+              </select>
+              {teachers.filter((teacher) => teacher.role === "professor")
+                .length === 0 ? (
+                <p className="text-xs text-amet-indigo/60">
+                  Nenhum professor com conta ativa. Convide em{" "}
+                  <a
+                    href="#convidar"
+                    className="font-medium text-amet-blue underline"
+                  >
+                    Convites
+                  </a>{" "}
+                  e peça para a pessoa abrir o link e ativar a conta — só então
+                  ela aparece aqui.
+                </p>
+              ) : null}
+            </label>
+
+            <button
+              type="submit"
+              disabled={pending || !selectedSubjectId || !selectedShift}
+              className="ava-btn ava-btn-primary"
+            >
+              {pending ? "Criando…" : "Criar turma"}
+            </button>
+          </form>
+        </CollapsibleCard>
+
+        <CollapsibleCard
+          id="matricular"
+          kicker="Matrículas"
+          title="Matricular aluno"
+          description="Escolha a turma e o aluno com conta ativa."
+        >
+          <form onSubmit={enrollStudent} className="space-y-5">
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-amet-indigo">Turma</span>
+              <select
+                name="classId"
+                required
+                className="ava-input"
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Selecione a turma
+                </option>
+                {classes.map((classRow) => (
+                  <option key={classRow.id} value={classRow.id}>
+                    {classRow.subjectName} — {classRow.name}
+                    {shiftLabel(classRow.shift)
+                      ? ` · ${shiftLabel(classRow.shift)}`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-amet-indigo">Aluno</span>
+              <select
+                name="studentId"
+                required
+                className="ava-input"
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Selecione o aluno
+                </option>
+                {students.map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.name} ({student.email})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="submit"
+              disabled={pending}
+              className="ava-btn ava-btn-primary"
+            >
+              Matricular
+            </button>
+          </form>
+        </CollapsibleCard>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="ava-panel space-y-4">
-          <div className="space-y-1">
-            <p className="ava-kicker">Acesso</p>
-            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
-              Usuários
-            </h2>
-            <p className="text-sm text-[var(--ava-muted)]">
-              Remova alguém para tirar o acesso à ferramenta.
-            </p>
-          </div>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">Papel</span>
-            <select
-              className="ava-input"
-              value={userRoleFilter}
-              onChange={(event) =>
-                setUserRoleFilter(
-                  (event.target.value || "all") as UserRole | "all",
-                )
-              }
-            >
-              <option value="all">Todos os papéis</option>
-              <option value="admin">Administrador</option>
-              <option value="professor">Professor</option>
-              <option value="aluno">Aluno</option>
-            </select>
-          </label>
+        <CollapsibleCard
+          kicker="Acesso"
+          title="Usuários"
+          description="Remova alguém para tirar o acesso à ferramenta."
+          defaultOpen={false}
+        >
           <ul className="space-y-2 text-sm">
-            {filteredUsers.map((user) => (
+            {users.map((user) => (
               <li
                 key={user.id}
                 className="flex flex-wrap items-center justify-between gap-3 border-b border-amet-indigo/5 pb-2"
@@ -970,37 +910,16 @@ export function AdminPanel({
               </li>
             ))}
           </ul>
-        </div>
+        </CollapsibleCard>
 
-        <div className="ava-panel space-y-4">
-          <div className="space-y-1">
-            <p className="ava-kicker">Convites</p>
-            <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
-              Convites enviados
-            </h2>
-            <p className="text-sm text-[var(--ava-muted)]">
-              Pendente: cancela o link. Usado: remove também a conta criada.
-            </p>
-          </div>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-amet-indigo">Papel</span>
-            <select
-              className="ava-input"
-              value={inviteRoleFilter}
-              onChange={(event) =>
-                setInviteRoleFilter(
-                  (event.target.value || "all") as UserRole | "all",
-                )
-              }
-            >
-              <option value="all">Todos os papéis</option>
-              <option value="admin">Administrador</option>
-              <option value="professor">Professor</option>
-              <option value="aluno">Aluno</option>
-            </select>
-          </label>
+        <CollapsibleCard
+          kicker="Convites"
+          title="Convites enviados"
+          description="Pendente: cancela o link. Usado: remove também a conta criada."
+          defaultOpen={false}
+        >
           <ul className="space-y-2 text-sm">
-            {filteredInvites.map((invite) => {
+            {invites.map((invite) => {
               const hasAccount = activeEmails.has(invite.email.toLowerCase());
               const statusLabel = !invite.usedAt
                 ? "Pendente"
@@ -1045,20 +964,15 @@ export function AdminPanel({
               );
             })}
           </ul>
-        </div>
+        </CollapsibleCard>
       </section>
 
-      <section id="turmas" className="ava-panel scroll-mt-24 space-y-4">
-        <div className="space-y-1">
-          <p className="ava-kicker">Turmas</p>
-          <h2 className="text-xl font-semibold tracking-tight text-amet-indigo">
-            Turmas ativas
-          </h2>
-          <p className="text-sm text-[var(--ava-muted)]">
-            Edite nome, turno e professor nos dropdowns. Ao atribuir um
-            professor, a turma aparece automaticamente no painel dele.
-          </p>
-        </div>
+      <CollapsibleCard
+        id="turmas"
+        kicker="Turmas"
+        title="Turmas ativas"
+        description="Edite nome, turno e professor. Ao atribuir um professor, a turma aparece no painel dele."
+      >
         {classes.length === 0 ? (
           <p className="text-sm text-amet-indigo/60">
             Nenhuma turma ainda. Crie matéria e turma no fluxo acima.
@@ -1139,13 +1053,6 @@ export function AdminPanel({
                           </option>
                         ))}
                       </select>
-                      {teachers.filter((teacher) => teacher.role === "professor")
-                        .length === 0 ? (
-                        <p className="text-xs text-amet-indigo/60">
-                          Nenhum professor ativo ainda. Convide e peça para
-                          ativar a conta — ou atribua um admin temporariamente.
-                        </p>
-                      ) : null}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -1214,7 +1121,7 @@ export function AdminPanel({
             );
           })}
         </ul>
-      </section>
+      </CollapsibleCard>
     </div>
   );
 }

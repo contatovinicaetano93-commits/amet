@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CollapsibleCard } from "@/components/ava/CollapsibleCard";
 import type { FlowTree as FlowTreeModel } from "@/lib/ava/flows";
 
 type FlowTreeProps = {
@@ -11,26 +12,16 @@ export function FlowTree({ tree, compact = false }: FlowTreeProps) {
   const remaining = tree.steps.filter((step) => !step.done).length;
 
   return (
-    <section className={`ava-panel ${compact ? "space-y-4" : "space-y-5"}`}>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <p className="ava-kicker">O que fazer agora</p>
-          <h2
-            className={`font-semibold tracking-tight text-amet-indigo ${
-              compact ? "text-lg" : "text-xl"
-            }`}
-          >
-            {tree.title}
-          </h2>
-          <p className="text-sm text-[var(--ava-muted)]">{tree.subtitle}</p>
-        </div>
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--ava-muted)]">
-          {remaining === 0
-            ? "Completo"
-            : `${remaining} passo${remaining > 1 ? "s" : ""}`}
-        </p>
-      </div>
-
+    <CollapsibleCard
+      kicker="O que fazer agora"
+      title={tree.title}
+      description={`${tree.subtitle} · ${
+        remaining === 0
+          ? "Completo"
+          : `${remaining} passo${remaining > 1 ? "s" : ""}`
+      }`}
+      defaultOpen={!compact}
+    >
       <ol className="space-y-2">
         {tree.steps.map((step, index) => {
           const body = (
@@ -81,6 +72,6 @@ export function FlowTree({ tree, compact = false }: FlowTreeProps) {
           );
         })}
       </ol>
-    </section>
+    </CollapsibleCard>
   );
 }

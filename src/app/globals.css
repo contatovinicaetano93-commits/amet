@@ -756,6 +756,74 @@ a.ava-row:hover {
   padding: 1.15rem 1.2rem;
 }
 
+.ava-collapse-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.ava-collapse-toggle {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.2rem;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.ava-collapse-toggle:hover {
+  background: rgba(40, 90, 206, 0.03);
+}
+
+.ava-collapse-copy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ava-collapse-title {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--amet-indigo);
+}
+
+.ava-collapse-desc {
+  display: block;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ava-muted);
+}
+
+.ava-collapse-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  border: 1px solid var(--ava-line-strong);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--amet-indigo);
+  background: #fff;
+}
+
+.ava-collapse-chevron {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.ava-collapse-body {
+  border-top: 1px solid var(--ava-line);
+  padding: 1.15rem 1.2rem 1.25rem;
+}
+
 .ava-cinema {
   overflow: hidden;
   border-radius: var(--ava-radius);
