@@ -138,6 +138,25 @@ export const lessonProgress = pgTable(
   ],
 );
 
+export const lessonQuestions = pgTable("ava_lesson_questions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  lessonId: uuid("lesson_id")
+    .notNull()
+    .references(() => lessons.id, { onDelete: "cascade" }),
+  askerId: uuid("asker_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  answer: text("answer"),
+  answeredById: uuid("answered_by_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  answeredAt: timestamp("answered_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   taughtClasses: many(classes),
   enrollments: many(enrollments),
@@ -178,6 +197,7 @@ export const lessonsRelations = relations(lessons, ({ one, many }) => ({
     references: [classes.id],
   }),
   progress: many(lessonProgress),
+  questions: many(lessonQuestions),
 }));
 
 export const lessonProgressRelations = relations(lessonProgress, ({ one }) => ({
@@ -191,8 +211,27 @@ export const lessonProgressRelations = relations(lessonProgress, ({ one }) => ({
   }),
 }));
 
+export const lessonQuestionsRelations = relations(
+  lessonQuestions,
+  ({ one }) => ({
+    lesson: one(lessons, {
+      fields: [lessonQuestions.lessonId],
+      references: [lessons.id],
+    }),
+    asker: one(users, {
+      fields: [lessonQuestions.askerId],
+      references: [users.id],
+    }),
+    answeredBy: one(users, {
+      fields: [lessonQuestions.answeredById],
+      references: [users.id],
+    }),
+  }),
+);
+
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 export type AvaUser = typeof users.$inferSelect;
 export type AvaClass = typeof classes.$inferSelect;
 export type AvaLesson = typeof lessons.$inferSelect;
 export type AvaSubject = typeof subjects.$inferSelect;
+export type AvaLessonQuestion = typeof lessonQuestions.$inferSelect;

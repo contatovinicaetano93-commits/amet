@@ -69,3 +69,11 @@ export const progressSchema = z.object({
   lessonId: z.uuid(),
   completed: z.boolean(),
 });
+
+export const lessonQuestionCreateSchema = z.object({
+  body: z.string().trim().min(3).max(2000),
+});
+
+export const lessonQuestionAnswerSchema = z.object({
+  answer: z.string().trim().min(1).max(4000),
+});

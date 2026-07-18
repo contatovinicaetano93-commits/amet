@@ -1,15 +1,22 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { LessonAskAi } from "@/components/ava/LessonAskAi";
 import { LessonPlayer } from "@/components/ava/LessonPlayer";
+import { LessonQuestions } from "@/components/ava/LessonQuestions";
 import { userCanAccessClass } from "@/lib/ava/access";
 import { auth } from "@/lib/ava/auth";
 import { getDb } from "@/lib/ava/db";
 import { avaLog, errorMessage } from "@/lib/ava/observability";
 import { canManageClass } from "@/lib/ava/permissions";
-import { lessonProgress, lessons } from "@/lib/ava/schema";
+import {
+  lessonProgress,
+  lessonQuestions,
+  lessons,
+  users,
+} from "@/lib/ava/schema";
 import { createReadUrl, objectExists } from "@/lib/ava/storage";
 
 type PageProps = {
@@ -79,6 +86,38 @@ export default async function LessonPage({ params }: PageProps) {
     )
     .limit(1);
 
+  const asker = alias(users, "asker");
+  const answerer = alias(users, "answerer");
+  const questionRows = await db
+    .select({
+      id: lessonQuestions.id,
+      body: lessonQuestions.body,
+      answer: lessonQuestions.answer,
+      createdAt: lessonQuestions.createdAt,
+      answeredAt: lessonQuestions.answeredAt,
+      askerId: lessonQuestions.askerId,
+      askerName: asker.name,
+      answeredByName: answerer.name,
+    })
+    .from(lessonQuestions)
+    .innerJoin(asker, eq(asker.id, lessonQuestions.askerId))
+    .leftJoin(answerer, eq(answerer.id, lessonQuestions.answeredById))
+    .where(eq(lessonQuestions.lessonId, lessonId))
+    .orderBy(desc(lessonQuestions.createdAt));
+
+  const initialQuestions = questionRows.map((row) => ({
+    id: row.id,
+    body: row.body,
+    answer: row.answer,
+    createdAt: row.createdAt.toISOString(),
+    answeredAt: row.answeredAt ? row.answeredAt.toISOString() : null,
+    askerName: row.askerName,
+    isMine: row.askerId === session.user.id,
+    answeredByName: row.answeredByName,
+  }));
+
+  const canAsk = session.user.role === "aluno" || manage;
+
   return (
     <div className="space-y-4">
       <Link
@@ -104,6 +143,12 @@ export default async function LessonPage({ params }: PageProps) {
           session.user.role === "admin" ||
           session.user.role === "professor"
         }
+      />
+      <LessonQuestions
+        lessonId={lesson.id}
+        canAsk={canAsk}
+        canAnswer={manage}
+        initialQuestions={initialQuestions}
       />
       <LessonAskAi lessonId={lesson.id} />
     </div>
