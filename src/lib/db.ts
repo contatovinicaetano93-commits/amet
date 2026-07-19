@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { AREAS, type AreaCode } from "@/lib/constants";
@@ -13,32 +13,62 @@ type DatabaseFile = {
   candidaturas: CandidaturaRecord[];
 };
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_FILE = path.join(DATA_DIR, "candidaturas.json");
+let resolvedDataDir: string | null = null;
+
+function canWriteDir(dir: string): boolean {
+  try {
+    mkdirSync(dir, { recursive: true });
+    const probe = path.join(dir, `.write-probe-${process.pid}`);
+    writeFileSync(probe, "ok", "utf-8");
+    unlinkSync(probe);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getDataDir(): string {
+  if (resolvedDataDir) return resolvedDataDir;
+
+  const primary = path.join(process.cwd(), "data");
+  if (canWriteDir(primary)) {
+    resolvedDataDir = primary;
+    return resolvedDataDir;
+  }
+
+  const fallback = path.join("/tmp", "amet-data");
+  mkdirSync(fallback, { recursive: true });
+  resolvedDataDir = fallback;
+  return resolvedDataDir;
+}
+
+function getDbFile(): string {
+  return path.join(getDataDir(), "candidaturas.json");
+}
 
 function ensureDatabase(): DatabaseFile {
-  mkdirSync(DATA_DIR, { recursive: true });
+  const dbFile = getDbFile();
 
-  if (!existsSync(DB_FILE)) {
+  if (!existsSync(dbFile)) {
     const empty: DatabaseFile = { candidaturas: [] };
-    writeFileSync(DB_FILE, JSON.stringify(empty, null, 2), "utf-8");
+    writeFileSync(dbFile, JSON.stringify(empty, null, 2), "utf-8");
     return empty;
   }
 
   try {
-    const raw = readFileSync(DB_FILE, "utf-8");
+    const raw = readFileSync(dbFile, "utf-8");
     const parsed = JSON.parse(raw) as DatabaseFile;
     if (!Array.isArray(parsed.candidaturas)) throw new Error("Invalid database");
     return parsed;
   } catch {
     const empty: DatabaseFile = { candidaturas: [] };
-    writeFileSync(DB_FILE, JSON.stringify(empty, null, 2), "utf-8");
+    writeFileSync(dbFile, JSON.stringify(empty, null, 2), "utf-8");
     return empty;
   }
 }
 
 function saveDatabase(data: DatabaseFile): void {
-  writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
+  writeFileSync(getDbFile(), JSON.stringify(data, null, 2), "utf-8");
 }
 
 function getAreaFromRecord(item: CandidaturaRecord): AreaCode[] {
@@ -76,36 +106,45 @@ export type CreateCandidaturaResult =
   | { ok: false; error: string; code: "AREA_FULL" | "DUPLICATE" | "UNKNOWN" };
 
 export function createCandidatura(input: CandidaturaInput): CreateCandidaturaResult {
-  const db = ensureDatabase();
-  const counts = getVacancyCounts();
+  try {
+    const db = ensureDatabase();
+    const counts = getVacancyCounts();
 
-  if (input.tipoPerfil === "aluno") {
-    const area = input.areasInteresse[0];
-    if (counts[area].full) {
-      return { ok: false, error: "Vagas esgotadas para esta área.", code: "AREA_FULL" };
+    if (input.tipoPerfil === "aluno") {
+      const area = input.areasInteresse[0];
+      if (counts[area].full) {
+        return { ok: false, error: "Vagas esgotadas para esta área.", code: "AREA_FULL" };
+      }
+      const duplicate = db.candidaturas.some(
+        (item) =>
+          item.tipoPerfil === "aluno" &&
+          item.cpf === input.cpf &&
+          getAreaFromRecord(item).includes(area),
+      );
+      if (duplicate) {
+        return {
+          ok: false,
+          error: "Você já possui uma candidatura nesta área com este CPF.",
+          code: "DUPLICATE",
+        };
+      }
     }
-    const duplicate = db.candidaturas.some(
-      (item) =>
-        item.tipoPerfil === "aluno" &&
-        item.cpf === input.cpf &&
-        getAreaFromRecord(item).includes(area),
-    );
-    if (duplicate) {
-      return {
-        ok: false,
-        error: "Você já possui uma candidatura nesta área com este CPF.",
-        code: "DUPLICATE",
-      };
-    }
+
+    const candidatura: CandidaturaRecord = {
+      ...input,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    };
+
+    db.candidaturas.push(candidatura);
+    saveDatabase(db);
+    return { ok: true, candidatura };
+  } catch (error) {
+    console.error("[db] Falha ao gravar candidatura:", error);
+    return {
+      ok: false,
+      error: "Não foi possível salvar a candidatura. Tente novamente.",
+      code: "UNKNOWN",
+    };
   }
-
-  const candidatura: CandidaturaRecord = {
-    ...input,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-  };
-
-  db.candidaturas.push(candidatura);
-  saveDatabase(db);
-  return { ok: true, candidatura };
 }

@@ -8,7 +8,7 @@ const unidadeCodes = UNIDADES.map((u) => u.code) as [string, ...string[]];
 
 export const personalDataSchema = z.object({
   nomeCompleto: z.string().trim().min(3, "Informe seu nome completo").max(120),
-  rgm: z.string().trim().min(1, "Informe seu RGM").max(20),
+  rgm: z.string().trim().max(20).default(""),
   cpf: z.string().trim().refine(isValidCpf, "CPF inválido").transform(stripDigits),
   telefone: z
     .string()
@@ -32,6 +32,9 @@ export const candidaturaSchema = z
   .merge(personalDataSchema)
   .superRefine((data, ctx) => {
     if (data.tipoPerfil === "aluno") {
+      if (!data.rgm.trim()) {
+        ctx.addIssue({ code: "custom", message: "Informe seu RGM", path: ["rgm"] });
+      }
       if (data.unidades.length !== 1) {
         ctx.addIssue({ code: "custom", message: "Selecione uma unidade", path: ["unidades"] });
       }
