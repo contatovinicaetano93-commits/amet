@@ -115,7 +115,6 @@ export function ApplicationForm() {
 
   async function verifyAlunoCpf(): Promise<boolean> {
     if (form.tipoPerfil !== "aluno") {
-      setCpfNotice("");
       return true;
     }
 
@@ -125,7 +124,6 @@ export function ApplicationForm() {
     }
 
     setCheckingCpf(true);
-    setCpfNotice("");
     try {
       const response = await fetch("/api/participantes/lookup", {
         method: "POST",
@@ -142,7 +140,7 @@ export function ApplicationForm() {
       if (!data.found) {
         updateField("tipoPerfil", "nao_aluno");
         setCpfNotice(
-          "CPF não encontrado na base de alunos AMET. Continuaremos no fluxo de não aluno.",
+          "CPF não encontrado na base de alunos AMET. Seguiremos no fluxo de não aluno — você pode continuar.",
         );
       } else {
         setCpfNotice("");
@@ -174,6 +172,10 @@ export function ApplicationForm() {
           if (typeof key === "string" && !fieldErrors[key]) fieldErrors[key] = issue.message;
         }
         setErrors(fieldErrors);
+        return false;
+      }
+      if (form.tipoPerfil === "aluno" && !form.rgm.trim()) {
+        setErrors({ rgm: "Informe seu RGM" });
         return false;
       }
       setErrors({});
@@ -291,7 +293,10 @@ export function ApplicationForm() {
               <button
                 key={tipo}
                 type="button"
-                onClick={() => updateField("tipoPerfil", tipo)}
+                onClick={() => {
+                  updateField("tipoPerfil", tipo);
+                  setCpfNotice("");
+                }}
                 className={`rounded-2xl border px-4 py-4 text-left font-medium transition ${
                   form.tipoPerfil === tipo
                     ? "border-amet-blue bg-amet-blue/10 text-amet-blue"
@@ -310,7 +315,10 @@ export function ApplicationForm() {
             <Field label="Nome completo" error={errors.nomeCompleto} className="sm:col-span-2">
               <input value={form.nomeCompleto} onChange={(e) => updateField("nomeCompleto", e.target.value)} className={inputClass(errors.nomeCompleto)} />
             </Field>
-            <Field label="RGM" error={errors.rgm}>
+            <Field
+              label={isAluno ? "RGM" : "RGM (opcional)"}
+              error={errors.rgm}
+            >
               <input value={form.rgm} onChange={(e) => updateField("rgm", e.target.value)} className={inputClass(errors.rgm)} />
             </Field>
             <Field label="CPF" error={errors.cpf}>
@@ -324,9 +332,6 @@ export function ApplicationForm() {
                 inputMode="numeric"
               />
             </Field>
-            {cpfNotice && (
-              <p className="sm:col-span-2 text-sm text-amet-indigo/70">{cpfNotice}</p>
-            )}
             <Field label="Telefone / WhatsApp" error={errors.telefone}>
               <input value={form.telefone} onChange={(e) => updateField("telefone", formatPhone(e.target.value))} className={inputClass(errors.telefone)} inputMode="tel" />
             </Field>
@@ -334,6 +339,12 @@ export function ApplicationForm() {
               <input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} className={inputClass(errors.email)} />
             </Field>
           </div>
+        )}
+
+        {cpfNotice && step >= 2 && (
+          <p className="mt-4 rounded-xl border border-amet-blue/25 bg-amet-blue/5 px-4 py-3 text-sm text-amet-indigo/80">
+            {cpfNotice}
+          </p>
         )}
 
         {step === 3 && (

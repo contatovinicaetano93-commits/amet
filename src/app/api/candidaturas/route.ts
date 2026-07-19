@@ -47,11 +47,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error, code: result.code }, { status });
     }
 
-    if (parsed.data.tipoPerfil === "nao_aluno") {
-      const emailResult = await sendCandidaturaEmail(parsed.data);
-      if (!emailResult.ok) {
-        return NextResponse.json({ error: emailResult.error }, { status: 500 });
-      }
+    const emailResult = await sendCandidaturaEmail(parsed.data);
+    if (!emailResult.ok) {
+      console.error("[candidaturas] Email:", emailResult.error);
+      // Inscrição já gravada — não falha o envio por causa do e-mail
     }
 
     return NextResponse.json(
