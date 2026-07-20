@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { createCandidatura } from "@/lib/db";
 import { candidaturaSchema } from "@/lib/schemas";
+import { sendCandidacyConfirmation, sendAdminNotification } from "@/lib/email";
+import { AREAS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,26 @@ export async function POST(request: Request) {
       const status = result.code === "AREA_FULL" ? 409 : 400;
       return NextResponse.json({ error: result.error, code: result.code }, { status });
     }
+
+    const areaLabel = AREAS[parsed.data.areaInteresse as keyof typeof AREAS]?.label || parsed.data.areaInteresse;
+
+    await Promise.all([
+      sendCandidacyConfirmation(
+        parsed.data.nomeCompleto,
+        parsed.data.email,
+        areaLabel,
+        parsed.data.cursoAtual,
+      ),
+      sendAdminNotification(
+        parsed.data.nomeCompleto,
+        parsed.data.email,
+        parsed.data.telefone,
+        parsed.data.cpf,
+        parsed.data.rgm,
+        areaLabel,
+        parsed.data.cursoAtual,
+      ),
+    ]);
 
     return NextResponse.json(
       {
