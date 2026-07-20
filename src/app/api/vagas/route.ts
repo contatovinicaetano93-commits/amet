@@ -6,7 +6,7 @@ import { getVacancyCounts } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const counts = getVacancyCounts();
+  const counts = await getVacancyCounts();
 
   const areas = Object.entries(AREAS).map(([code, area]) => ({
     code,

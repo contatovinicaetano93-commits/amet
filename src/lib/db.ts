@@ -1,69 +1,53 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import path from "node:path";
+import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 import { AREAS, type AreaCode } from "@/lib/constants";
 import type { CandidaturaInput } from "@/lib/schemas";
 
-export type CandidaturaRecord = CandidaturaInput & {
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+export type CandidaturaRecord = {
   id: string;
-  createdAt: string;
+  nomeCompleto: string;
+  rgm: string;
+  cpf: string;
+  telefone: string;
+  email: string;
+  areaInteresse: string;
+  cursoAtual: string;
+  createdAt: Date;
 };
 
-type DatabaseFile = {
-  candidaturas: CandidaturaRecord[];
-};
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_FILE = path.join(DATA_DIR, "candidaturas.json");
-
-function ensureDatabase(): DatabaseFile {
-  mkdirSync(DATA_DIR, { recursive: true });
-
-  if (!existsSync(DB_FILE)) {
-    const empty: DatabaseFile = { candidaturas: [] };
-    writeFileSync(DB_FILE, JSON.stringify(empty, null, 2), "utf-8");
-    return empty;
-  }
-
-  try {
-    const raw = readFileSync(DB_FILE, "utf-8");
-    const parsed = JSON.parse(raw) as DatabaseFile;
-    if (!Array.isArray(parsed.candidaturas)) {
-      throw new Error("Invalid database format");
-    }
-    return parsed;
-  } catch {
-    const empty: DatabaseFile = { candidaturas: [] };
-    writeFileSync(DB_FILE, JSON.stringify(empty, null, 2), "utf-8");
-    return empty;
-  }
-}
-
-function saveDatabase(data: DatabaseFile): void {
-  writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
-}
-
-export function getVacancyCounts(): Record<
-  AreaCode,
-  { total: number; used: number; available: number; full: boolean }
+export async function getVacancyCounts(): Promise<
+  Record<
+    AreaCode,
+    { total: number; used: number; available: number; full: boolean }
+  >
 > {
-  const db = ensureDatabase();
   const counts = Object.fromEntries(
-    Object.entries(AREAS).map(([code, area]) => {
-      const used = db.candidaturas.filter(
-        (item) => item.areaInteresse === code,
-      ).length;
-      const available = Math.max(area.limit - used, 0);
-      return [
-        code,
-        {
-          total: area.limit,
-          used,
-          available,
-          full: used >= area.limit,
-        },
-      ];
-    }),
+    await Promise.all(
+      Object.entries(AREAS).map(async ([code, area]) => {
+        const used = await prisma.candidatura.count({
+          where: { areaInteresse: code },
+        });
+        const available = Math.max(area.limit - used, 0);
+        return [
+          code,
+          {
+            total: area.limit,
+            used,
+            available,
+            full: used >= area.limit,
+          },
+        ];
+      }),
+    ),
   ) as Record<
     AreaCode,
     { total: number; used: number; available: number; full: boolean }
@@ -76,11 +60,10 @@ export type CreateCandidaturaResult =
   | { ok: true; candidatura: CandidaturaRecord }
   | { ok: false; error: string; code: "AREA_FULL" | "DUPLICATE" | "UNKNOWN" };
 
-export function createCandidatura(
+export async function createCandidatura(
   input: CandidaturaInput,
-): CreateCandidaturaResult {
-  const db = ensureDatabase();
-  const counts = getVacancyCounts();
+): Promise<CreateCandidaturaResult> {
+  const counts = await getVacancyCounts();
 
   if (counts[input.areaInteresse].full) {
     return {
@@ -90,27 +73,28 @@ export function createCandidatura(
     };
   }
 
-  const duplicate = db.candidaturas.some(
-    (item) =>
-      item.cpf === input.cpf && item.areaInteresse === input.areaInteresse,
-  );
+  try {
+    const candidatura = await prisma.candidatura.create({
+      data: input,
+    });
 
-  if (duplicate) {
+    return { ok: true, candidatura };
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("Unique constraint failed")
+    ) {
+      return {
+        ok: false,
+        error: "Você já possui uma candidatura nesta área com este CPF.",
+        code: "DUPLICATE",
+      };
+    }
+
     return {
       ok: false,
-      error: "Você já possui uma candidatura nesta área com este CPF.",
-      code: "DUPLICATE",
+      error: "Erro ao criar candidatura.",
+      code: "UNKNOWN",
     };
   }
-
-  const candidatura: CandidaturaRecord = {
-    ...input,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-  };
-
-  db.candidaturas.push(candidatura);
-  saveDatabase(db);
-
-  return { ok: true, candidatura };
 }

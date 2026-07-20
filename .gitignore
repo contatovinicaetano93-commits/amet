@@ -40,12 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local database
-/data/candidaturas.json
-
 # brand kit downloads (fonte oficial em public/fonts)
 /brand-assets/
 
 # macOS zip metadata
 **/__MACOSX/
 **/._*
+
+/src/generated/prisma

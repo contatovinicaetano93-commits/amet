@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const result = createCandidatura(parsed.data);
+    const result = await createCandidatura(parsed.data);
 
     if (!result.ok) {
       const status = result.code === "AREA_FULL" ? 409 : 400;
