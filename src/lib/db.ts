@@ -6,6 +6,8 @@ import { isAluno, type CandidaturaInput } from "@/lib/schemas";
 export type CandidaturaRecord = CandidaturaInput & {
   id: string;
   createdAt: string;
+  emailSent: boolean;
+  emailError: string | null;
 };
 
 let pool: Pool | null = null;
@@ -41,6 +43,17 @@ function ensureSchema(): Promise<void> {
       CREATE UNIQUE INDEX IF NOT EXISTS idx_candidaturas_cpf_area_unique
         ON candidaturas (cpf, area)
         WHERE tipo_perfil = 'aluno';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_sent BOOLEAN NOT NULL DEFAULT false;
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_error TEXT;
+      CREATE TABLE IF NOT EXISTS admin_access_log (
+        id BIGSERIAL PRIMARY KEY,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        ip TEXT NOT NULL,
+        action TEXT NOT NULL,
+        success BOOLEAN NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_admin_access_log_ip_created
+        ON admin_access_log (ip, created_at);
     `).then(() => undefined);
   }
   return schemaReady;
@@ -59,6 +72,8 @@ type CandidaturaRow = {
   periodo: string | null;
   dias: string[] | null;
   created_at: Date;
+  email_sent: boolean;
+  email_error: string | null;
 };
 
 function rowToRecord(row: CandidaturaRow): CandidaturaRecord {
@@ -70,6 +85,8 @@ function rowToRecord(row: CandidaturaRow): CandidaturaRecord {
     telefone: row.telefone,
     email: row.email,
     createdAt: row.created_at.toISOString(),
+    emailSent: row.email_sent,
+    emailError: row.email_error,
   };
 
   if (row.tipo_perfil === "aluno") {
@@ -161,6 +178,52 @@ export async function listCandidaturas(): Promise<CandidaturaRecord[]> {
     `SELECT * FROM candidaturas ORDER BY created_at DESC`,
   );
   return result.rows.map(rowToRecord);
+}
+
+export async function getCandidaturaById(id: string): Promise<CandidaturaRecord | null> {
+  await ensureSchema();
+  const result = await getPool().query<CandidaturaRow>(
+    `SELECT * FROM candidaturas WHERE id = $1`,
+    [id],
+  );
+  return result.rows[0] ? rowToRecord(result.rows[0]) : null;
+}
+
+export async function updateEmailStatus(
+  id: string,
+  sent: boolean,
+  error: string | null,
+): Promise<void> {
+  await ensureSchema();
+  await getPool().query(
+    `UPDATE candidaturas SET email_sent = $2, email_error = $3 WHERE id = $1`,
+    [id, sent, error],
+  );
+}
+
+export async function logAdminAccess(
+  ip: string,
+  action: string,
+  success: boolean,
+): Promise<void> {
+  await ensureSchema();
+  await getPool().query(
+    `INSERT INTO admin_access_log (ip, action, success) VALUES ($1, $2, $3)`,
+    [ip, action, success],
+  );
+}
+
+export async function countRecentFailedAttempts(
+  ip: string,
+  windowMinutes: number,
+): Promise<number> {
+  await ensureSchema();
+  const result = await getPool().query<{ count: string }>(
+    `SELECT COUNT(*) AS count FROM admin_access_log
+     WHERE ip = $1 AND success = false AND created_at > now() - ($2 || ' minutes')::interval`,
+    [ip, windowMinutes],
+  );
+  return Number(result.rows[0]?.count ?? 0);
 }
 
 export type CreateCandidaturaResult =

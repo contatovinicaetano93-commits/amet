@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { cloneElement, isValidElement, useCallback, useEffect, useMemo, useState } from "react";
+import type { ReactElement } from "react";
 import Link from "next/link";
 
 import { StepIndicator } from "@/components/StepIndicator";
@@ -308,7 +309,11 @@ export function ApplicationForm() {
 
   if (success) {
     return (
-      <div className="rounded-3xl border border-amet-blue/20 bg-amet-blue/5 p-8 text-center">
+      <div
+        role="status"
+        aria-live="polite"
+        className="rounded-3xl border border-amet-blue/20 bg-amet-blue/5 p-8 text-center"
+      >
         <h2 className="text-2xl font-semibold text-amet-blue">
           {isNaoAluno ? "Recebemos seus dados!" : "Inscrição registrada!"}
         </h2>
@@ -353,7 +358,7 @@ export function ApplicationForm() {
             <p className="text-sm text-amet-indigo/70">
               Informe seu CPF para verificarmos se você é aluno AMET.
             </p>
-            <Field label="CPF" error={errors.cpf}>
+            <Field id="cpf" label="CPF" error={errors.cpf}>
               <input
                 value={form.cpf}
                 onChange={(e) => updateField("cpf", formatCpf(e.target.value))}
@@ -372,21 +377,21 @@ export function ApplicationForm() {
                 {cpfNotice}
               </p>
             )}
-            <Field label="Nome completo" error={errors.nomeCompleto} className="sm:col-span-2">
+            <Field id="nomeCompleto" label="Nome completo" error={errors.nomeCompleto} className="sm:col-span-2">
               <input
                 value={form.nomeCompleto}
                 onChange={(e) => updateField("nomeCompleto", e.target.value)}
                 className={inputClass(errors.nomeCompleto)}
               />
             </Field>
-            <Field label={isAluno ? "RGM" : "RGM (opcional)"} error={errors.rgm}>
+            <Field id="rgm" label={isAluno ? "RGM" : "RGM (opcional)"} error={errors.rgm}>
               <input
                 value={form.rgm}
                 onChange={(e) => updateField("rgm", e.target.value)}
                 className={inputClass(errors.rgm)}
               />
             </Field>
-            <Field label="E-mail" error={errors.email}>
+            <Field id="email" label="E-mail" error={errors.email}>
               <input
                 type="email"
                 value={form.email}
@@ -394,7 +399,7 @@ export function ApplicationForm() {
                 className={inputClass(errors.email)}
               />
             </Field>
-            <Field label="Telefone / WhatsApp" error={errors.telefone} className="sm:col-span-2">
+            <Field id="telefone" label="Telefone / WhatsApp" error={errors.telefone} className="sm:col-span-2">
               <input
                 value={form.telefone}
                 onChange={(e) => updateField("telefone", formatPhone(e.target.value))}
@@ -413,6 +418,7 @@ export function ApplicationForm() {
                 <button
                   key={u.code}
                   type="button"
+                  aria-pressed={form.unidade === u.code}
                   onClick={() => updateField("unidade", u.code)}
                   className={`rounded-2xl border px-4 py-4 font-medium transition ${
                     form.unidade === u.code
@@ -447,6 +453,7 @@ export function ApplicationForm() {
                       key={code}
                       type="button"
                       disabled={disabled}
+                      aria-pressed={selected}
                       onClick={() => updateField("area", code)}
                       className={`rounded-2xl border p-5 text-left transition-all ${
                         disabled
@@ -485,6 +492,7 @@ export function ApplicationForm() {
                       key={periodo}
                       type="button"
                       disabled={disabled}
+                      aria-pressed={selected}
                       onClick={() => {
                         updateField("periodo", periodo);
                         updateField("dias", []);
@@ -524,6 +532,7 @@ export function ApplicationForm() {
                         key={dia}
                         type="button"
                         disabled={disabled}
+                        aria-pressed={selected}
                         onClick={() => toggleDia(dia)}
                         className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                           disabled
@@ -578,7 +587,11 @@ export function ApplicationForm() {
       </div>
 
       {submitError && (
-        <p className="mt-6 rounded-xl border border-amet-purple/40 bg-amet-purple/10 px-4 py-3 text-sm text-amet-purple">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="mt-6 rounded-xl border border-amet-purple/40 bg-amet-purple/10 px-4 py-3 text-sm text-amet-purple"
+        >
           {submitError}
         </p>
       )}
@@ -661,21 +674,34 @@ function SummaryItem({
 }
 
 function Field({
+  id,
   label,
   error,
   className,
   children,
 }: {
+  id: string;
   label: string;
   error?: string;
   className?: string;
-  children: React.ReactNode;
+  children: ReactElement<React.InputHTMLAttributes<HTMLInputElement>>;
 }) {
+  const errorId = `${id}-error`;
   return (
     <label className={`block space-y-2 ${className ?? ""}`}>
       <span className="text-sm font-medium text-amet-indigo/80">{label}</span>
-      {children}
-      {error && <span className="block text-sm text-amet-purple">{error}</span>}
+      {isValidElement(children)
+        ? cloneElement(children, {
+            id,
+            "aria-invalid": !!error,
+            "aria-describedby": error ? errorId : undefined,
+          })
+        : children}
+      {error && (
+        <span id={errorId} role="alert" className="block text-sm text-amet-purple">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

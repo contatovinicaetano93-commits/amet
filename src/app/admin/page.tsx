@@ -207,6 +207,14 @@ export default function AdminPage() {
                 <span className="rounded-full bg-amet-blue/10 px-3 py-1 text-xs font-medium text-amet-blue">
                   RGM {item.rgm}
                 </span>
+                {!item.emailSent && (
+                  <span
+                    className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700"
+                    title={item.emailError ?? "Falha ao enviar notificação por e-mail"}
+                  >
+                    E-mail não enviado
+                  </span>
+                )}
                 <a
                   href={buildWhatsAppLink(item.telefone, item.nomeCompleto)}
                   target="_blank"

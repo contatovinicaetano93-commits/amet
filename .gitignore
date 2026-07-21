@@ -51,3 +51,6 @@ next-env.d.ts
 # brand kit downloads (fonte oficial fica em src/fonts)
 /brand-assets/
 .claude/
+
+# graphify tool scratch output
+/graphify-out/

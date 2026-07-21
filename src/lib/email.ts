@@ -82,3 +82,17 @@ export async function sendCandidaturaEmail(
 
   return { ok: true };
 }
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function sendCandidaturaEmailWithRetry(
+  data: CandidaturaInput,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const first = await sendCandidaturaEmail(data);
+  if (first.ok) return first;
+
+  await sleep(1000);
+  return sendCandidaturaEmail(data);
+}

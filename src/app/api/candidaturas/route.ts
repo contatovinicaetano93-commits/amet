@@ -1,20 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { createCandidatura, listCandidaturas } from "@/lib/db";
-import { sendCandidaturaEmail } from "@/lib/email";
+import { checkAdminAccess } from "@/lib/adminAuth";
+import { createCandidatura, listCandidaturas, updateEmailStatus } from "@/lib/db";
+import { sendCandidaturaEmailWithRetry } from "@/lib/email";
 import { isParticipanteCpf } from "@/lib/participantes";
 import { candidaturaSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
-function isAdmin(request: Request): boolean {
-  const key = process.env.ADMIN_KEY ?? "amet-admin";
-  return request.headers.get("x-admin-key") === key;
-}
-
 export async function GET(request: Request) {
-  if (!isAdmin(request)) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const admin = await checkAdminAccess(request, "list_candidaturas");
+  if (!admin.ok) {
+    return NextResponse.json({ error: admin.error }, { status: admin.status });
   }
   return NextResponse.json({ candidaturas: await listCandidaturas() });
 }
@@ -47,11 +44,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error, code: result.code }, { status });
     }
 
-    const emailResult = await sendCandidaturaEmail(parsed.data);
+    const emailResult = await sendCandidaturaEmailWithRetry(parsed.data);
     if (!emailResult.ok) {
       console.error("[candidaturas] Email:", emailResult.error);
-      // Inscrição já gravada — não falha o envio por causa do e-mail
     }
+    // Inscrição já gravada — não falha a resposta por causa do e-mail, mas o
+    // status fica visível no painel admin para follow-up manual se necessário.
+    await updateEmailStatus(result.candidatura.id, emailResult.ok, emailResult.ok ? null : emailResult.error);
 
     return NextResponse.json(
       { message: "Candidatura registrada com sucesso!", id: result.candidatura.id },

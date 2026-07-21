@@ -16,6 +16,7 @@ export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
         return (
           <li
             key={label}
+            aria-current={isActive ? "step" : undefined}
             className={`min-w-[90px] flex-1 rounded-xl border px-2 py-2 sm:px-3 sm:py-3 ${
               isActive
                 ? "border-amet-blue bg-amet-blue/5"

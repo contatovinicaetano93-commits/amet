@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
 
+import { checkAdminAccess } from "@/lib/adminAuth";
 import { listCandidaturas } from "@/lib/db";
 import { AREAS, DIAS, PERIODOS, UNIDADES } from "@/lib/constants";
 import { isAluno } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(request: Request): boolean {
-  const key = process.env.ADMIN_KEY ?? "amet-admin";
-  return request.headers.get("x-admin-key") === key;
-}
 
 function csvEscape(value: string): string {
   if (/[",\n]/.test(value)) {
@@ -30,11 +26,13 @@ const HEADERS = [
   "Área de estágio",
   "Turno",
   "Dias",
+  "Notificação por e-mail",
 ];
 
 export async function GET(request: Request) {
-  if (!isAdmin(request)) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const admin = await checkAdminAccess(request, "export_candidaturas");
+  if (!admin.ok) {
+    return NextResponse.json({ error: admin.error }, { status: admin.status });
   }
 
   const candidaturas = await listCandidaturas();
@@ -44,6 +42,7 @@ export async function GET(request: Request) {
       timeZone: "America/Sao_Paulo",
     });
     const perfil = item.tipoPerfil === "aluno" ? "Aluno" : "Não aluno";
+    const emailStatus = item.emailSent ? "Enviado" : "Falhou";
 
     if (isAluno(item)) {
       const unidade = UNIDADES.find((u) => u.code === item.unidade)?.label ?? item.unidade;
@@ -65,10 +64,11 @@ export async function GET(request: Request) {
         area,
         periodo,
         dias,
+        emailStatus,
       ];
     }
 
-    return [dataHora, perfil, item.nomeCompleto, item.rgm, item.cpf, item.telefone, item.email, "", "", "", ""];
+    return [dataHora, perfil, item.nomeCompleto, item.rgm, item.cpf, item.telefone, item.email, "", "", "", "", emailStatus];
   });
 
   const csvLines = [HEADERS, ...rows].map((row) => row.map((cell) => csvEscape(String(cell))).join(","));
