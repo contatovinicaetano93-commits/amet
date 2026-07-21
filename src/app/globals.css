@@ -2,6 +2,10 @@
 
 :root {
   --amet-purple: #b355c9;
+  /* Same hue, ~8% darker — used only where white text sits on a solid purple
+     background, so it clears WCAG AA (4.5:1) contrast without changing the
+     brand purple used everywhere else (borders, tints, text-on-white). */
+  --amet-purple-contrast: #a54eb9;
   --amet-blue: #285ace;
   --amet-indigo: #1c2493;
   --amet-white: #ffffff;
@@ -10,6 +14,7 @@
 
 @theme inline {
   --color-amet-purple: var(--amet-purple);
+  --color-amet-purple-contrast: var(--amet-purple-contrast);
   --color-amet-blue: var(--amet-blue);
   --color-amet-indigo: var(--amet-indigo);
   --color-amet-white: var(--amet-white);

@@ -146,7 +146,7 @@ export default function AdminPage() {
             Entrar
           </button>
         </form>
-        <p className="mt-6 text-xs text-amet-indigo/50">
+        <p className="mt-6 text-xs text-amet-indigo/70">
           Padrão local: <code className="rounded bg-amet-blue/5 px-1">amet-admin</code> — altere com{" "}
           <code className="rounded bg-amet-blue/5 px-1">ADMIN_KEY</code> no ambiente.
         </p>
@@ -199,7 +199,7 @@ export default function AdminPage() {
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-amet-blue/10 pb-4">
               <div>
                 <h2 className="text-lg font-semibold text-amet-indigo">{item.nomeCompleto}</h2>
-                <p className="text-xs text-amet-indigo/50">
+                <p className="text-xs text-amet-indigo/70">
                   {formatDate(item.createdAt)} · {item.tipoPerfil === "aluno" ? "Aluno" : "Não aluno"}
                 </p>
               </div>
@@ -228,35 +228,35 @@ export default function AdminPage() {
 
             <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">CPF</dt>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">CPF</dt>
                 <dd className="mt-1 text-sm text-amet-indigo">{item.cpf}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Telefone</dt>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Telefone</dt>
                 <dd className="mt-1 text-sm text-amet-indigo">{item.telefone}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">E-mail</dt>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">E-mail</dt>
                 <dd className="mt-1 text-sm text-amet-indigo">{item.email}</dd>
               </div>
               {isAluno(item) && (
                 <>
                   <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Unidade</dt>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Unidade</dt>
                     <dd className="mt-1 text-sm text-amet-indigo">{labelUnidade(item.unidade)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">
+                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
                       Área de estágio
                     </dt>
                     <dd className="mt-1 text-sm text-amet-indigo">{labelArea(item.area)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Turno</dt>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Turno</dt>
                     <dd className="mt-1 text-sm text-amet-indigo">{labelPeriodo(item.periodo)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Dias</dt>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Dias</dt>
                     <dd className="mt-1 text-sm text-amet-indigo">{labelDias(item.dias)}</dd>
                   </div>
                 </>

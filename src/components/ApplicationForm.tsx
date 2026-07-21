@@ -326,7 +326,7 @@ export function ApplicationForm() {
           <button
             type="button"
             onClick={() => setSuccess(false)}
-            className="rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white"
+            className="rounded-full bg-amet-purple-contrast px-6 py-3 text-sm font-semibold text-amet-white"
           >
             Nova inscrição
           </button>
@@ -440,7 +440,7 @@ export function ApplicationForm() {
               Escolha a área de estágio. Áreas totalmente esgotadas não permitem candidatura.
             </p>
             {loadingVagas ? (
-              <p className="text-sm text-amet-indigo/50">Carregando vagas...</p>
+              <p className="text-sm text-amet-indigo/70">Carregando vagas...</p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {availableAreas.map((code) => {
@@ -646,7 +646,7 @@ export function ApplicationForm() {
             type="button"
             onClick={() => void submitCandidatura()}
             disabled={submitting}
-            className="rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-blue disabled:opacity-60"
+            className="rounded-full bg-amet-purple-contrast px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-blue disabled:opacity-60"
           >
             {submitting ? "Enviando..." : "Enviar candidatura"}
           </button>
@@ -667,7 +667,7 @@ function SummaryItem({
 }) {
   return (
     <div className={className}>
-      <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">{label}</dt>
+      <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">{label}</dt>
       <dd className="mt-1 text-sm text-amet-indigo">{value || "—"}</dd>
     </div>
   );
@@ -707,7 +707,7 @@ function Field({
 }
 
 function inputClass(error?: string) {
-  return `w-full rounded-xl border bg-amet-white px-4 py-3 text-amet-indigo outline-none transition placeholder:text-amet-indigo/35 ${
+  return `w-full rounded-xl border bg-amet-white px-4 py-3 text-amet-indigo outline-none transition placeholder:text-amet-indigo/60 ${
     error ? "border-amet-purple" : "border-amet-indigo/15 focus:border-amet-blue"
   }`;
 }

@@ -31,8 +31,8 @@ export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
                   isActive
                     ? "bg-amet-blue text-amet-white"
                     : isComplete
-                      ? "bg-amet-purple text-amet-white"
-                      : "bg-amet-indigo/10 text-amet-indigo/50"
+                      ? "bg-amet-purple-contrast text-amet-white"
+                      : "bg-amet-indigo/10 text-amet-indigo/70"
                 }`}
               >
                 {number}
