@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 import { StepIndicator } from "@/components/StepIndicator";
 import {
@@ -316,19 +317,34 @@ export function ApplicationForm() {
             ? "A equipe da AMET entrará em contato em breve."
             : "Recebemos sua candidatura. A AMET entrará em contato pelo e-mail informado."}
         </p>
-        <button
-          type="button"
-          onClick={() => setSuccess(false)}
-          className="mt-6 rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white"
-        >
-          Nova inscrição
-        </button>
+        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => setSuccess(false)}
+            className="rounded-full bg-amet-purple px-6 py-3 text-sm font-semibold text-amet-white"
+          >
+            Nova inscrição
+          </button>
+          <Link
+            href="/#estagios"
+            className="rounded-full border border-amet-blue/20 px-6 py-3 text-sm font-semibold text-amet-blue transition hover:border-amet-blue"
+          >
+            Voltar para a página inicial
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="rounded-3xl border border-amet-blue/15 bg-gradient-to-br from-amet-blue/10 via-amet-white to-amet-purple/10 p-6 shadow-lg shadow-amet-blue/10 sm:p-8">
+      <Link
+        href="/#estagios"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-amet-blue transition hover:text-amet-purple"
+      >
+        ← Voltar para a página inicial
+      </Link>
+
       <StepIndicator currentStep={step} labels={stepLabels} />
 
       <div className="mt-8">
