@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   if (!isAdmin(request)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
-  return NextResponse.json({ candidaturas: listCandidaturas() });
+  return NextResponse.json({ candidaturas: await listCandidaturas() });
 }
 
 export async function POST(request: Request) {
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = createCandidatura(parsed.data);
+    const result = await createCandidatura(parsed.data);
 
     if (!result.ok) {
       const status = result.code === "AREA_FULL" ? 409 : 400;

@@ -5,6 +5,6 @@ import { getVacancyCounts } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const areas = getVacancyCounts();
+  const areas = await getVacancyCounts();
   return NextResponse.json({ areas, updatedAt: new Date().toISOString() });
 }

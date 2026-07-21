@@ -43,6 +43,7 @@ export default function AdminPage() {
   const [inputKey, setInputKey] = useState("");
   const [candidaturas, setCandidaturas] = useState<CandidaturaRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -75,6 +76,33 @@ export default function AdminPage() {
   useEffect(() => {
     if (adminKey) void fetchCandidaturas(adminKey);
   }, [adminKey, fetchCandidaturas]);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const response = await fetch("/api/candidaturas/export", {
+        headers: { "x-admin-key": adminKey },
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        setError("Não foi possível gerar a planilha.");
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `candidaturas-amet-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Não foi possível conectar ao servidor.");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   function handleLogin(event: React.FormEvent) {
     event.preventDefault();
@@ -133,7 +161,7 @@ export default function AdminPage() {
           <h1 className="text-2xl font-bold text-amet-indigo">Candidaturas recebidas</h1>
           <p className="mt-1 text-sm text-amet-indigo/70">{candidaturas.length} registro(s)</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => void fetchCandidaturas(adminKey)}
@@ -141,6 +169,14 @@ export default function AdminPage() {
             className="rounded-full border border-amet-blue/20 px-4 py-2 text-sm font-medium text-amet-blue hover:bg-amet-blue/5 disabled:opacity-50"
           >
             {loading ? "Atualizando…" : "Atualizar"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleExport()}
+            disabled={exporting || candidaturas.length === 0}
+            className="rounded-full bg-amet-blue px-4 py-2 text-sm font-medium text-white hover:bg-amet-indigo disabled:opacity-50"
+          >
+            {exporting ? "Gerando…" : "Baixar planilha (CSV)"}
           </button>
           <button
             type="button"

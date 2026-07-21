@@ -1,5 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
-import path from "node:path";
+import { Pool } from "pg";
 
 import { AREAS, type AreaCode, type PeriodoCode } from "@/lib/constants";
 import { isAluno, type CandidaturaInput } from "@/lib/schemas";
@@ -9,66 +8,79 @@ export type CandidaturaRecord = CandidaturaInput & {
   createdAt: string;
 };
 
-type DatabaseFile = {
-  candidaturas: CandidaturaRecord[];
+let pool: Pool | null = null;
+let schemaReady: Promise<void> | null = null;
+
+function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  }
+  return pool;
+}
+
+function ensureSchema(): Promise<void> {
+  if (!schemaReady) {
+    schemaReady = getPool().query(`
+      CREATE TABLE IF NOT EXISTS candidaturas (
+        id TEXT PRIMARY KEY,
+        nome_completo TEXT NOT NULL,
+        rgm TEXT DEFAULT '',
+        cpf TEXT NOT NULL,
+        telefone TEXT NOT NULL,
+        email TEXT NOT NULL,
+        tipo_perfil TEXT NOT NULL,
+        unidade TEXT,
+        area TEXT,
+        periodo TEXT,
+        dias TEXT[],
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+      CREATE INDEX IF NOT EXISTS idx_candidaturas_area_periodo
+        ON candidaturas (area, periodo)
+        WHERE tipo_perfil = 'aluno';
+    `).then(() => undefined);
+  }
+  return schemaReady;
+}
+
+type CandidaturaRow = {
+  id: string;
+  nome_completo: string;
+  rgm: string | null;
+  cpf: string;
+  telefone: string;
+  email: string;
+  tipo_perfil: string;
+  unidade: string | null;
+  area: string | null;
+  periodo: string | null;
+  dias: string[] | null;
+  created_at: Date;
 };
 
-let resolvedDataDir: string | null = null;
+function rowToRecord(row: CandidaturaRow): CandidaturaRecord {
+  const base = {
+    id: row.id,
+    nomeCompleto: row.nome_completo,
+    rgm: row.rgm ?? "",
+    cpf: row.cpf,
+    telefone: row.telefone,
+    email: row.email,
+    createdAt: row.created_at.toISOString(),
+  };
 
-function canWriteDir(dir: string): boolean {
-  try {
-    mkdirSync(dir, { recursive: true });
-    const probe = path.join(dir, `.write-probe-${process.pid}`);
-    writeFileSync(probe, "ok", "utf-8");
-    unlinkSync(probe);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function getDataDir(): string {
-  if (resolvedDataDir) return resolvedDataDir;
-
-  const primary = path.join(process.cwd(), "data");
-  if (canWriteDir(primary)) {
-    resolvedDataDir = primary;
-    return resolvedDataDir;
-  }
-
-  const fallback = path.join("/tmp", "amet-data");
-  mkdirSync(fallback, { recursive: true });
-  resolvedDataDir = fallback;
-  return resolvedDataDir;
-}
-
-function getDbFile(): string {
-  return path.join(getDataDir(), "candidaturas.json");
-}
-
-function ensureDatabase(): DatabaseFile {
-  const dbFile = getDbFile();
-
-  if (!existsSync(dbFile)) {
-    const empty: DatabaseFile = { candidaturas: [] };
-    writeFileSync(dbFile, JSON.stringify(empty, null, 2), "utf-8");
-    return empty;
+  if (row.tipo_perfil === "aluno") {
+    return {
+      ...base,
+      tipoPerfil: "aluno",
+      unidade: row.unidade ?? "",
+      area: row.area ?? "",
+      periodo: row.periodo ?? "",
+      dias: row.dias ?? [],
+    } as CandidaturaRecord;
   }
 
-  try {
-    const raw = readFileSync(dbFile, "utf-8");
-    const parsed = JSON.parse(raw) as DatabaseFile;
-    if (!Array.isArray(parsed.candidaturas)) throw new Error("Invalid database");
-    return parsed;
-  } catch {
-    const empty: DatabaseFile = { candidaturas: [] };
-    writeFileSync(dbFile, JSON.stringify(empty, null, 2), "utf-8");
-    return empty;
-  }
-}
-
-function saveDatabase(data: DatabaseFile): void {
-  writeFileSync(getDbFile(), JSON.stringify(data, null, 2), "utf-8");
+  return { ...base, tipoPerfil: "nao_aluno" } as CandidaturaRecord;
 }
 
 export type PeriodoVacancy = {
@@ -86,28 +98,34 @@ export type AreaVacancy = {
   full: boolean;
 };
 
-function countUsage(db: DatabaseFile, area: AreaCode, periodo: PeriodoCode): number {
-  return db.candidaturas.filter(
-    (item) => isAluno(item) && item.area === area && item.periodo === periodo,
-  ).length;
+async function countUsage(area: AreaCode, periodo: PeriodoCode): Promise<number> {
+  await ensureSchema();
+  const result = await getPool().query<{ count: string }>(
+    `SELECT COUNT(*) AS count FROM candidaturas
+     WHERE tipo_perfil = 'aluno' AND area = $1 AND periodo = $2`,
+    [area, periodo],
+  );
+  return Number(result.rows[0]?.count ?? 0);
 }
 
-export function getVacancyCounts(): AreaVacancy[] {
-  const db = ensureDatabase();
+export async function getVacancyCounts(): Promise<AreaVacancy[]> {
+  const entries = Object.entries(AREAS) as [AreaCode, (typeof AREAS)[AreaCode]][];
 
-  return (Object.entries(AREAS) as [AreaCode, (typeof AREAS)[AreaCode]][]).map(
-    ([code, config]) => {
-      const periodos: PeriodoVacancy[] = config.periodos.map((periodo) => {
-        const used = countUsage(db, code, periodo);
-        const total = config.limit;
-        return {
-          periodo,
-          total,
-          used,
-          available: Math.max(total - used, 0),
-          full: used >= total,
-        };
-      });
+  return Promise.all(
+    entries.map(async ([code, config]) => {
+      const periodos: PeriodoVacancy[] = await Promise.all(
+        config.periodos.map(async (periodo) => {
+          const used = await countUsage(code, periodo);
+          const total = config.limit;
+          return {
+            periodo,
+            total,
+            used,
+            available: Math.max(total - used, 0),
+            full: used >= total,
+          };
+        }),
+      );
 
       return {
         code,
@@ -115,39 +133,45 @@ export function getVacancyCounts(): AreaVacancy[] {
         periodos,
         full: periodos.every((p) => p.full),
       };
-    },
+    }),
   );
 }
 
-export function getPeriodoVacancy(area: AreaCode, periodo: PeriodoCode): PeriodoVacancy {
-  const areaVacancy = getVacancyCounts().find((a) => a.code === area);
-  const found = areaVacancy?.periodos.find((p) => p.periodo === periodo);
-  if (found) return found;
+export async function getPeriodoVacancy(
+  area: AreaCode,
+  periodo: PeriodoCode,
+): Promise<PeriodoVacancy> {
+  const used = await countUsage(area, periodo);
+  const total = AREAS[area].limit;
   return {
     periodo,
-    total: AREAS[area].limit,
-    used: 0,
-    available: AREAS[area].limit,
-    full: false,
+    total,
+    used,
+    available: Math.max(total - used, 0),
+    full: used >= total,
   };
 }
 
-export function listCandidaturas(): CandidaturaRecord[] {
-  return ensureDatabase().candidaturas.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+export async function listCandidaturas(): Promise<CandidaturaRecord[]> {
+  await ensureSchema();
+  const result = await getPool().query<CandidaturaRow>(
+    `SELECT * FROM candidaturas ORDER BY created_at DESC`,
   );
+  return result.rows.map(rowToRecord);
 }
 
 export type CreateCandidaturaResult =
   | { ok: true; candidatura: CandidaturaRecord }
   | { ok: false; error: string; code: "AREA_FULL" | "DUPLICATE" | "UNKNOWN" };
 
-export function createCandidatura(input: CandidaturaInput): CreateCandidaturaResult {
+export async function createCandidatura(
+  input: CandidaturaInput,
+): Promise<CreateCandidaturaResult> {
   try {
-    const db = ensureDatabase();
+    await ensureSchema();
 
     if (isAluno(input)) {
-      const vacancy = getPeriodoVacancy(input.area, input.periodo as PeriodoCode);
+      const vacancy = await getPeriodoVacancy(input.area, input.periodo as PeriodoCode);
       if (vacancy.full) {
         return {
           ok: false,
@@ -156,10 +180,11 @@ export function createCandidatura(input: CandidaturaInput): CreateCandidaturaRes
         };
       }
 
-      const duplicate = db.candidaturas.some(
-        (item) => isAluno(item) && item.cpf === input.cpf && item.area === input.area,
+      const duplicate = await getPool().query(
+        `SELECT 1 FROM candidaturas WHERE tipo_perfil = 'aluno' AND cpf = $1 AND area = $2 LIMIT 1`,
+        [input.cpf, input.area],
       );
-      if (duplicate) {
+      if ((duplicate.rowCount ?? 0) > 0) {
         return {
           ok: false,
           error: "Você já possui uma candidatura nesta área com este CPF.",
@@ -168,15 +193,30 @@ export function createCandidatura(input: CandidaturaInput): CreateCandidaturaRes
       }
     }
 
-    const candidatura: CandidaturaRecord = {
-      ...input,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
+    const id = crypto.randomUUID();
+    const isAlunoInput = isAluno(input);
 
-    db.candidaturas.push(candidatura);
-    saveDatabase(db);
-    return { ok: true, candidatura };
+    const result = await getPool().query<CandidaturaRow>(
+      `INSERT INTO candidaturas
+        (id, nome_completo, rgm, cpf, telefone, email, tipo_perfil, unidade, area, periodo, dias)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING *`,
+      [
+        id,
+        input.nomeCompleto,
+        input.rgm ?? "",
+        input.cpf,
+        input.telefone,
+        input.email,
+        input.tipoPerfil,
+        isAlunoInput ? input.unidade : null,
+        isAlunoInput ? input.area : null,
+        isAlunoInput ? input.periodo : null,
+        isAlunoInput ? input.dias : null,
+      ],
+    );
+
+    return { ok: true, candidatura: rowToRecord(result.rows[0]) };
   } catch (error) {
     console.error("[db] Falha ao gravar candidatura:", error);
     return {

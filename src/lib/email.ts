@@ -48,10 +48,10 @@ function formatCandidaturaBody(data: CandidaturaInput): string {
 export async function sendCandidaturaEmail(
   data: CandidaturaInput,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const to = process.env.CANDIDATURA_EMAIL_TO ?? siteContent.contatoEmail;
+  const to = process.env.CANDIDATURA_EMAIL_TO || siteContent.contatoEmail;
   const apiKey = process.env.RESEND_API_KEY;
   const from =
-    process.env.RESEND_FROM_EMAIL ?? "AMET Saúde & Estética <onboarding@resend.dev>";
+    process.env.RESEND_FROM_EMAIL || "AMET Saúde & Estética <onboarding@resend.dev>";
 
   if (!to) {
     console.error("[email] E-mail de destino não configurado.");
