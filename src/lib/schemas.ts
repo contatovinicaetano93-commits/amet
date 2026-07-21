@@ -1,10 +1,26 @@
 import { z } from "zod";
 
-import { AREAS, CURSOS, TIPOS_PERFIL, UNIDADES } from "@/lib/constants";
+import {
+  AREA_CODES,
+  AREAS,
+  DIAS,
+  PERIODOS,
+  UNIDADES,
+  areasDisponiveis,
+  diasDisponiveis,
+  type AreaCode,
+  type PeriodoCode,
+  type UnidadeCode,
+} from "@/lib/constants";
 import { isValidCpf, stripDigits } from "@/lib/validators";
 
-const areaCodes = Object.keys(AREAS) as [keyof typeof AREAS, ...Array<keyof typeof AREAS>];
 const unidadeCodes = UNIDADES.map((u) => u.code) as [string, ...string[]];
+const diaCodes = DIAS.map((d) => d.code) as [string, ...string[]];
+const periodoCodes = PERIODOS.map((p) => p.code) as [string, ...string[]];
+
+export const cpfLookupSchema = z.object({
+  cpf: z.string().trim().refine(isValidCpf, "CPF inválido").transform(stripDigits),
+});
 
 export const personalDataSchema = z.object({
   nomeCompleto: z.string().trim().min(3, "Informe seu nome completo").max(120),
@@ -18,31 +34,65 @@ export const personalDataSchema = z.object({
   email: z.string().trim().email("E-mail inválido").max(120),
 });
 
-export const cpfLookupSchema = z.object({
-  cpf: z.string().trim().refine(isValidCpf, "CPF inválido").transform(stripDigits),
+const alunoFields = z.object({
+  tipoPerfil: z.literal("aluno"),
+  unidade: z.enum(unidadeCodes, { message: "Selecione uma unidade" }),
+  area: z.enum(AREA_CODES, { message: "Selecione uma área" }),
+  periodo: z.enum(periodoCodes, { message: "Selecione um turno" }),
+  dias: z.array(z.enum(diaCodes)).min(1, "Selecione ao menos um dia"),
 });
 
-export const candidaturaSchema = z
-  .object({
-    tipoPerfil: z.enum(TIPOS_PERFIL, { message: "Selecione se você é aluno ou não aluno" }),
-    unidades: z.array(z.enum(unidadeCodes)).min(1, "Selecione ao menos uma unidade"),
-    cursoAtual: z.enum(CURSOS, { message: "Selecione um curso" }),
-    areasInteresse: z.array(z.enum(areaCodes)).min(1, "Selecione ao menos uma área"),
-  })
-  .merge(personalDataSchema)
+export const candidaturaAlunoSchema = personalDataSchema
+  .extend({ rgm: z.string().trim().min(1, "Informe seu RGM").max(20) })
+  .merge(alunoFields)
   .superRefine((data, ctx) => {
-    if (data.tipoPerfil === "aluno") {
-      if (!data.rgm.trim()) {
-        ctx.addIssue({ code: "custom", message: "Informe seu RGM", path: ["rgm"] });
-      }
-      if (data.unidades.length !== 1) {
-        ctx.addIssue({ code: "custom", message: "Selecione uma unidade", path: ["unidades"] });
-      }
-      if (data.areasInteresse.length !== 1) {
-        ctx.addIssue({ code: "custom", message: "Selecione uma área", path: ["areasInteresse"] });
+    const area = data.area as AreaCode;
+    const periodo = data.periodo as PeriodoCode;
+    const unidade = data.unidade as UnidadeCode;
+    const config = AREAS[area];
+
+    if (!areasDisponiveis(unidade).includes(area)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Esta área não está disponível nesta unidade",
+        path: ["area"],
+      });
+    }
+
+    if (!(config.periodos as readonly string[]).includes(periodo)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Turno indisponível para esta área",
+        path: ["periodo"],
+      });
+    }
+
+    const allowedDias = new Set<string>(diasDisponiveis(area, periodo));
+    for (const dia of data.dias) {
+      if (!allowedDias.has(dia)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Dia indisponível para o turno selecionado",
+          path: ["dias"],
+        });
+        break;
       }
     }
   });
 
+export const candidaturaNaoAlunoSchema = personalDataSchema.extend({
+  tipoPerfil: z.literal("nao_aluno"),
+});
+
+export const candidaturaSchema = z.discriminatedUnion("tipoPerfil", [
+  candidaturaAlunoSchema,
+  candidaturaNaoAlunoSchema,
+]);
+
 export type CandidaturaInput = z.infer<typeof candidaturaSchema>;
+export type CandidaturaAlunoInput = z.infer<typeof candidaturaAlunoSchema>;
 export type PersonalData = z.infer<typeof personalDataSchema>;
+
+export function isAluno(data: CandidaturaInput): data is CandidaturaAlunoInput {
+  return data.tipoPerfil === "aluno";
+}

@@ -1,39 +1,48 @@
 import { Resend } from "resend";
 
-import { AREAS, UNIDADES } from "@/lib/constants";
+import { AREAS, DIAS, PERIODOS, UNIDADES } from "@/lib/constants";
 import { siteContent } from "@/lib/content";
-import type { CandidaturaInput } from "@/lib/schemas";
+import { isAluno, type CandidaturaInput } from "@/lib/schemas";
 
 function buildSubject(nomeCompleto: string): string {
   return `Inscrições AMET 2027 — ${nomeCompleto}`;
 }
 
 function formatCandidaturaBody(data: CandidaturaInput): string {
-  const unidadeLabels = data.unidades
-    .map((code) => UNIDADES.find((u) => u.code === code)?.label ?? code)
-    .join(", ");
-
-  const areaLabels = data.areasInteresse
-    .map((code) => AREAS[code].label)
-    .join(", ");
-
   const perfil = data.tipoPerfil === "aluno" ? "Aluno AMET" : "Não aluno AMET";
 
-  return [
+  const lines = [
     buildSubject(data.nomeCompleto),
     "",
     `Perfil: ${perfil}`,
     `Nome: ${data.nomeCompleto}`,
-    `RGM: ${data.rgm}`,
+    `RGM: ${data.rgm || "—"}`,
     `CPF: ${data.cpf}`,
     `Telefone: ${data.telefone}`,
     `E-mail: ${data.email}`,
-    `Unidade(s): ${unidadeLabels}`,
-    `Curso: ${data.cursoAtual}`,
-    `Área(s) de interesse: ${areaLabels}`,
+  ];
+
+  if (isAluno(data)) {
+    const unidade = UNIDADES.find((u) => u.code === data.unidade)?.label ?? data.unidade;
+    const periodo = PERIODOS.find((p) => p.code === data.periodo)?.label ?? data.periodo;
+    const dias = data.dias
+      .map((code) => DIAS.find((d) => d.code === code)?.label ?? code)
+      .join(", ");
+
+    lines.push(
+      `Unidade: ${unidade}`,
+      `Área de estágio: ${AREAS[data.area].label}`,
+      `Turno: ${periodo}`,
+      `Dias: ${dias}`,
+    );
+  }
+
+  lines.push(
     "",
     `Enviado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`,
-  ].join("\n");
+  );
+
+  return lines.join("\n");
 }
 
 export async function sendCandidaturaEmail(

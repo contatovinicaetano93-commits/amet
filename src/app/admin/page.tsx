@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { AREAS, CURSOS, UNIDADES } from "@/lib/constants";
+import { AREAS, DIAS, PERIODOS, UNIDADES } from "@/lib/constants";
 import type { CandidaturaRecord } from "@/lib/db";
+import { isAluno } from "@/lib/schemas";
 
 const STORAGE_KEY = "amet-admin-key";
 
@@ -17,6 +18,14 @@ function labelUnidade(code: string) {
 
 function labelArea(code: string) {
   return AREAS[code as keyof typeof AREAS]?.label ?? code;
+}
+
+function labelPeriodo(code: string) {
+  return PERIODOS.find((p) => p.code === code)?.label ?? code;
+}
+
+function labelDias(codes: string[]) {
+  return codes.map((code) => DIAS.find((d) => d.code === code)?.label ?? code).join(", ");
 }
 
 export default function AdminPage() {
@@ -166,24 +175,28 @@ export default function AdminPage() {
                 <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">E-mail</dt>
                 <dd className="mt-1 text-sm text-amet-indigo">{item.email}</dd>
               </div>
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Unidade(s)</dt>
-                <dd className="mt-1 text-sm text-amet-indigo">
-                  {item.unidades.map(labelUnidade).join(", ")}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Curso</dt>
-                <dd className="mt-1 text-sm text-amet-indigo">{item.cursoAtual}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">
-                  Área(s) de interesse
-                </dt>
-                <dd className="mt-1 text-sm text-amet-indigo">
-                  {item.areasInteresse.map(labelArea).join(", ")}
-                </dd>
-              </div>
+              {isAluno(item) && (
+                <>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Unidade</dt>
+                    <dd className="mt-1 text-sm text-amet-indigo">{labelUnidade(item.unidade)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">
+                      Área de estágio
+                    </dt>
+                    <dd className="mt-1 text-sm text-amet-indigo">{labelArea(item.area)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Turno</dt>
+                    <dd className="mt-1 text-sm text-amet-indigo">{labelPeriodo(item.periodo)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/50">Dias</dt>
+                    <dd className="mt-1 text-sm text-amet-indigo">{labelDias(item.dias)}</dd>
+                  </div>
+                </>
+              )}
             </dl>
           </article>
         ))}

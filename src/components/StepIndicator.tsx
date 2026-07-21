@@ -7,7 +7,7 @@ type StepIndicatorProps = {
 
 export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
   return (
-    <ol className="grid gap-2 sm:grid-cols-5">
+    <ol className="flex flex-wrap gap-2">
       {labels.map((label, index) => {
         const number = index + 1;
         const isActive = number === currentStep;
@@ -16,7 +16,7 @@ export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
         return (
           <li
             key={label}
-            className={`rounded-xl border px-2 py-2 sm:px-3 sm:py-3 ${
+            className={`min-w-[90px] flex-1 rounded-xl border px-2 py-2 sm:px-3 sm:py-3 ${
               isActive
                 ? "border-amet-blue bg-amet-blue/5"
                 : isComplete

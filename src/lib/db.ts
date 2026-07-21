@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { AREAS, type AreaCode } from "@/lib/constants";
-import type { CandidaturaInput } from "@/lib/schemas";
+import { AREAS, type AreaCode, type PeriodoCode } from "@/lib/constants";
+import { isAluno, type CandidaturaInput } from "@/lib/schemas";
 
 export type CandidaturaRecord = CandidaturaInput & {
   id: string;
@@ -71,28 +71,65 @@ function saveDatabase(data: DatabaseFile): void {
   writeFileSync(getDbFile(), JSON.stringify(data, null, 2), "utf-8");
 }
 
-function getAreaFromRecord(item: CandidaturaRecord): AreaCode[] {
-  if (item.areasInteresse?.length) return item.areasInteresse;
-  const legacy = (item as { areaInteresse?: AreaCode }).areaInteresse;
-  return legacy ? [legacy] : [];
+export type PeriodoVacancy = {
+  periodo: PeriodoCode;
+  total: number;
+  used: number;
+  available: number;
+  full: boolean;
+};
+
+export type AreaVacancy = {
+  code: AreaCode;
+  label: string;
+  periodos: PeriodoVacancy[];
+  full: boolean;
+};
+
+function countUsage(db: DatabaseFile, area: AreaCode, periodo: PeriodoCode): number {
+  return db.candidaturas.filter(
+    (item) => isAluno(item) && item.area === area && item.periodo === periodo,
+  ).length;
 }
 
-export function getVacancyCounts(): Record<
-  AreaCode,
-  { total: number; used: number; available: number; full: boolean }
-> {
+export function getVacancyCounts(): AreaVacancy[] {
   const db = ensureDatabase();
 
-  return Object.fromEntries(
-    Object.entries(AREAS).map(([code, area]) => {
-      const used = db.candidaturas.filter((item) => {
-        if (item.tipoPerfil === "nao_aluno") return false;
-        return getAreaFromRecord(item).includes(code as AreaCode);
-      }).length;
-      const available = Math.max(area.limit - used, 0);
-      return [code, { total: area.limit, used, available, full: used >= area.limit }];
-    }),
-  ) as Record<AreaCode, { total: number; used: number; available: number; full: boolean }>;
+  return (Object.entries(AREAS) as [AreaCode, (typeof AREAS)[AreaCode]][]).map(
+    ([code, config]) => {
+      const periodos: PeriodoVacancy[] = config.periodos.map((periodo) => {
+        const used = countUsage(db, code, periodo);
+        const total = config.limit;
+        return {
+          periodo,
+          total,
+          used,
+          available: Math.max(total - used, 0),
+          full: used >= total,
+        };
+      });
+
+      return {
+        code,
+        label: config.label,
+        periodos,
+        full: periodos.every((p) => p.full),
+      };
+    },
+  );
+}
+
+export function getPeriodoVacancy(area: AreaCode, periodo: PeriodoCode): PeriodoVacancy {
+  const areaVacancy = getVacancyCounts().find((a) => a.code === area);
+  const found = areaVacancy?.periodos.find((p) => p.periodo === periodo);
+  if (found) return found;
+  return {
+    periodo,
+    total: AREAS[area].limit,
+    used: 0,
+    available: AREAS[area].limit,
+    full: false,
+  };
 }
 
 export function listCandidaturas(): CandidaturaRecord[] {
@@ -108,18 +145,19 @@ export type CreateCandidaturaResult =
 export function createCandidatura(input: CandidaturaInput): CreateCandidaturaResult {
   try {
     const db = ensureDatabase();
-    const counts = getVacancyCounts();
 
-    if (input.tipoPerfil === "aluno") {
-      const area = input.areasInteresse[0];
-      if (counts[area].full) {
-        return { ok: false, error: "Vagas esgotadas para esta área.", code: "AREA_FULL" };
+    if (isAluno(input)) {
+      const vacancy = getPeriodoVacancy(input.area, input.periodo as PeriodoCode);
+      if (vacancy.full) {
+        return {
+          ok: false,
+          error: "Vagas esgotadas para esta área neste turno.",
+          code: "AREA_FULL",
+        };
       }
+
       const duplicate = db.candidaturas.some(
-        (item) =>
-          item.tipoPerfil === "aluno" &&
-          item.cpf === input.cpf &&
-          getAreaFromRecord(item).includes(area),
+        (item) => isAluno(item) && item.cpf === input.cpf && item.area === input.area,
       );
       if (duplicate) {
         return {
