@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AMET">
   <defs>
     <linearGradient id="amet-grad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#B355C9"/>
-      <stop offset="1" stop-color="#285ACE"/>
+      <stop stop-color="#C45BA0"/>
+      <stop offset="0.5" stop-color="#4350C4"/>
+      <stop offset="1" stop-color="#5B9ADF"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="#1C2493"/>
   <circle cx="32" cy="32" r="24" fill="url(#amet-grad)"/>
   <path fill="#FFFFFF" d="M20 42V22h6.2l5.8 12.4L37.8 22H44v20h-5.6V30.2L33.4 42h-2.8l-5-11.8V42H20z"/>
 </svg>

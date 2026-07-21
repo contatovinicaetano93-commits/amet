@@ -38,7 +38,7 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${leagueSpartan.variable} h-full scroll-smooth antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-amet-indigo font-sans text-amet-white">
+      <body className="min-h-full flex flex-col bg-amet-dark font-sans text-amet-white">
         <SiteHeader />
         {children}
         <SiteFooter />

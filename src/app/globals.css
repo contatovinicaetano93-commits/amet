@@ -1,25 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  /* Paleta oficial AMET — apenas 3 cores + branco */
-  --amet-purple: #b355c9;
-  --amet-blue: #285ace;
-  --amet-indigo: #1c2493;
-  --amet-white: #ffffff;
+  --amet-purple:      #c45ba0;
+  --amet-purple-mid:  #b355c9;
+  --amet-blue:        #5b9adf;
+  --amet-blue-deep:   #285ace;
+  --amet-indigo:      #1c2493;
+  --amet-dark:        #0d1145;
+  --amet-white:       #ffffff;
+  --amet-grad:        linear-gradient(135deg, #c45ba0 0%, #4350c4 52%, #5b9adf 100%);
+  --amet-grad-btn:    linear-gradient(135deg, #b355c9 0%, #285ace 100%);
 }
 
 @theme inline {
-  --color-amet-purple: var(--amet-purple);
-  --color-amet-blue: var(--amet-blue);
-  --color-amet-indigo: var(--amet-indigo);
-  --color-amet-white: var(--amet-white);
-  --font-sans: var(--font-league-spartan);
+  --color-amet-purple:     var(--amet-purple);
+  --color-amet-purple-mid: var(--amet-purple-mid);
+  --color-amet-blue:       var(--amet-blue);
+  --color-amet-blue-deep:  var(--amet-blue-deep);
+  --color-amet-indigo:     var(--amet-indigo);
+  --color-amet-dark:       var(--amet-dark);
+  --color-amet-white:      var(--amet-white);
+  --font-sans:             var(--font-league-spartan);
 }
 
 body {
-  background: var(--amet-indigo);
+  background: var(--amet-dark);
   color: var(--amet-white);
   font-family: var(--font-league-spartan), Arial, Helvetica, sans-serif;
+}
+
+/* ── Gradient utilities ── */
+@utility amet-grad-text {
+  background: var(--amet-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@utility amet-grad-bg {
+  background: var(--amet-grad);
+}
+
+@utility amet-grad-btn {
+  background: var(--amet-grad-btn);
+  color: var(--amet-white);
+  transition: opacity 0.15s, transform 0.15s;
+  &:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+}
+
+/* ── Gradient border card ── */
+@utility amet-grad-card {
+  position: relative;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--amet-grad);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
 }
 
 ::selection {

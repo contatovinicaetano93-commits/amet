@@ -22,6 +22,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
+    if (!result.lead) {
+      return NextResponse.json({ error: "Erro ao criar lead" }, { status: 500 });
+    }
+
     await sendLeadNotification(
       parsed.data.nomeCompleto,
       parsed.data.email,

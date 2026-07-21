@@ -35,7 +35,7 @@ export function PosGraduacaoSection() {
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex rounded-full border border-amet-purple bg-amet-purple/15 px-6 py-3 text-sm font-semibold text-amet-white transition hover:bg-amet-purple/30"
+            className="amet-grad-btn inline-flex rounded-full px-6 py-3 text-sm font-semibold text-amet-white shadow-md shadow-amet-indigo/40"
           >
             {posGraduacaoContent.cta}
           </a>

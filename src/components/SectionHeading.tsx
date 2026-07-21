@@ -16,7 +16,7 @@ export function SectionHeading({
       <h2 className="text-3xl font-bold tracking-tight text-amet-white sm:text-4xl">
         {title}
       </h2>
-      <div className="mx-auto mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-amet-purple via-amet-blue to-amet-indigo" />
+      <div className={`mt-4 h-1 w-16 rounded-full amet-grad-bg ${align === "center" ? "mx-auto" : ""}`} />
       {subtitle && (
         <p className="mt-5 text-base leading-7 text-amet-white/70 sm:text-lg">{subtitle}</p>
       )}

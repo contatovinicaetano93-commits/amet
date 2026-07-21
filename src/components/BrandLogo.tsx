@@ -18,7 +18,7 @@ export function BrandLogo({
   return (
     <span className="inline-flex items-center gap-3">
       <Image
-        src="/amet-mark.png"
+        src="/amet-mark.svg"
         alt=""
         aria-hidden
         width={64}

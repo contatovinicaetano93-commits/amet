@@ -9,7 +9,7 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-amet-white/10 bg-amet-indigo/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-amet-white/10 bg-amet-dark/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <a href="#inicio">
           <BrandLogo
@@ -32,7 +32,7 @@ export function SiteHeader() {
 
         <a
           href="#estagios"
-          className="hidden rounded-full bg-amet-blue px-4 py-2 text-sm font-semibold text-amet-white transition hover:bg-amet-purple sm:inline-flex"
+          className="amet-grad-btn hidden rounded-full px-5 py-2.5 text-sm font-semibold text-amet-white shadow-md shadow-amet-indigo/50 sm:inline-flex"
         >
           Candidatar-se
         </a>

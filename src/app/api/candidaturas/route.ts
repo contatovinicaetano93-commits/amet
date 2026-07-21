@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         parsed.data.nomeCompleto,
         parsed.data.email,
         areaLabel,
-        parsed.data.cursoAtual,
+        parsed.data.periodo,
       ),
       sendAdminNotification(
         parsed.data.nomeCompleto,
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         parsed.data.cpf,
         parsed.data.rgm,
         areaLabel,
-        parsed.data.cursoAtual,
+        parsed.data.periodo,
       ),
     ]);
 

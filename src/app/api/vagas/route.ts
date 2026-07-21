@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { AREAS } from "@/lib/constants";
+import { AREAS, PERIODOS } from "@/lib/constants";
 import { getVacancyCounts } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -12,10 +12,12 @@ export async function GET() {
     code,
     label: area.label,
     limit: area.limit,
+    periodos: area.periodos,
     used: counts[code as keyof typeof AREAS].used,
     available: counts[code as keyof typeof AREAS].available,
     full: counts[code as keyof typeof AREAS].full,
+    unidadesDisponiveis: (area as any).unidadesDisponiveis,
   }));
 
-  return NextResponse.json({ areas, updatedAt: new Date().toISOString() });
+  return NextResponse.json({ areas, periodos: PERIODOS, updatedAt: new Date().toISOString() });
 }

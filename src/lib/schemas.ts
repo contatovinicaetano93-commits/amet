@@ -5,7 +5,7 @@ import { isValidCpf, stripDigits } from "@/lib/validators";
 
 const areaCodes = Object.keys(AREAS) as [keyof typeof AREAS, ...Array<keyof typeof AREAS>];
 const unidadeCodes = Object.keys(UNIDADES) as [keyof typeof UNIDADES, ...Array<keyof typeof UNIDADES>];
-const periodoCodes = [...PERIODOS] as [typeof PERIODOS[number], ...typeof PERIODOS[]];
+const periodoCodes = [...PERIODOS] as const as typeof PERIODOS;
 
 export const cpfSchema = z.object({
   cpf: z
