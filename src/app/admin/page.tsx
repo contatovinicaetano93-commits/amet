@@ -28,6 +28,16 @@ function labelDias(codes: string[]) {
   return codes.map((code) => DIAS.find((d) => d.code === code)?.label ?? code).join(", ");
 }
 
+function buildWhatsAppLink(telefone: string, nomeCompleto: string): string {
+  let digits = telefone.replace(/\D/g, "");
+  if (!digits.startsWith("55")) digits = `55${digits}`;
+  const firstName = nomeCompleto.trim().split(/\s+/)[0] || "";
+  const text = firstName
+    ? `Olá ${firstName}, tudo bem? Aqui é da AMET Saúde & Estética.`
+    : "Olá, tudo bem? Aqui é da AMET Saúde & Estética.";
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState("");
   const [inputKey, setInputKey] = useState("");
@@ -157,9 +167,19 @@ export default function AdminPage() {
                   {formatDate(item.createdAt)} · {item.tipoPerfil === "aluno" ? "Aluno" : "Não aluno"}
                 </p>
               </div>
-              <span className="rounded-full bg-amet-blue/10 px-3 py-1 text-xs font-medium text-amet-blue">
-                RGM {item.rgm}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-amet-blue/10 px-3 py-1 text-xs font-medium text-amet-blue">
+                  RGM {item.rgm}
+                </span>
+                <a
+                  href={buildWhatsAppLink(item.telefone, item.nomeCompleto)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
+                >
+                  WhatsApp
+                </a>
+              </div>
             </div>
 
             <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
