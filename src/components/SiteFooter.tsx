@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { BrandLogo } from "@/components/BrandLogo";
 import { siteContent } from "@/lib/content";
 
@@ -34,7 +36,15 @@ export function SiteFooter() {
             </a>
           </div>
         </div>
-        <p className="mt-6 text-center text-xs text-amet-indigo/45">{siteContent.cadan}</p>
+        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+          <p className="text-center text-xs text-amet-indigo/45">{siteContent.cadan}</p>
+          <Link
+            href="/admin"
+            className="text-xs font-medium text-amet-indigo/45 transition hover:text-amet-blue"
+          >
+            Área administrativa
+          </Link>
+        </div>
       </div>
     </footer>
   );
