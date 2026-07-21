@@ -14,15 +14,28 @@ datasource db {
 
 model Candidatura {
   id               String   @id @default(cuid())
+  cpf              String
   nomeCompleto     String
   rgm              String
-  cpf              String
   telefone         String
   email            String
+  unidade          String
   areaInteresse    String
-  cursoAtual       String
+  periodo          String
+  isAluno          Boolean  @default(true)
   createdAt        DateTime @default(now())
 
-  @@unique([cpf, areaInteresse])
+  @@unique([cpf, areaInteresse, periodo])
   @@index([areaInteresse])
+  @@index([unidade])
+  @@index([periodo])
+}
+
+model Lead {
+  id               String   @id @default(cuid())
+  cpf              String   @unique
+  nomeCompleto     String
+  email            String
+  telefone         String
+  createdAt        DateTime @default(now())
 }

@@ -87,3 +87,44 @@ export async function sendAdminNotification(
     console.error("Failed to send admin notification:", error);
   }
 }
+
+export async function sendLeadNotification(
+  leadName: string,
+  leadEmail: string,
+  leadPhone: string,
+  cpf: string,
+) {
+  try {
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "noreply@ametsaude.com.br",
+      to: process.env.RESEND_ADMIN_EMAIL || "ametsaude1@gmail.com",
+      subject: `Novo Lead - ${leadName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Novo Lead de Estágio</h2>
+          <p>Um novo candidato (não aluno AMET) se registrou para o programa de estágios.</p>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background-color: #f5f5f5;">
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>Nome</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd;">${leadName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>Email</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd;"><a href="mailto:${leadEmail}">${leadEmail}</a></td>
+            </tr>
+            <tr style="background-color: #f5f5f5;">
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>Telefone</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd;"><a href="https://wa.me/55${leadPhone.replace(/\D/g, '')}">${leadPhone}</a></td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>CPF</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd;">${cpf}</td>
+            </tr>
+          </table>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Failed to send lead notification:", error);
+  }
+}

@@ -1,19 +1,47 @@
+export const UNIDADES = {
+  IPIRANGA: { code: "IPIRANGA", label: "Ipiranga" },
+  LIBERDADE: { code: "LIBERDADE", label: "Liberdade" },
+  GUARULHOS: { code: "GUARULHOS", label: "Guarulhos" },
+} as const;
+
+export type UnidadeCode = keyof typeof UNIDADES;
+
 export const AREAS = {
-  AC: { code: "AC", label: "AC", limit: 50 },
-  BCT: { code: "BCT", label: "BCT", limit: 20 },
-  BC: { code: "BC", label: "BC", limit: 20 },
-  NMA: { code: "NMA", label: "NMA", limit: 20 },
+  AC: {
+    code: "AC",
+    label: "Análises Clínicas",
+    limit: 20,
+    periodos: ["MANHÃ", "TARDE", "NOITE"],
+    dias: "seg-quinta; sábado só manhã",
+  },
+  HEM: {
+    code: "HEM",
+    label: "Hematologia",
+    limit: 20,
+    periodos: ["MANHÃ", "NOITE"],
+    dias: "seg-quinta",
+  },
+  IMG: {
+    code: "IMG",
+    label: "Imagenologia",
+    limit: 20,
+    periodos: ["MANHÃ", "NOITE"],
+    dias: "seg-quinta",
+    unidadesDisponiveis: ["IPIRANGA", "LIBERDADE"],
+  },
+  EST: {
+    code: "EST",
+    label: "Estética",
+    limit: 20,
+    periodos: ["MANHÃ", "NOITE"],
+    dias: "seg-quinta; sábado só manhã",
+  },
 } as const;
 
 export type AreaCode = keyof typeof AREAS;
 
-export const CURSOS = [
-  "Imaginologia",
-  "Estética",
-  "Análises Clínicas",
-  "Hematologia",
-] as const;
+export const PERIODOS = ["MANHÃ", "TARDE", "NOITE"] as const;
 
-export type CursoAtual = (typeof CURSOS)[number];
+export type Periodo = (typeof PERIODOS)[number];
 
 export const POLLING_INTERVAL_MS = 30_000;
