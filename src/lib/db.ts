@@ -38,6 +38,9 @@ function ensureSchema(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_candidaturas_area_periodo
         ON candidaturas (area, periodo)
         WHERE tipo_perfil = 'aluno';
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_candidaturas_cpf_area_unique
+        ON candidaturas (cpf, area)
+        WHERE tipo_perfil = 'aluno';
     `).then(() => undefined);
   }
   return schemaReady;
@@ -167,28 +170,36 @@ export type CreateCandidaturaResult =
 export async function createCandidatura(
   input: CandidaturaInput,
 ): Promise<CreateCandidaturaResult> {
+  await ensureSchema();
+  const client = await getPool().connect();
+
   try {
-    await ensureSchema();
+    await client.query("BEGIN");
 
     if (isAluno(input)) {
-      const vacancy = await getPeriodoVacancy(input.area, input.periodo as PeriodoCode);
-      if (vacancy.full) {
+      const area = input.area;
+      const periodo = input.periodo as PeriodoCode;
+
+      // Serializes concurrent submissions for the same area+turno so the vacancy
+      // check and insert below are atomic together (prevents overbooking when many
+      // students submit to the same slot at once). Transaction-scoped, so it's
+      // released automatically on COMMIT/ROLLBACK even under connection pooling.
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`${area}:${periodo}`]);
+
+      const usedResult = await client.query<{ count: string }>(
+        `SELECT COUNT(*) AS count FROM candidaturas
+         WHERE tipo_perfil = 'aluno' AND area = $1 AND periodo = $2`,
+        [area, periodo],
+      );
+      const used = Number(usedResult.rows[0]?.count ?? 0);
+      const total = AREAS[area].limit;
+
+      if (used >= total) {
+        await client.query("ROLLBACK");
         return {
           ok: false,
           error: "Vagas esgotadas para esta área neste turno.",
           code: "AREA_FULL",
-        };
-      }
-
-      const duplicate = await getPool().query(
-        `SELECT 1 FROM candidaturas WHERE tipo_perfil = 'aluno' AND cpf = $1 AND area = $2 LIMIT 1`,
-        [input.cpf, input.area],
-      );
-      if ((duplicate.rowCount ?? 0) > 0) {
-        return {
-          ok: false,
-          error: "Você já possui uma candidatura nesta área com este CPF.",
-          code: "DUPLICATE",
         };
       }
     }
@@ -196,7 +207,7 @@ export async function createCandidatura(
     const id = crypto.randomUUID();
     const isAlunoInput = isAluno(input);
 
-    const result = await getPool().query<CandidaturaRow>(
+    const result = await client.query<CandidaturaRow>(
       `INSERT INTO candidaturas
         (id, nome_completo, rgm, cpf, telefone, email, tipo_perfil, unidade, area, periodo, dias)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -216,13 +227,25 @@ export async function createCandidatura(
       ],
     );
 
+    await client.query("COMMIT");
     return { ok: true, candidatura: rowToRecord(result.rows[0]) };
   } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    const pgError = error as { code?: string };
+    if (pgError.code === "23505") {
+      return {
+        ok: false,
+        error: "Você já possui uma candidatura nesta área com este CPF.",
+        code: "DUPLICATE",
+      };
+    }
     console.error("[db] Falha ao gravar candidatura:", error);
     return {
       ok: false,
       error: "Não foi possível salvar a candidatura. Tente novamente.",
       code: "UNKNOWN",
     };
+  } finally {
+    client.release();
   }
 }
