@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
+import { usePathname } from "next/navigation";
 
 import { BrandLogo } from "@/components/BrandLogo";
 import { smoothScrollTo } from "@/lib/lenis";
@@ -12,6 +13,8 @@ function sectionIdFromHref(href: string) {
 }
 
 export function SiteHeader() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState<string>(sectionIdFromHref(navLinks[0].href));
 
@@ -37,9 +40,10 @@ export function SiteHeader() {
   }, []);
 
   const handleNavClick = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    setOpen(false);
+    if (!isHome) return; // let the browser navigate to "/#section" normally
     event.preventDefault();
     smoothScrollTo(`#${sectionIdFromHref(href)}`);
-    setOpen(false);
   };
 
   return (
