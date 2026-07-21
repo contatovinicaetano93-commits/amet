@@ -164,10 +164,21 @@ export function ApplicationForm() {
   }
 
   function toggleDia(code: DiaCode) {
-    setForm((c) => ({
-      ...c,
-      dias: c.dias.includes(code) ? c.dias.filter((d) => d !== code) : [...c.dias, code],
-    }));
+    setForm((c) => {
+      if (code === "sab") {
+        return { ...c, dias: c.dias.includes("sab") ? [] : ["sab"] };
+      }
+      if (c.dias.includes(code)) {
+        return { ...c, dias: c.dias.filter((d) => d !== code) };
+      }
+      if (c.dias.includes("sab")) {
+        return { ...c, dias: [code] };
+      }
+      if (c.dias.length >= 2) {
+        return c;
+      }
+      return { ...c, dias: [...c.dias, code] };
+    });
     setErrors((c) => {
       const n = { ...c };
       delete n.dias;
@@ -481,20 +492,29 @@ export function ApplicationForm() {
 
             {form.periodo && (
               <div className="space-y-3">
-                <p className="text-sm text-amet-indigo/70">Selecione os dias.</p>
+                <p className="text-sm text-amet-indigo/70">
+                  Selecione até 2 dias — ou apenas Sábado, sozinho.
+                </p>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {availableDias.map((dia) => {
                     const label = DIAS.find((d) => d.code === dia)?.label ?? dia;
                     const selected = form.dias.includes(dia);
+                    const disabled =
+                      !selected &&
+                      dia !== "sab" &&
+                      (form.dias.includes("sab") || form.dias.length >= 2);
                     return (
                       <button
                         key={dia}
                         type="button"
+                        disabled={disabled}
                         onClick={() => toggleDia(dia)}
                         className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                          selected
-                            ? "border-amet-purple bg-amet-purple/10 text-amet-purple"
-                            : "border-amet-indigo/15 text-amet-indigo/80 hover:border-amet-blue"
+                          disabled
+                            ? "cursor-not-allowed border-amet-indigo/10 bg-amet-indigo/[0.03] opacity-50"
+                            : selected
+                              ? "border-amet-purple bg-amet-purple/10 text-amet-purple"
+                              : "border-amet-indigo/15 text-amet-indigo/80 hover:border-amet-blue"
                         }`}
                       >
                         {label}

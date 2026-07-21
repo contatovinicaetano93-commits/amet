@@ -39,7 +39,7 @@ const alunoFields = z.object({
   unidade: z.enum(unidadeCodes, { message: "Selecione uma unidade" }),
   area: z.enum(AREA_CODES, { message: "Selecione uma área" }),
   periodo: z.enum(periodoCodes, { message: "Selecione um turno" }),
-  dias: z.array(z.enum(diaCodes)).min(1, "Selecione ao menos um dia"),
+  dias: z.array(z.enum(diaCodes)).min(1, "Selecione ao menos um dia").max(2, "Selecione no máximo 2 dias"),
 });
 
 export const candidaturaAlunoSchema = personalDataSchema
@@ -77,6 +77,14 @@ export const candidaturaAlunoSchema = personalDataSchema
         });
         break;
       }
+    }
+
+    if (data.dias.includes("sab") && data.dias.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Sábado não pode ser combinado com outros dias",
+        path: ["dias"],
+      });
     }
   });
 
