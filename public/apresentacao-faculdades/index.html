@@ -151,6 +151,8 @@
       font-weight: 500;
       color: var(--muted);
       max-width: 34ch;
+      text-align: justify;
+      hyphens: auto;
     }
     .bg-indigo .lead, .on-dark .lead { color: color-mix(in srgb, white 78%, transparent); }
 
@@ -159,6 +161,26 @@
       line-height: 1.45;
       font-weight: 500;
       color: var(--ink);
+      text-align: justify;
+      hyphens: auto;
+    }
+    .card p,
+    .diff-item p,
+    .course p,
+    .lab-copy .lead {
+      text-align: justify;
+      hyphens: auto;
+    }
+    .kicker,
+    h1, h2, h3,
+    .stat span,
+    .pill,
+    .tag,
+    .chip,
+    .footer-mini,
+    .contact-grid small,
+    .contact-grid strong {
+      text-align: inherit;
     }
     .muted { color: var(--muted); }
     .accent { color: var(--purple); }
@@ -402,17 +424,29 @@
     }
     .logo-cell {
       height: 110px;
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 12px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
       display: grid;
       place-items: center;
-      padding: 16px;
+      padding: 12px 8px;
     }
     .logo-cell img {
       max-width: 100%;
-      max-height: 72px;
+      max-height: 80px;
       object-fit: contain;
+      mix-blend-mode: multiply;
+      filter: contrast(1.08);
+    }
+    .bg-split .logo-cell,
+    .bg-indigo .logo-cell {
+      background: transparent;
+      border: none;
+    }
+    .bg-split .logo-cell img,
+    .bg-indigo .logo-cell img {
+      mix-blend-mode: screen;
+      filter: brightness(1.15) contrast(1.05);
     }
 
     .footer-mini {
