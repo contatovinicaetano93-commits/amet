@@ -305,7 +305,7 @@
       border-radius: 14px;
       padding: 28px 24px 24px;
       border: 1px solid var(--line);
-      min-height: 260px;
+      min-height: 360px;
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -456,13 +456,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 0;
+      gap: 10px;
       padding: 18px 14px 12px;
       box-shadow: 0 10px 28px -22px color-mix(in srgb, var(--indigo) 40%, transparent);
     }
     .logo-cell img {
       max-width: 90%;
-      max-height: 78px;
+      max-height: 70px;
       width: auto;
       height: auto;
       object-fit: contain;
@@ -552,10 +552,6 @@
     }
 
     @media print {
-      html, body, .slide, .pad, .logo-cell, .course, .card, .diff-item {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
       @page { size: 1440px 810px; margin: 0; }
       html, body { background: white; }
       .deck { gap: 0; padding: 0; }
@@ -714,19 +710,31 @@
           <p class="kicker">Sua formação</p>
           <h2>Cursos e modalidades</h2>
         </div>
-        <div class="grid-3 fill-grid">
-          <div class="course" style="min-height:240px;">
+        <div class="grid-3" style="flex:1;align-content:start;padding-top:8px;">
+          <div class="course" style="min-height:280px;">
             <h3>Imagenologia</h3>
             <p class="body muted" style="font-size:16px;">Tomógrafo, DICOM e console para práticas de exames.</p>
+            <div class="col gap-sm" style="margin-top:auto;">
+              <div class="pill soft">Estágio obrigatório</div>
+            </div>
           </div>
-          <div class="course" style="min-height:240px;">
+          <div class="course" style="min-height:280px;">
             <h3>Análises Clínicas</h3>
             <p class="body muted" style="font-size:16px;">Rotina laboratorial completa com equipamentos reais.</p>
+            <div class="col gap-sm" style="margin-top:auto;">
+              <div class="pill soft">Estágio obrigatório</div>
+            </div>
           </div>
-          <div class="course" style="min-height:240px;">
+          <div class="course" style="min-height:280px;">
             <h3>Estética</h3>
             <p class="body muted" style="font-size:16px;">Atendimento assistido sob supervisão de Biomédico.</p>
+            <div class="col gap-sm" style="margin-top:auto;">
+              <div class="pill soft">Estágio obrigatório</div>
+            </div>
           </div>
+        </div>
+        <div style="display:flex;justify-content:center;">
+          <div class="pill" style="min-width:420px;padding:16px 28px;font-size:18px;">Carreira profissional</div>
         </div>
       </div>
     </section>
@@ -872,14 +880,14 @@
           <h2>Parceiros acadêmicos</h2>
         </div>
         <div class="logo-grid">
-          <div class="logo-cell"><img src="./img/partner-anhanguera.png" alt="Anhanguera" /></div>
-          <div class="logo-cell"><img src="./img/partner-cruzeiro.png" alt="Cruzeiro do Sul" /></div>
-          <div class="logo-cell"><img src="./img/partner-uninove.png" alt="UNINOVE" /></div>
-          <div class="logo-cell"><img src="./img/partner-anhembi.png" alt="Anhembi Morumbi" /></div>
-          <div class="logo-cell"><img src="./img/partner-unicid.png" alt="UNICID" /></div>
-          <div class="logo-cell"><img src="./img/partner-uninter.png" alt="UNINTER" /></div>
-          <div class="logo-cell"><img src="./img/partner-anima.png" alt="Ânima" /></div>
-          <div class="logo-cell"><img src="./img/partner-estacio.png" alt="Estácio" /></div>
+          <div class="logo-cell"><img src="./img/partner-anhanguera.png" alt="Anhanguera" /><span>Anhanguera</span></div>
+          <div class="logo-cell"><img src="./img/partner-cruzeiro.png" alt="Cruzeiro do Sul" /><span>Cruzeiro do Sul</span></div>
+          <div class="logo-cell"><img src="./img/partner-uninove.png" alt="UNINOVE" /><span>UNINOVE</span></div>
+          <div class="logo-cell"><img src="./img/partner-anhembi.png" alt="Anhembi Morumbi" /><span>Anhembi Morumbi</span></div>
+          <div class="logo-cell"><img src="./img/partner-unicid.png" alt="UNICID" /><span>UNICID</span></div>
+          <div class="logo-cell"><img src="./img/partner-uninter.png" alt="UNINTER" /><span>UNINTER</span></div>
+          <div class="logo-cell"><img src="./img/partner-anima.png" alt="Ânima" /><span>Ânima</span></div>
+          <div class="logo-cell"><img src="./img/partner-estacio.png" alt="Estácio" /><span>Estácio</span></div>
         </div>
 
       </div>
@@ -895,8 +903,8 @@
           <p class="lead">Equipamentos e soluções que sustentam a prática profissional na AMET.</p>
         </div>
         <div class="row gap-lg grow center" style="align-items:center;justify-content:center;flex-wrap:wrap;">
-          <div class="logo-cell logo-cell-dark" style="width:380px;min-height:220px;"><img src="./img/partner-phd.png" alt="PHD" style="max-height:96px;" /></div>
-          <div class="logo-cell" style="width:380px;min-height:220px;background:#fff;"><img src="./img/partner-siemens.png" alt="Siemens Healthineers" style="max-height:96px;" /></div>
+          <div class="logo-cell logo-cell-dark" style="width:380px;min-height:220px;"><img src="./img/partner-phd.png" alt="PHD" style="max-height:96px;" /><span>PHD</span></div>
+          <div class="logo-cell" style="width:380px;min-height:220px;background:#fff;"><img src="./img/partner-siemens.png" alt="Siemens Healthineers" style="max-height:96px;" /><span>Siemens Healthineers</span></div>
         </div>
 
       </div>
