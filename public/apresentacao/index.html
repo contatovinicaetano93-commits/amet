@@ -186,8 +186,8 @@
     .accent { color: var(--purple); }
     .blue { color: var(--blue); }
 
-    .pad { padding: 64px 72px; }
-    .pad-sm { padding: 48px 64px; }
+.pad { padding: 64px 72px; height: 100%; }
+    .pad-sm { padding: 48px 64px; height: 100%; }
 
     .row { display: flex; gap: 40px; height: 100%; }
     .col { display: flex; flex-direction: column; }
@@ -255,6 +255,20 @@
       line-height: 1.4;
       color: var(--muted);
       font-weight: 500;
+    }
+
+
+    .fill-grid {
+      flex: 1 1 auto;
+      min-height: 0;
+      align-content: stretch;
+      height: 100%;
+    }
+    .grid-2.fill-grid .diff-item,
+    .grid-6.fill-grid .diff-item {
+      align-items: center;
+      height: 100%;
+      min-height: 0;
     }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -390,76 +404,103 @@
       color: white;
     }
 
-    .faculty {
+.faculty {
+      list-style: none;
+      margin: 0;
+      padding: 0;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 28px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px 14px;
+      flex: 1;
+      align-content: stretch;
+      height: 100%;
+      min-height: 0;
     }
     .faculty li {
-      list-style: none;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--line);
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      align-items: baseline;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      padding: 12px 14px;
+      background: #fff;
+      border: 1px solid color-mix(in srgb, var(--indigo) 10%, transparent);
+      border-radius: 10px;
     }
     .faculty strong {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--indigo);
+      line-height: 1.25;
     }
     .faculty span {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-      text-align: right;
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--indigo) 55%, transparent);
     }
 
-    .logo-grid {
+
+.logo-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 1fr);
       gap: 18px;
-      align-items: center;
+      align-items: stretch;
+      flex: 1;
+      min-height: 0;
     }
     .logo-cell {
-      height: 110px;
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      display: grid;
-      place-items: center;
-      padding: 12px 8px;
+      min-height: 0;
+      background: #fff;
+      border: 1px solid color-mix(in srgb, var(--indigo) 12%, transparent);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 18px 14px 12px;
+      box-shadow: 0 10px 28px -22px color-mix(in srgb, var(--indigo) 40%, transparent);
     }
     .logo-cell img {
-      max-width: 100%;
-      max-height: 80px;
+      max-width: 90%;
+      max-height: 70px;
+      width: auto;
+      height: auto;
       object-fit: contain;
-      mix-blend-mode: multiply;
-      filter: contrast(1.08);
     }
-    .bg-split .logo-cell,
-    .bg-indigo .logo-cell {
-      background: transparent;
-      border: none;
+    .logo-cell span {
+      font-size: 11px;
+      font-weight: 700;
+      color: color-mix(in srgb, var(--indigo) 70%, transparent);
+      text-align: center;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      line-height: 1.2;
     }
-    .bg-split .logo-cell img,
-    .bg-indigo .logo-cell img {
-      mix-blend-mode: screen;
-      filter: brightness(1.15) contrast(1.05);
-    }
-
-
     .logo-cell-dark {
-      background: var(--indigo) !important;
+      background: linear-gradient(160deg, var(--indigo), #151a6e) !important;
       border: none !important;
       border-radius: 14px !important;
-      padding: 28px !important;
+      padding: 28px 22px 18px !important;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 16px 32px rgba(28,36,147,0.22);
     }
     .logo-cell-dark img {
-      mix-blend-mode: screen !important;
-      filter: brightness(1.25) contrast(1.05) !important;
-      max-height: 90px !important;
+      max-height: 64px !important;
+      max-width: 88% !important;
+      filter: none !important;
+    }
+    .logo-cell-dark span {
+      color: rgba(255,255,255,0.78) !important;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     .footer-mini {
@@ -593,7 +634,7 @@
           <p class="kicker">Formação complementar</p>
           <h2>O que o residente vivencia</h2>
         </div>
-        <div class="grid-2" style="flex:1;align-content:center;">
+        <div class="grid-2 fill-grid">
           <div class="diff-item"><div class="n">01</div><div><h3>Atendimentos supervisionados</h3><p>Participação em rotinas clínicas com acompanhamento de profissionais experientes.</p></div></div>
           <div class="diff-item purple"><div class="n">02</div><div><h3>Teoria aplicada</h3><p>Conhecimentos teóricos colocados em situações reais do dia a dia.</p></div></div>
           <div class="diff-item blue"><div class="n">03</div><div><h3>Competências essenciais</h3><p>Desenvolvimento técnico, raciocínio clínico e postura ética profissional.</p></div></div>
@@ -610,7 +651,7 @@
           <p class="kicker on-dark">Diretrizes</p>
           <h2>Missão, visão e valores</h2>
         </div>
-        <div class="grid-3" style="flex:1;align-content:center;">
+        <div class="grid-3 fill-grid">
           <div class="card" style="background:color-mix(in srgb,white 8%,transparent);border-color:color-mix(in srgb,white 18%,transparent);border-left-color:var(--purple);">
             <h3 style="color:white;">Missão</h3>
             <p style="color:color-mix(in srgb,white 78%,transparent);">Oferecer excelência em saúde e geração de conhecimento, com ética, sustentabilidade e responsabilidade social.</p>
@@ -651,7 +692,7 @@
           <p class="kicker">Mercado</p>
           <h2>Por que nos diferenciamos</h2>
         </div>
-        <div class="grid-6" style="flex:1;align-content:center;">
+        <div class="grid-6 fill-grid">
           <div class="diff-item"><div class="n">01</div><div><h3>Prática diária</h3><p>Rotinas reais com equipamentos do mercado.</p></div></div>
           <div class="diff-item purple"><div class="n">02</div><div><h3>Flexibilidade</h3><p>Horários e turmas pensados para a sua rotina.</p></div></div>
           <div class="diff-item blue"><div class="n">03</div><div><h3>Conteúdo atualizado</h3><p>Alinhado às exigências do mercado de trabalho.</p></div></div>
@@ -669,7 +710,7 @@
           <p class="kicker">Formação</p>
           <h2>Cursos e modalidades</h2>
         </div>
-        <div class="grid-3" style="flex:1;align-content:center;">
+        <div class="grid-3 fill-grid">
           <div class="course">
             <h3>Imagenologia</h3>
             <p class="body muted" style="font-size:16px;">Tomógrafo, DICOM e console para práticas de exames.</p>
@@ -838,16 +879,17 @@
           <p class="kicker">Rede</p>
           <h2>Parceiros acadêmicos</h2>
         </div>
-        <div class="logo-grid" style="flex:1;align-content:center;">
-          <div class="logo-cell"><img src="./img/partner-00.png" alt="Parceiro" /></div>
-          <div class="logo-cell"><img src="./img/partner-01.png" alt="Parceiro" /></div>
-          <div class="logo-cell"><img src="./img/partner-02.png" alt="Parceiro" /></div>
-          <div class="logo-cell"><img src="./img/partner-03.png" alt="Parceiro" /></div>
-          <div class="logo-cell"><img src="./img/partner-04.png" alt="Parceiro" /></div>
-          <div class="logo-cell"><img src="./img/partner-05.png" alt="Parceiro" /></div>
-          <div class="logo-cell"><img src="./img/partner-06.png" alt="Parceiro" /></div>
-          <div class="logo-cell"><img src="./img/partner-07.png" alt="Parceiro" /></div>
+        <div class="logo-grid">
+          <div class="logo-cell"><img src="./img/partner-anhanguera.png" alt="Anhanguera" /><span>Anhanguera</span></div>
+          <div class="logo-cell"><img src="./img/partner-cruzeiro.png" alt="Cruzeiro do Sul" /><span>Cruzeiro do Sul</span></div>
+          <div class="logo-cell"><img src="./img/partner-uninove.png" alt="UNINOVE" /><span>UNINOVE</span></div>
+          <div class="logo-cell"><img src="./img/partner-anhembi.png" alt="Anhembi Morumbi" /><span>Anhembi Morumbi</span></div>
+          <div class="logo-cell"><img src="./img/partner-unicid.png" alt="UNICID" /><span>UNICID</span></div>
+          <div class="logo-cell"><img src="./img/partner-uninter.png" alt="UNINTER" /><span>UNINTER</span></div>
+          <div class="logo-cell"><img src="./img/partner-anima.png" alt="Ânima" /><span>Ânima</span></div>
+          <div class="logo-cell"><img src="./img/partner-estacio.png" alt="Estácio" /><span>Estácio</span></div>
         </div>
+
       </div>
     </section>
 
@@ -860,10 +902,11 @@
           <div class="rule on-dark"></div>
           <p class="lead">Equipamentos e soluções que sustentam a prática profissional na AMET.</p>
         </div>
-        <div class="row gap-lg grow center" style="height:auto;">
-          <div class="logo-cell logo-cell-dark" style="width:300px;height:160px;"><img src="./img/partner-10.png" alt="PHD" /></div>
-          <div class="logo-cell logo-cell-dark" style="width:300px;height:160px;"><img src="./img/partner-11.png" alt="Siemens" /></div>
+        <div class="row gap-lg grow center" style="align-items:center;justify-content:center;flex-wrap:wrap;">
+          <div class="logo-cell logo-cell-dark" style="width:380px;min-height:220px;"><img src="./img/partner-phd.png" alt="PHD" style="max-height:96px;" /><span>PHD</span></div>
+          <div class="logo-cell" style="width:380px;min-height:220px;background:#fff;"><img src="./img/partner-siemens.png" alt="Siemens Healthineers" style="max-height:96px;" /><span>Siemens Healthineers</span></div>
         </div>
+
       </div>
     </section>
 
