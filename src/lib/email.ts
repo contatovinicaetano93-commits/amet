@@ -5,7 +5,7 @@ import { siteContent } from "@/lib/content";
 import { isAluno, type CandidaturaInput } from "@/lib/schemas";
 
 function buildSubject(nomeCompleto: string): string {
-  return `Inscrições AMET 2027 — ${nomeCompleto}`;
+  return `Inscrições AMET 2026 — ${nomeCompleto}`;
 }
 
 function formatCandidaturaBody(data: CandidaturaInput): string {

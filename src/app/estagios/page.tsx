@@ -5,9 +5,9 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { estagiosInscricaoContent } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "Inscrição Estágios 2027 | AMET Saúde & Estética",
+  title: "Inscrição Estágios 2026 | AMET Saúde & Estética",
   description:
-    "Candidate-se ao programa de estágios da AMET Saúde & Estética. Vagas limitadas para 2027.",
+    "Candidate-se ao programa de estágios da AMET Saúde & Estética. Vagas limitadas para 2026.",
 };
 
 export default function EstagiosInscricaoPage() {

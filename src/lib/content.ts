@@ -156,9 +156,9 @@ export const estagiosContent = {
         "Oportunidades nas unidades Liberdade, CTA e Guarulhos, conforme disponibilidade.",
     },
     {
-      title: "Foco em 2027",
+      title: "Foco em 2026",
       description:
-        "Processo seletivo aberto para garantir sua vaga no ciclo de estágios de 2027.",
+        "Processo seletivo aberto para garantir sua vaga no ciclo de estágios de 2026.",
     },
   ],
   areas: [
@@ -181,12 +181,12 @@ export const estagiosContent = {
         "Atendimento estético assistido em clínicas equipadas, sob supervisão de um Biomédico.",
     },
   ],
-  cta: "Garanta sua vaga para 2027",
+  cta: "Garanta sua vaga para 2026",
   ctaHref: "/estagios",
 };
 
 export const estagiosInscricaoContent = {
-  title: "Inscrição para Estágios 2027",
+  title: "Inscrição para Estágios 2026",
   subtitle:
     "Preencha o formulário abaixo para candidatar-se ao programa de estágios da AMET.",
   backLabel: "Voltar para a página inicial",
