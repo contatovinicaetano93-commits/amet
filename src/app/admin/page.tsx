@@ -92,7 +92,7 @@ export default function AdminPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `candidaturas-amet-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `candidaturas-amet-${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -176,7 +176,7 @@ export default function AdminPage() {
             disabled={exporting || candidaturas.length === 0}
             className="rounded-full bg-amet-blue px-4 py-2 text-sm font-medium text-white hover:bg-amet-indigo disabled:opacity-50"
           >
-            {exporting ? "Gerando…" : "Baixar planilha (CSV)"}
+            {exporting ? "Gerando…" : "Baixar planilha (Excel)"}
           </button>
           <button
             type="button"
