@@ -40,9 +40,6 @@ function ensureSchema(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_candidaturas_area_periodo
         ON candidaturas (area, periodo)
         WHERE tipo_perfil = 'aluno';
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_candidaturas_cpf_area_unique
-        ON candidaturas (cpf, area)
-        WHERE tipo_perfil = 'aluno';
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_sent BOOLEAN NOT NULL DEFAULT false;
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_error TEXT;
       CREATE TABLE IF NOT EXISTS admin_access_log (
@@ -54,7 +51,19 @@ function ensureSchema(): Promise<void> {
       );
       CREATE INDEX IF NOT EXISTS idx_admin_access_log_ip_created
         ON admin_access_log (ip, created_at);
-    `).then(() => undefined);
+    `).then(async () => {
+      await getPool().query(`DROP INDEX IF EXISTS idx_candidaturas_cpf_area_unique`);
+      try {
+        await getPool().query(`
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_candidaturas_cpf_unique
+          ON candidaturas (cpf)
+        `);
+      } catch (error) {
+        // Se já existirem CPFs duplicados na base antiga, a regra continua
+        // enforced no createCandidatura; o índice pode ser criado depois da limpeza.
+        console.error("[db] Não foi possível criar índice único de CPF:", error);
+      }
+    });
   }
   return schemaReady;
 }
@@ -239,6 +248,22 @@ export async function createCandidatura(
   try {
     await client.query("BEGIN");
 
+    // Serializes concurrent submissions for the same CPF (1 cadastro por CPF).
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`cpf:${input.cpf}`]);
+
+    const existing = await client.query<{ id: string }>(
+      `SELECT id FROM candidaturas WHERE cpf = $1 LIMIT 1`,
+      [input.cpf],
+    );
+    if (existing.rows[0]) {
+      await client.query("ROLLBACK");
+      return {
+        ok: false,
+        error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
+        code: "DUPLICATE",
+      };
+    }
+
     if (isAluno(input)) {
       const area = input.area;
       const periodo = input.periodo as PeriodoCode;
@@ -298,7 +323,7 @@ export async function createCandidatura(
     if (pgError.code === "23505") {
       return {
         ok: false,
-        error: "Você já possui uma candidatura nesta área com este CPF.",
+        error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
         code: "DUPLICATE",
       };
     }

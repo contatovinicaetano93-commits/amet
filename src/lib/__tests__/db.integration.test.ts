@@ -43,7 +43,7 @@ describe("createCandidatura concurrency", () => {
     expect(areaFull).toBe(5);
   }, 30_000);
 
-  it("never lets the same CPF register twice in the same area under concurrent submission", async () => {
+  it("never lets the same CPF register twice under concurrent submission", async () => {
     const N = 10;
     const results = await Promise.all(
       Array.from({ length: N }, () =>
@@ -67,5 +67,35 @@ describe("createCandidatura concurrency", () => {
 
     expect(ok).toBe(1);
     expect(duplicate).toBe(N - 1);
+  }, 30_000);
+
+  it("blocks a second registration with the same CPF even as nao_aluno", async () => {
+    const cpf = fakeCpf(3, 1);
+    const first = await createCandidatura({
+      tipoPerfil: "nao_aluno",
+      nomeCompleto: "TESTE CPF UNICO NAO ALUNO",
+      rgm: "",
+      cpf,
+      telefone: "11999999999",
+      email: "teste-unico-1@example.com",
+    });
+    expect(first.ok).toBe(true);
+
+    const second = await createCandidatura({
+      tipoPerfil: "aluno",
+      nomeCompleto: "TESTE CPF UNICO ALUNO",
+      rgm: "TESTE-UNICO",
+      cpf,
+      telefone: "11988887777",
+      email: "teste-unico-2@example.com",
+      unidade: "liberdade",
+      area: "IMG",
+      periodo: "noite",
+      dias: ["qua"],
+    });
+    expect(second.ok).toBe(false);
+    if (!second.ok) {
+      expect(second.code).toBe("DUPLICATE");
+    }
   }, 30_000);
 });

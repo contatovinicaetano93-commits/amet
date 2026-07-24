@@ -40,7 +40,8 @@ export async function POST(request: Request) {
     const result = await createCandidatura(parsed.data);
 
     if (!result.ok) {
-      const status = result.code === "AREA_FULL" ? 409 : 400;
+      const status =
+        result.code === "AREA_FULL" || result.code === "DUPLICATE" ? 409 : 400;
       return NextResponse.json({ error: result.error, code: result.code }, { status });
     }
 
