@@ -88,11 +88,21 @@ export default function AdminPage() {
         setError("Não foi possível gerar a planilha.");
         return;
       }
-      const blob = await response.blob();
+      const contentType =
+        response.headers.get("content-type") ??
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      const disposition = response.headers.get("content-disposition") ?? "";
+      const filenameMatch = /filename="?([^"]+)"?/i.exec(disposition);
+      const filename =
+        filenameMatch?.[1] ??
+        `candidaturas-amet-${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+      const buffer = await response.arrayBuffer();
+      const blob = new Blob([buffer], { type: contentType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `candidaturas-amet-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.download = filename.endsWith(".xlsx") ? filename : `${filename}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
