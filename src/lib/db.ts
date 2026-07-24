@@ -198,6 +198,15 @@ export async function getCandidaturaById(id: string): Promise<CandidaturaRecord 
   return result.rows[0] ? rowToRecord(result.rows[0]) : null;
 }
 
+export async function candidaturaExistsByCpf(cpf: string): Promise<boolean> {
+  await ensureSchema();
+  const result = await getPool().query<{ exists: boolean }>(
+    `SELECT EXISTS(SELECT 1 FROM candidaturas WHERE cpf = $1) AS exists`,
+    [cpf],
+  );
+  return result.rows[0]?.exists ?? false;
+}
+
 export async function updateEmailStatus(
   id: string,
   sent: boolean,

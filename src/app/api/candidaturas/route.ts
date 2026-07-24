@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { checkAdminAccess } from "@/lib/adminAuth";
-import { createCandidatura, listCandidaturas, updateEmailStatus } from "@/lib/db";
+import {
+  candidaturaExistsByCpf,
+  createCandidatura,
+  listCandidaturas,
+  updateEmailStatus,
+} from "@/lib/db";
 import { sendCandidaturaEmailWithRetry } from "@/lib/email";
 import { isParticipanteCpf } from "@/lib/participantes";
 import { candidaturaSchema } from "@/lib/schemas";
@@ -24,6 +29,16 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message ?? "Dados inválidos";
       return NextResponse.json({ error: firstError }, { status: 400 });
+    }
+
+    if (await candidaturaExistsByCpf(parsed.data.cpf)) {
+      return NextResponse.json(
+        {
+          error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
+          code: "DUPLICATE",
+        },
+        { status: 409 },
+      );
     }
 
     if (parsed.data.tipoPerfil === "aluno" && !isParticipanteCpf(parsed.data.cpf)) {
