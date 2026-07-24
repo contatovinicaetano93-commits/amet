@@ -314,25 +314,14 @@ export function ApplicationForm() {
         aria-live="polite"
         className="rounded-3xl border border-amet-blue/20 bg-amet-blue/5 p-8 text-center"
       >
-        <h2 className="text-2xl font-semibold text-amet-blue">
-          {isNaoAluno ? "Recebemos seus dados!" : "Inscrição registrada!"}
-        </h2>
+        <h2 className="text-2xl font-semibold text-amet-blue">Cadastro realizado</h2>
         <p className="mt-3 text-amet-indigo/70">
-          {isNaoAluno
-            ? "A equipe da AMET entrará em contato em breve."
-            : "Recebemos sua candidatura. A AMET entrará em contato pelo e-mail informado."}
+          Seu cadastro foi realizado com sucesso, aguarde que entraremos em contato. Obrigado.
         </p>
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <button
-            type="button"
-            onClick={() => setSuccess(false)}
-            className="rounded-full bg-amet-purple-contrast px-6 py-3 text-sm font-semibold text-amet-white"
-          >
-            Nova inscrição
-          </button>
           <Link
             href="/#estagios"
-            className="rounded-full border border-amet-blue/20 px-6 py-3 text-sm font-semibold text-amet-blue transition hover:border-amet-blue"
+            className="rounded-full bg-amet-purple-contrast px-6 py-3 text-sm font-semibold text-amet-white"
           >
             Voltar para a página inicial
           </Link>
