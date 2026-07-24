@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { candidaturaAlunoSchema, candidaturaNaoAlunoSchema, candidaturaSchema } from "@/lib/schemas";
+import {
+  candidaturaAlunoSchema,
+  candidaturaNaoAlunoSchema,
+  candidaturaSchema,
+  diasSelectionError,
+} from "@/lib/schemas";
 
 const VALID_CPF = "111.444.777-35"; // known-valid check-digit test CPF
 
@@ -15,7 +20,7 @@ function baseAluno(overrides: Record<string, unknown> = {}) {
     unidade: "ipiranga",
     area: "AC",
     periodo: "manha",
-    dias: ["seg"],
+    dias: ["seg", "ter"],
     ...overrides,
   };
 }
@@ -33,7 +38,12 @@ describe("candidaturaAlunoSchema", () => {
 
   it("rejects an area not offered at the chosen unidade (Imagenologia at Guarulhos)", () => {
     const result = candidaturaAlunoSchema.safeParse(
-      baseAluno({ unidade: "guarulhos", area: "IMG", periodo: "manha", dias: ["seg"] }),
+      baseAluno({
+        unidade: "guarulhos",
+        area: "IMG",
+        periodo: "manha",
+        dias: ["seg", "ter"],
+      }),
     );
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -43,7 +53,7 @@ describe("candidaturaAlunoSchema", () => {
 
   it("rejects a turno not offered by the area (Hematologia has no tarde)", () => {
     const result = candidaturaAlunoSchema.safeParse(
-      baseAluno({ area: "HEM", periodo: "tarde", dias: ["seg"] }),
+      baseAluno({ area: "HEM", periodo: "tarde", dias: ["seg", "ter"] }),
     );
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -72,6 +82,14 @@ describe("candidaturaAlunoSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("rejects a single weekday (only Sábado may be alone)", () => {
+    const result = candidaturaAlunoSchema.safeParse(baseAluno({ dias: ["seg"] }));
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "dias")).toBe(true);
+    }
+  });
+
   it("rejects more than 2 dias", () => {
     const result = candidaturaAlunoSchema.safeParse(
       baseAluno({ dias: ["seg", "ter", "qua"] }),
@@ -82,6 +100,15 @@ describe("candidaturaAlunoSchema", () => {
   it("accepts exactly 2 dias", () => {
     const result = candidaturaAlunoSchema.safeParse(baseAluno({ dias: ["seg", "ter"] }));
     expect(result.success).toBe(true);
+  });
+
+  it("diasSelectionError encodes the 2-day / Saturday-only rule", () => {
+    expect(diasSelectionError([])).toBeTruthy();
+    expect(diasSelectionError(["seg"])).toMatch(/2 dias/i);
+    expect(diasSelectionError(["sab"])).toBeNull();
+    expect(diasSelectionError(["seg", "ter"])).toBeNull();
+    expect(diasSelectionError(["seg", "ter", "qua"])).toMatch(/máximo 2/i);
+    expect(diasSelectionError(["sab", "seg"])).toMatch(/Sábado/i);
   });
 
   it("requires a non-empty RGM for alunos", () => {

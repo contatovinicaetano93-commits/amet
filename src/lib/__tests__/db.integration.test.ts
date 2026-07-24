@@ -31,7 +31,7 @@ describe("createCandidatura concurrency", () => {
           unidade: "ipiranga",
           area: "EST",
           periodo: "manha",
-          dias: ["seg"],
+          dias: ["seg", "ter"],
         }),
       ),
     );
@@ -57,7 +57,7 @@ describe("createCandidatura concurrency", () => {
           unidade: "liberdade",
           area: "AC",
           periodo: "tarde",
-          dias: ["ter"],
+          dias: ["ter", "qua"],
         }),
       ),
     );
@@ -91,7 +91,7 @@ describe("createCandidatura concurrency", () => {
       unidade: "liberdade",
       area: "IMG",
       periodo: "noite",
-      dias: ["qua"],
+      dias: ["qua", "qui"],
     });
     expect(second.ok).toBe(false);
     if (!second.ok) {

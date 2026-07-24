@@ -39,8 +39,32 @@ const alunoFields = z.object({
   unidade: z.enum(unidadeCodes, { message: "Selecione uma unidade" }),
   area: z.enum(AREA_CODES, { message: "Selecione uma área" }),
   periodo: z.enum(periodoCodes, { message: "Selecione um turno" }),
-  dias: z.array(z.enum(diaCodes)).min(1, "Selecione ao menos um dia").max(2, "Selecione no máximo 2 dias"),
+  dias: z
+    .array(z.enum(diaCodes))
+    .min(1, "Selecione os dias de estágio")
+    .max(2, "Selecione no máximo 2 dias"),
 });
+
+/** Dias: exatamente 2 (úteis), ou apenas Sábado sozinho. Nunca 1 útil nem 3+. */
+export function diasSelectionError(dias: readonly string[]): string | null {
+  if (dias.length === 0) {
+    return "Selecione os dias de estágio";
+  }
+  const hasSabado = dias.includes("sab");
+  if (hasSabado) {
+    if (dias.length !== 1) {
+      return "Sábado não pode ser combinado com outros dias";
+    }
+    return null;
+  }
+  if (dias.length === 1) {
+    return "Selecione 2 dias — apenas Sábado pode ser escolhido sozinho";
+  }
+  if (dias.length > 2) {
+    return "Selecione no máximo 2 dias";
+  }
+  return null;
+}
 
 export const candidaturaAlunoSchema = personalDataSchema
   .extend({ rgm: z.string().trim().min(1, "Informe seu RGM").max(20) })
@@ -79,10 +103,11 @@ export const candidaturaAlunoSchema = personalDataSchema
       }
     }
 
-    if (data.dias.includes("sab") && data.dias.length > 1) {
+    const diasError = diasSelectionError(data.dias);
+    if (diasError) {
       ctx.addIssue({
         code: "custom",
-        message: "Sábado não pode ser combinado com outros dias",
+        message: diasError,
         path: ["dias"],
       });
     }

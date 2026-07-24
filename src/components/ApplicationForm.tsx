@@ -22,7 +22,12 @@ import {
   type UnidadeCode,
 } from "@/lib/constants";
 import type { AreaVacancy } from "@/lib/db";
-import { candidaturaSchema, cpfLookupSchema, personalDataSchema } from "@/lib/schemas";
+import {
+  candidaturaSchema,
+  cpfLookupSchema,
+  diasSelectionError,
+  personalDataSchema,
+} from "@/lib/schemas";
 import { formatCpf, formatPhone, stripDigits } from "@/lib/validators";
 
 type FormState = {
@@ -282,8 +287,9 @@ export function ApplicationForm() {
         setErrors({ periodo: "Selecione um turno" });
         return;
       }
-      if (form.dias.length === 0) {
-        setErrors({ dias: "Selecione ao menos um dia" });
+      const diasError = diasSelectionError(form.dias);
+      if (diasError) {
+        setErrors({ dias: diasError });
         return;
       }
       setErrors({});
@@ -506,7 +512,8 @@ export function ApplicationForm() {
             {form.periodo && (
               <div className="space-y-3">
                 <p className="text-sm text-amet-indigo/70">
-                  Selecione até 2 dias — ou apenas Sábado, sozinho.
+                  Escolha exatamente 2 dias — ou apenas Sábado (sozinho). Não é
+                  possível escolher 1 dia útil nem 3 dias.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {availableDias.map((dia) => {
