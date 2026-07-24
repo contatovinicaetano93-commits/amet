@@ -5,6 +5,12 @@ import { useCallback, useEffect, useState } from "react";
 import { AREAS, DIAS, PERIODOS, UNIDADES } from "@/lib/constants";
 import type { CandidaturaRecord } from "@/lib/db";
 import { isAluno } from "@/lib/schemas";
+import {
+  buildCandidaturasXlsxFilename,
+  forceXlsxFilename,
+  isXlsxBuffer,
+  XLSX_MIME,
+} from "@/lib/xlsxDownload";
 
 const STORAGE_KEY = "amet-admin-key";
 
@@ -79,30 +85,37 @@ export default function AdminPage() {
 
   async function handleExport() {
     setExporting(true);
+    setError("");
     try {
-      const response = await fetch("/api/candidaturas/export", {
-        headers: { "x-admin-key": adminKey },
+      const response = await fetch("/api/candidaturas/export?format=xlsx", {
+        headers: {
+          "x-admin-key": adminKey,
+          Accept: XLSX_MIME,
+        },
         cache: "no-store",
       });
       if (!response.ok) {
         setError("Não foi possível gerar a planilha.");
         return;
       }
-      const contentType =
-        response.headers.get("content-type") ??
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-      const disposition = response.headers.get("content-disposition") ?? "";
-      const filenameMatch = /filename="?([^"]+)"?/i.exec(disposition);
-      const filename =
-        filenameMatch?.[1] ??
-        `candidaturas-amet-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
       const buffer = await response.arrayBuffer();
-      const blob = new Blob([buffer], { type: contentType });
+      if (!isXlsxBuffer(buffer)) {
+        setError(
+          "A planilha gerada é inválida. Atualize a página (Ctrl+F5) e tente de novo.",
+        );
+        return;
+      }
+
+      // Force XLSX MIME + filename. Some browsers rename by Blob type / old
+      // Content-Disposition and would save real Excel bytes as ".csv".
+      const filename = forceXlsxFilename(buildCandidaturasXlsxFilename());
+      const blob = new Blob([buffer], { type: XLSX_MIME });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename.endsWith(".xlsx") ? filename : `${filename}.xlsx`;
+      a.download = filename;
+      a.rel = "noopener";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -186,7 +199,7 @@ export default function AdminPage() {
             disabled={exporting || candidaturas.length === 0}
             className="rounded-full bg-amet-blue px-4 py-2 text-sm font-medium text-white hover:bg-amet-indigo disabled:opacity-50"
           >
-            {exporting ? "Gerando…" : "Baixar planilha (Excel)"}
+            {exporting ? "Gerando…" : "Baixar Excel (.xlsx)"}
           </button>
           <button
             type="button"

@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { checkAdminAccess } from "@/lib/adminAuth";
 import { listCandidaturas } from "@/lib/db";
 import { buildCandidaturasWorkbook } from "@/lib/exportCandidaturas";
+import {
+  buildCandidaturasXlsxFilename,
+  XLSX_MIME,
+} from "@/lib/xlsxDownload";
 
 export const dynamic = "force-dynamic";
 
@@ -14,15 +18,17 @@ export async function GET(request: Request) {
 
   const candidaturas = await listCandidaturas();
   const buffer = await buildCandidaturasWorkbook(candidaturas);
-  const filename = `candidaturas-amet-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  const filename = buildCandidaturasXlsxFilename();
+  const body = new Uint8Array(buffer);
 
-  return new NextResponse(new Uint8Array(buffer), {
+  return new NextResponse(body, {
     status: 200,
     headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-      "Cache-Control": "no-store",
+      "Content-Type": XLSX_MIME,
+      "Content-Disposition": `attachment; filename="${filename}"; filename*=UTF-8''${filename}`,
+      "Content-Length": String(body.byteLength),
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }
