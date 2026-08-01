@@ -74,7 +74,7 @@ export const VAGAS: Record<
   },
   HEM: {
     manha: { guarulhos: 0, ipiranga: 0, liberdade: 25 },
-    noite: { guarulhos: 0, ipiranga: 0, liberdade: 25 },
+    noite: { guarulhos: 0, ipiranga: 0, liberdade: 35 },
   },
   IMG: {
     manha: { guarulhos: 0, ipiranga: 60, liberdade: 60 },

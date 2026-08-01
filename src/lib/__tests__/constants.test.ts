@@ -15,6 +15,7 @@ describe("vagaLimit / disponibilidade por unidade", () => {
     expect(vagaLimit("AC", "liberdade", "tarde")).toBe(60);
     expect(vagaLimit("EST", "liberdade", "tarde")).toBe(30);
     expect(vagaLimit("HEM", "liberdade", "manha")).toBe(25);
+    expect(vagaLimit("HEM", "liberdade", "noite")).toBe(35);
     expect(vagaLimit("HEM", "ipiranga", "manha")).toBe(0);
     expect(vagaLimit("IMG", "guarulhos", "noite")).toBe(0);
     expect(vagaLimit("IMG", "ipiranga", "noite")).toBe(60);
@@ -45,7 +46,7 @@ describe("vagaLimit / disponibilidade por unidade", () => {
   it("sums area vacancies inside a unit", () => {
     expect(totalVagasAreaNaUnidade("AC", "liberdade")).toBe(180);
     expect(totalVagasAreaNaUnidade("EST", "liberdade")).toBe(150);
-    expect(totalVagasAreaNaUnidade("HEM", "liberdade")).toBe(50);
+    expect(totalVagasAreaNaUnidade("HEM", "liberdade")).toBe(60);
     expect(totalVagasAreaNaUnidade("IMG", "guarulhos")).toBe(0);
   });
 });
