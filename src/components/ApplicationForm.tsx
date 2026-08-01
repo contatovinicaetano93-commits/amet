@@ -15,6 +15,9 @@ import {
   UNIDADES,
   areasDisponiveis,
   diasDisponiveis,
+  periodosDisponiveis,
+  totalVagasAreaNaUnidade,
+  vagaLimit,
   type AreaCode,
   type DiaCode,
   type PeriodoCode,
@@ -78,7 +81,10 @@ export function ApplicationForm() {
     [form.unidade],
   );
 
-  const selectedAreaConfig = form.area ? AREAS[form.area] : null;
+  const availablePeriodos = useMemo(() => {
+    if (!form.area || !form.unidade) return [] as PeriodoCode[];
+    return periodosDisponiveis(form.area, form.unidade);
+  }, [form.area, form.unidade]);
 
   const availableDias = useMemo(() => {
     if (!form.area || !form.periodo) return [] as DiaCode[];
@@ -86,23 +92,30 @@ export function ApplicationForm() {
   }, [form.area, form.periodo]);
 
   const fetchVagas = useCallback(async () => {
+    if (!form.unidade) {
+      setVagas([]);
+      return;
+    }
     setLoadingVagas(true);
     try {
-      const response = await fetch("/api/vagas", { cache: "no-store" });
+      const response = await fetch(
+        `/api/vagas?unidade=${encodeURIComponent(form.unidade)}`,
+        { cache: "no-store" },
+      );
       if (!response.ok) return;
       const data = (await response.json()) as { areas: AreaVacancy[] };
       setVagas(data.areas);
     } finally {
       setLoadingVagas(false);
     }
-  }, []);
+  }, [form.unidade]);
 
   useEffect(() => {
-    if (!isAluno || step < 4) return;
+    if (!isAluno || step < 4 || !form.unidade) return;
     void fetchVagas();
     const interval = setInterval(() => void fetchVagas(), POLLING_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [isAluno, step, fetchVagas]);
+  }, [isAluno, step, form.unidade, fetchVagas]);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((c) => ({ ...c, [key]: value }));
@@ -269,6 +282,9 @@ export function ApplicationForm() {
         setErrors({ unidade: "Selecione uma unidade" });
         return;
       }
+      updateField("area", "");
+      updateField("periodo", "");
+      updateField("dias", []);
       setErrors({});
       setStep(4);
       return;
@@ -278,6 +294,13 @@ export function ApplicationForm() {
         setErrors({ area: "Selecione uma área" });
         return;
       }
+      const vacancy = vagas.find((v) => v.code === form.area);
+      if (vacancy?.full) {
+        setErrors({ area: "Esta área está com vagas esgotadas nesta unidade" });
+        return;
+      }
+      updateField("periodo", "");
+      updateField("dias", []);
       setErrors({});
       setStep(5);
       return;
@@ -285,6 +308,21 @@ export function ApplicationForm() {
     if (step === 5) {
       if (!form.periodo) {
         setErrors({ periodo: "Selecione um turno" });
+        return;
+      }
+      if (
+        form.area &&
+        form.unidade &&
+        !periodosDisponiveis(form.area, form.unidade).includes(form.periodo)
+      ) {
+        setErrors({ periodo: "Turno indisponível para esta área nesta unidade" });
+        return;
+      }
+      const periodoVacancy = vagas
+        .find((v) => v.code === form.area)
+        ?.periodos.find((p) => p.periodo === form.periodo);
+      if (periodoVacancy?.full) {
+        setErrors({ periodo: "Vagas esgotadas neste turno" });
         return;
       }
       const diasError = diasSelectionError(form.dias);
@@ -414,7 +452,23 @@ export function ApplicationForm() {
                   key={u.code}
                   type="button"
                   aria-pressed={form.unidade === u.code}
-                  onClick={() => updateField("unidade", u.code)}
+                  onClick={() => {
+                    setForm((current) => ({
+                      ...current,
+                      unidade: u.code,
+                      area: "",
+                      periodo: "",
+                      dias: [],
+                    }));
+                    setErrors((current) => {
+                      const next = { ...current };
+                      delete next.unidade;
+                      delete next.area;
+                      delete next.periodo;
+                      delete next.dias;
+                      return next;
+                    });
+                  }}
                   className={`rounded-2xl border px-4 py-4 font-medium transition ${
                     form.unidade === u.code
                       ? "border-amet-purple bg-amet-purple/10 text-amet-purple"
@@ -432,7 +486,9 @@ export function ApplicationForm() {
         {step === 4 && (
           <div className="space-y-4">
             <p className="text-sm text-amet-indigo/70">
-              Escolha a área de estágio. Áreas totalmente esgotadas não permitem candidatura.
+              Escolha a área disponível na unidade{" "}
+              {UNIDADES.find((u) => u.code === form.unidade)?.label}. Vagas variam
+              por turno.
             </p>
             {loadingVagas ? (
               <p className="text-sm text-amet-indigo/70">Carregando vagas...</p>
@@ -443,6 +499,12 @@ export function ApplicationForm() {
                   const vacancy = vagas.find((v) => v.code === code);
                   const disabled = vacancy?.full ?? false;
                   const selected = form.area === code;
+                  const total = form.unidade
+                    ? totalVagasAreaNaUnidade(code, form.unidade)
+                    : 0;
+                  const available =
+                    vacancy?.periodos.reduce((sum, p) => sum + p.available, 0) ??
+                    total;
                   return (
                     <button
                       key={code}
@@ -460,7 +522,9 @@ export function ApplicationForm() {
                     >
                       <p className="text-lg font-bold text-amet-indigo">{config.label}</p>
                       <p className="mt-1 text-sm text-amet-indigo/60">
-                        {disabled ? "Vagas esgotadas" : "20 vagas por turno"}
+                        {disabled
+                          ? "Vagas esgotadas nesta unidade"
+                          : `${available} de ${total} vagas nesta unidade`}
                       </p>
                     </button>
                   );
@@ -471,15 +535,22 @@ export function ApplicationForm() {
           </div>
         )}
 
-        {step === 5 && selectedAreaConfig && (
+        {step === 5 && form.area && form.unidade && (
           <div className="space-y-6">
             <div className="space-y-3">
-              <p className="text-sm text-amet-indigo/70">Escolha o turno.</p>
+              <p className="text-sm text-amet-indigo/70">
+                Escolha o turno disponível para {AREAS[form.area].label} em{" "}
+                {UNIDADES.find((u) => u.code === form.unidade)?.label}.
+              </p>
               <div className="grid gap-3 sm:grid-cols-3">
-                {selectedAreaConfig.periodos.map((periodo) => {
+                {availablePeriodos.map((periodo) => {
                   const label = PERIODOS.find((p) => p.code === periodo)?.label ?? periodo;
                   const areaVacancy = vagas.find((v) => v.code === form.area);
                   const periodoVacancy = areaVacancy?.periodos.find((p) => p.periodo === periodo);
+                  const total =
+                    periodoVacancy?.total ??
+                    vagaLimit(form.area as AreaCode, form.unidade as UnidadeCode, periodo);
+                  const available = periodoVacancy?.available ?? total;
                   const disabled = periodoVacancy?.full ?? false;
                   const selected = form.periodo === periodo;
                   return (
@@ -501,7 +572,11 @@ export function ApplicationForm() {
                       }`}
                     >
                       {label}
-                      {disabled && <span className="block text-xs">Esgotado</span>}
+                      <span className="mt-1 block text-xs font-normal opacity-80">
+                        {disabled
+                          ? "Esgotado"
+                          : `${available} de ${total} vagas`}
+                      </span>
                     </button>
                   );
                 })}

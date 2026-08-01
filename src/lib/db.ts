@@ -1,6 +1,14 @@
 import { Pool } from "pg";
 
-import { AREAS, type AreaCode, type PeriodoCode } from "@/lib/constants";
+import {
+  AREAS,
+  areasDisponiveis,
+  periodosDisponiveis,
+  vagaLimit,
+  type AreaCode,
+  type PeriodoCode,
+  type UnidadeCode,
+} from "@/lib/constants";
 import { isAluno, type CandidaturaInput } from "@/lib/schemas";
 
 export type CandidaturaRecord = CandidaturaInput & {
@@ -39,6 +47,9 @@ function ensureSchema(): Promise<void> {
       );
       CREATE INDEX IF NOT EXISTS idx_candidaturas_area_periodo
         ON candidaturas (area, periodo)
+        WHERE tipo_perfil = 'aluno';
+      CREATE INDEX IF NOT EXISTS idx_candidaturas_area_unidade_periodo
+        ON candidaturas (area, unidade, periodo)
         WHERE tipo_perfil = 'aluno';
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_sent BOOLEAN NOT NULL DEFAULT false;
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_error TEXT;
@@ -127,25 +138,31 @@ export type AreaVacancy = {
   full: boolean;
 };
 
-async function countUsage(area: AreaCode, periodo: PeriodoCode): Promise<number> {
+async function countUsage(
+  area: AreaCode,
+  unidade: UnidadeCode,
+  periodo: PeriodoCode,
+): Promise<number> {
   await ensureSchema();
   const result = await getPool().query<{ count: string }>(
     `SELECT COUNT(*) AS count FROM candidaturas
-     WHERE tipo_perfil = 'aluno' AND area = $1 AND periodo = $2`,
-    [area, periodo],
+     WHERE tipo_perfil = 'aluno' AND area = $1 AND unidade = $2 AND periodo = $3`,
+    [area, unidade, periodo],
   );
   return Number(result.rows[0]?.count ?? 0);
 }
 
-export async function getVacancyCounts(): Promise<AreaVacancy[]> {
-  const entries = Object.entries(AREAS) as [AreaCode, (typeof AREAS)[AreaCode]][];
+export async function getVacancyCounts(
+  unidade: UnidadeCode,
+): Promise<AreaVacancy[]> {
+  const areas = areasDisponiveis(unidade);
 
   return Promise.all(
-    entries.map(async ([code, config]) => {
+    areas.map(async (code) => {
       const periodos: PeriodoVacancy[] = await Promise.all(
-        config.periodos.map(async (periodo) => {
-          const used = await countUsage(code, periodo);
-          const total = config.limit;
+        periodosDisponiveis(code, unidade).map(async (periodo) => {
+          const used = await countUsage(code, unidade, periodo);
+          const total = vagaLimit(code, unidade, periodo);
           return {
             periodo,
             total,
@@ -158,9 +175,9 @@ export async function getVacancyCounts(): Promise<AreaVacancy[]> {
 
       return {
         code,
-        label: config.label,
+        label: AREAS[code].label,
         periodos,
-        full: periodos.every((p) => p.full),
+        full: periodos.length > 0 && periodos.every((p) => p.full),
       };
     }),
   );
@@ -168,16 +185,17 @@ export async function getVacancyCounts(): Promise<AreaVacancy[]> {
 
 export async function getPeriodoVacancy(
   area: AreaCode,
+  unidade: UnidadeCode,
   periodo: PeriodoCode,
 ): Promise<PeriodoVacancy> {
-  const used = await countUsage(area, periodo);
-  const total = AREAS[area].limit;
+  const used = await countUsage(area, unidade, periodo);
+  const total = vagaLimit(area, unidade, periodo);
   return {
     periodo,
     total,
     used,
     available: Math.max(total - used, 0),
-    full: used >= total,
+    full: total <= 0 || used >= total,
   };
 }
 
@@ -265,28 +283,38 @@ export async function createCandidatura(
     }
 
     if (isAluno(input)) {
-      const area = input.area;
+      const area = input.area as AreaCode;
+      const unidade = input.unidade as UnidadeCode;
       const periodo = input.periodo as PeriodoCode;
+      const total = vagaLimit(area, unidade, periodo);
 
-      // Serializes concurrent submissions for the same area+turno so the vacancy
-      // check and insert below are atomic together (prevents overbooking when many
-      // students submit to the same slot at once). Transaction-scoped, so it's
-      // released automatically on COMMIT/ROLLBACK even under connection pooling.
-      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`${area}:${periodo}`]);
+      if (total <= 0) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error: "Esta combinação de área, unidade e turno não está disponível.",
+          code: "AREA_FULL",
+        };
+      }
+
+      // Serializes concurrent submissions for the same area+unidade+turno so the
+      // vacancy check and insert below are atomic together.
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+        `${area}:${unidade}:${periodo}`,
+      ]);
 
       const usedResult = await client.query<{ count: string }>(
         `SELECT COUNT(*) AS count FROM candidaturas
-         WHERE tipo_perfil = 'aluno' AND area = $1 AND periodo = $2`,
-        [area, periodo],
+         WHERE tipo_perfil = 'aluno' AND area = $1 AND unidade = $2 AND periodo = $3`,
+        [area, unidade, periodo],
       );
       const used = Number(usedResult.rows[0]?.count ?? 0);
-      const total = AREAS[area].limit;
 
       if (used >= total) {
         await client.query("ROLLBACK");
         return {
           ok: false,
-          error: "Vagas esgotadas para esta área neste turno.",
+          error: "Vagas esgotadas para esta área nesta unidade e turno.",
           code: "AREA_FULL",
         };
       }

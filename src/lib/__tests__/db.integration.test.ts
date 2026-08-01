@@ -17,8 +17,9 @@ afterAll(async () => {
 });
 
 describe("createCandidatura concurrency", () => {
-  it("never lets concurrent submissions exceed the area/turno vacancy limit", async () => {
-    const N = 25; // EST/manha limit is 20
+  it("never lets concurrent submissions exceed the area/unidade/turno vacancy limit", async () => {
+    // EST/tarde/liberdade limit is 30 in the official vacancy matrix
+    const N = 35;
     const results = await Promise.all(
       Array.from({ length: N }, (_, i) =>
         createCandidatura({
@@ -28,9 +29,9 @@ describe("createCandidatura concurrency", () => {
           cpf: fakeCpf(1, i),
           telefone: "11999999999",
           email: `teste-vagas-${i}@example.com`,
-          unidade: "ipiranga",
+          unidade: "liberdade",
           area: "EST",
-          periodo: "manha",
+          periodo: "tarde",
           dias: ["seg", "ter"],
         }),
       ),
@@ -39,9 +40,9 @@ describe("createCandidatura concurrency", () => {
     const ok = results.filter((r) => r.ok).length;
     const areaFull = results.filter((r) => !r.ok && r.code === "AREA_FULL").length;
 
-    expect(ok).toBe(20);
+    expect(ok).toBe(30);
     expect(areaFull).toBe(5);
-  }, 30_000);
+  }, 60_000);
 
   it("never lets the same CPF register twice under concurrent submission", async () => {
     const N = 10;

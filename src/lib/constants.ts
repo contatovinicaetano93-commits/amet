@@ -20,29 +20,21 @@ export const AREAS = {
   AC: {
     code: "AC",
     label: "Análises Clínicas",
-    limit: 20,
-    periodos: ["manha", "tarde", "noite"] as const,
     dias: ["seg", "ter", "qua", "qui", "sab"] as const,
   },
   HEM: {
     code: "HEM",
     label: "Hematologia",
-    limit: 20,
-    periodos: ["manha", "noite"] as const,
     dias: ["seg", "ter", "qua", "qui"] as const,
   },
   IMG: {
     code: "IMG",
     label: "Imagenologia",
-    limit: 20,
-    periodos: ["manha", "noite"] as const,
     dias: ["seg", "ter", "qua", "qui"] as const,
   },
   EST: {
     code: "EST",
     label: "Estética",
-    limit: 20,
-    periodos: ["manha", "noite"] as const,
     dias: ["seg", "ter", "qua", "qui", "sab"] as const,
   },
 } as const;
@@ -51,12 +43,44 @@ export type AreaCode = keyof typeof AREAS;
 export const AREA_CODES = Object.keys(AREAS) as [AreaCode, ...AreaCode[]];
 
 export const UNIDADES = [
-  { code: "ipiranga", label: "Ipiranga", areasExcluidas: [] as AreaCode[] },
-  { code: "liberdade", label: "Liberdade", areasExcluidas: [] as AreaCode[] },
-  { code: "guarulhos", label: "Guarulhos", areasExcluidas: ["IMG"] as AreaCode[] },
+  { code: "guarulhos", label: "Guarulhos" },
+  { code: "ipiranga", label: "Ipiranga" },
+  { code: "liberdade", label: "Liberdade" },
 ] as const;
 
 export type UnidadeCode = (typeof UNIDADES)[number]["code"];
+export const UNIDADE_CODES = UNIDADES.map((u) => u.code) as [
+  UnidadeCode,
+  ...UnidadeCode[],
+];
+
+/**
+ * Vagas por área × turno × unidade (planilha oficial).
+ * 0 = slot inexistente / indisponível naquela unidade.
+ */
+export const VAGAS: Record<
+  AreaCode,
+  Partial<Record<PeriodoCode, Record<UnidadeCode, number>>>
+> = {
+  AC: {
+    manha: { guarulhos: 60, ipiranga: 60, liberdade: 60 },
+    noite: { guarulhos: 60, ipiranga: 60, liberdade: 60 },
+    tarde: { guarulhos: 0, ipiranga: 0, liberdade: 60 },
+  },
+  EST: {
+    manha: { guarulhos: 60, ipiranga: 60, liberdade: 60 },
+    tarde: { guarulhos: 0, ipiranga: 0, liberdade: 30 },
+    noite: { guarulhos: 60, ipiranga: 60, liberdade: 60 },
+  },
+  HEM: {
+    manha: { guarulhos: 0, ipiranga: 0, liberdade: 25 },
+    noite: { guarulhos: 0, ipiranga: 0, liberdade: 25 },
+  },
+  IMG: {
+    manha: { guarulhos: 0, ipiranga: 60, liberdade: 60 },
+    noite: { guarulhos: 0, ipiranga: 60, liberdade: 60 },
+  },
+};
 
 export const TIPOS_PERFIL = ["aluno", "nao_aluno"] as const;
 export type TipoPerfil = (typeof TIPOS_PERFIL)[number];
@@ -66,17 +90,41 @@ export const POLLING_INTERVAL_MS = 30_000;
 export const ALUNO_STEPS = ["CPF", "Dados", "Unidade", "Área", "Turno", "Confirmar"] as const;
 export const NAO_ALUNO_STEPS = ["CPF", "Dados"] as const;
 
+export function vagaLimit(
+  area: AreaCode,
+  unidade: UnidadeCode,
+  periodo: PeriodoCode,
+): number {
+  return VAGAS[area][periodo]?.[unidade] ?? 0;
+}
+
+export function periodosDisponiveis(
+  area: AreaCode,
+  unidade: UnidadeCode,
+): PeriodoCode[] {
+  return PERIODOS.map((p) => p.code).filter(
+    (periodo) => vagaLimit(area, unidade, periodo) > 0,
+  );
+}
+
 export function areasDisponiveis(unidade: UnidadeCode): AreaCode[] {
-  const unit = UNIDADES.find((u) => u.code === unidade);
-  const excluded = new Set<AreaCode>(unit?.areasExcluidas ?? []);
-  return AREA_CODES.filter((code) => !excluded.has(code));
+  return AREA_CODES.filter((area) => periodosDisponiveis(area, unidade).length > 0);
 }
 
 export function diasDisponiveis(area: AreaCode, periodo: PeriodoCode): DiaCode[] {
-  const config = AREAS[area];
-  const dias: readonly DiaCode[] = config.dias;
+  const dias: readonly DiaCode[] = AREAS[area].dias;
   if (periodo !== "manha") {
     return dias.filter((d) => d !== "sab");
   }
   return [...dias];
+}
+
+export function totalVagasAreaNaUnidade(
+  area: AreaCode,
+  unidade: UnidadeCode,
+): number {
+  return periodosDisponiveis(area, unidade).reduce(
+    (sum, periodo) => sum + vagaLimit(area, unidade, periodo),
+    0,
+  );
 }

@@ -51,14 +51,61 @@ describe("candidaturaAlunoSchema", () => {
     }
   });
 
-  it("rejects a turno not offered by the area (Hematologia has no tarde)", () => {
+  it("rejects a turno not offered for area+unidade (Hematologia has no tarde)", () => {
     const result = candidaturaAlunoSchema.safeParse(
-      baseAluno({ area: "HEM", periodo: "tarde", dias: ["seg", "ter"] }),
+      baseAluno({
+        unidade: "liberdade",
+        area: "HEM",
+        periodo: "tarde",
+        dias: ["seg", "ter"],
+      }),
     );
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.some((i) => i.path[0] === "periodo")).toBe(true);
     }
+  });
+
+  it("rejects Hematologia outside Liberdade", () => {
+    const result = candidaturaAlunoSchema.safeParse(
+      baseAluno({
+        unidade: "ipiranga",
+        area: "HEM",
+        periodo: "manha",
+        dias: ["seg", "ter"],
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "area")).toBe(true);
+    }
+  });
+
+  it("rejects Análises Clínicas tarde outside Liberdade", () => {
+    const result = candidaturaAlunoSchema.safeParse(
+      baseAluno({
+        unidade: "ipiranga",
+        area: "AC",
+        periodo: "tarde",
+        dias: ["seg", "ter"],
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path[0] === "periodo")).toBe(true);
+    }
+  });
+
+  it("accepts Estética tarde in Liberdade", () => {
+    const result = candidaturaAlunoSchema.safeParse(
+      baseAluno({
+        unidade: "liberdade",
+        area: "EST",
+        periodo: "tarde",
+        dias: ["seg", "ter"],
+      }),
+    );
+    expect(result.success).toBe(true);
   });
 
   it("rejects Sábado for a non-manhã turno", () => {

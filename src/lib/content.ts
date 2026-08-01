@@ -138,7 +138,7 @@ export const estagiosContent = {
   subtitle:
     "Residência Clínica em Saúde: formação complementar em ambiente real, com acompanhamento de profissionais experientes.",
   intro:
-    "A residência permite que os participantes atuem em ambiente real, com acompanhamento de profissionais experientes, desenvolvendo habilidades técnicas, raciocínio clínico e postura ética diante de situações do dia a dia. As oportunidades são organizadas por área nas unidades Liberdade, CTA e Guarulhos, com vagas limitadas e acompanhamento docente em todas as etapas.",
+    "A residência permite que os participantes atuem em ambiente real, com acompanhamento de profissionais experientes, desenvolvendo habilidades técnicas, raciocínio clínico e postura ética diante de situações do dia a dia. As oportunidades são organizadas por área, unidade e turno nas unidades Guarulhos, Ipiranga e Liberdade, com vagas limitadas e acompanhamento docente em todas as etapas.",
   highlights: [
     {
       title: "Supervisão especializada",
@@ -146,14 +146,14 @@ export const estagiosContent = {
         "Atendimentos clínicos supervisionados por professores e profissionais atuantes em cada etapa.",
     },
     {
-      title: "Vagas por área",
+      title: "Vagas por unidade e turno",
       description:
-        "Inscrições organizadas por especialidade, com controle de vagas em tempo real.",
+        "Inscrições organizadas por especialidade, unidade e turno, com controle de vagas em tempo real.",
     },
     {
       title: "Três unidades",
       description:
-        "Oportunidades nas unidades Liberdade, CTA e Guarulhos, conforme disponibilidade.",
+        "Oportunidades nas unidades Guarulhos, Ipiranga e Liberdade, conforme disponibilidade.",
     },
     {
       title: "Foco em 2026",
@@ -162,12 +162,6 @@ export const estagiosContent = {
     },
   ],
   areas: [
-    {
-      code: "IMG",
-      name: "Imagenologia",
-      description:
-        "Práticas com tomógrafo, simulador de plataforma DICOM e console Siemens para simulação de exames.",
-    },
     {
       code: "AC",
       name: "Análises Clínicas",
@@ -179,6 +173,18 @@ export const estagiosContent = {
       name: "Estética",
       description:
         "Atendimento estético assistido em clínicas equipadas, sob supervisão de um Biomédico.",
+    },
+    {
+      code: "HEM",
+      name: "Hematologia",
+      description:
+        "Práticas em hematologia clínica com acompanhamento especializado na unidade Liberdade.",
+    },
+    {
+      code: "IMG",
+      name: "Imagenologia",
+      description:
+        "Práticas com tomógrafo, simulador de plataforma DICOM e console Siemens para simulação de exames.",
     },
   ],
   cta: "Garanta sua vaga para 2026",

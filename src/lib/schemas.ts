@@ -2,12 +2,12 @@ import { z } from "zod";
 
 import {
   AREA_CODES,
-  AREAS,
   DIAS,
   PERIODOS,
   UNIDADES,
   areasDisponiveis,
   diasDisponiveis,
+  periodosDisponiveis,
   type AreaCode,
   type PeriodoCode,
   type UnidadeCode,
@@ -73,7 +73,6 @@ export const candidaturaAlunoSchema = personalDataSchema
     const area = data.area as AreaCode;
     const periodo = data.periodo as PeriodoCode;
     const unidade = data.unidade as UnidadeCode;
-    const config = AREAS[area];
 
     if (!areasDisponiveis(unidade).includes(area)) {
       ctx.addIssue({
@@ -83,10 +82,10 @@ export const candidaturaAlunoSchema = personalDataSchema
       });
     }
 
-    if (!(config.periodos as readonly string[]).includes(periodo)) {
+    if (!periodosDisponiveis(area, unidade).includes(periodo)) {
       ctx.addIssue({
         code: "custom",
-        message: "Turno indisponível para esta área",
+        message: "Turno indisponível para esta área nesta unidade",
         path: ["periodo"],
       });
     }
