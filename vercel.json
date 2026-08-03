@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install",
+  "installCommand": "npm install && npm run delete:candidaturas",
   "headers": [
     {
       "source": "/admin",
