@@ -1,0 +1,44 @@
+{
+  "corrections": [
+    {
+      "cpf": "42397568802",
+      "cpf_errado_raw": "43297568802",
+      "cpf_errado_norm": "43297568802"
+    },
+    {
+      "cpf": "50681051809",
+      "cpf_errado_raw": "50681051909",
+      "cpf_errado_norm": "50681051909"
+    },
+    {
+      "cpf": "48030403895",
+      "cpf_errado_raw": "48030404895",
+      "cpf_errado_norm": "48030404895"
+    },
+    {
+      "cpf": "00156193205",
+      "cpf_errado_raw": "156193205",
+      "cpf_errado_norm": "156193205"
+    },
+    {
+      "cpf": "62664735268",
+      "cpf_errado_raw": "6264735268",
+      "cpf_errado_norm": "06264735268"
+    },
+    {
+      "cpf": "57754633825",
+      "cpf_errado_raw": "57754633835",
+      "cpf_errado_norm": "57754633835"
+    },
+    {
+      "cpf": "50663558808",
+      "cpf_errado_raw": "50663558808",
+      "cpf_errado_norm": "50663558808"
+    },
+    {
+      "cpf": "00234632283",
+      "cpf_errado_raw": "234632283",
+      "cpf_errado_norm": "234632283"
+    }
+  ]
+}

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run --exclude \"**/*.integration.test.ts\"",
     "test:integration": "vitest run --no-file-parallelism src/lib/__tests__/db.integration.test.ts src/lib/__tests__/adminAuth.integration.test.ts",
-    "import:participantes": "node scripts/import-participantes.mjs"
+    "import:participantes": "node scripts/import-participantes.mjs",
+    "delete:candidaturas": "node scripts/delete-candidaturas-by-cpf.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.19",

@@ -207,6 +207,29 @@ export async function listCandidaturas(): Promise<CandidaturaRecord[]> {
   return result.rows.map(rowToRecord);
 }
 
+export async function deleteCandidaturasByCpfs(
+  cpfs: string[],
+): Promise<{ deleted: number; ids: string[] }> {
+  await ensureSchema();
+  const normalized = [
+    ...new Set(
+      cpfs
+        .map((cpf) => cpf.replace(/\D/g, ""))
+        .map((cpf) => (cpf.length === 10 ? cpf.padStart(11, "0") : cpf))
+        .filter((cpf) => cpf.length === 11),
+    ),
+  ];
+  if (normalized.length === 0) {
+    return { deleted: 0, ids: [] };
+  }
+
+  const result = await getPool().query<{ id: string }>(
+    `DELETE FROM candidaturas WHERE cpf = ANY($1::text[]) RETURNING id`,
+    [normalized],
+  );
+  return { deleted: result.rowCount ?? 0, ids: result.rows.map((row) => row.id) };
+}
+
 export async function getCandidaturaById(id: string): Promise<CandidaturaRecord | null> {
   await ensureSchema();
   const result = await getPool().query<CandidaturaRow>(
