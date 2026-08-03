@@ -1,0 +1,157 @@
+{
+  "cpfs": [
+    "08554189582",
+    "24209111805",
+    "36683975892",
+    "40219700885",
+    "41437096867",
+    "42588435807",
+    "44816295844",
+    "46821498814",
+    "47057588895",
+    "48030403895",
+    "49231791800",
+    "49513839850",
+    "50088462803",
+    "50680594809",
+    "50710216840",
+    "52281863875",
+    "52554895813",
+    "56629994817",
+    "56931518836",
+    "57587286837",
+    "59788913890"
+  ],
+  "added": [
+    "49231791800",
+    "49513839850",
+    "56931518836"
+  ],
+  "alreadyPresent": [
+    "08554189582",
+    "24209111805",
+    "36683975892",
+    "40219700885",
+    "41437096867",
+    "42588435807",
+    "44816295844",
+    "46821498814",
+    "47057588895",
+    "48030403895",
+    "50088462803",
+    "50680594809",
+    "50710216840",
+    "52281863875",
+    "52554895813",
+    "56629994817",
+    "57587286837",
+    "59788913890"
+  ],
+  "people": [
+    {
+      "nome": "Matheus kenji ueno",
+      "cpf": "49513839850",
+      "source": "known-fix"
+    },
+    {
+      "nome": "Magnolia Matias Santos",
+      "cpf": "42588435807",
+      "source": "file"
+    },
+    {
+      "nome": "Barbara silva dos santos",
+      "cpf": "59788913890",
+      "source": "file"
+    },
+    {
+      "nome": "Laura Cardoso do Couto",
+      "cpf": "50680594809",
+      "source": "file"
+    },
+    {
+      "nome": "Ana Carolina Santiago Bispo",
+      "cpf": "57587286837",
+      "source": "file"
+    },
+    {
+      "nome": "Rhayssa Beatriz Araújo dos Santos",
+      "cpf": "46821498814",
+      "source": "file"
+    },
+    {
+      "nome": "Laíza Souza Pereira",
+      "cpf": "56629994817",
+      "source": "file"
+    },
+    {
+      "nome": "Kathleen Ribeiro Penteado",
+      "cpf": "36683975892",
+      "source": "file"
+    },
+    {
+      "nome": "Gabriela Silva Lima",
+      "cpf": "49231791800",
+      "source": "known-fix"
+    },
+    {
+      "nome": "Naiane Hevelin Rodrigues da Silva Rocha",
+      "cpf": "52281863875",
+      "source": "file"
+    },
+    {
+      "nome": "Juliana Ferreira Macedo de Carvalho",
+      "cpf": "24209111805",
+      "source": "file"
+    },
+    {
+      "nome": "Rafaela argolo de Oliveira Gonzaga",
+      "cpf": "44816295844",
+      "source": "file"
+    },
+    {
+      "nome": "Wedna Silva Brito",
+      "cpf": "08554189582",
+      "source": "file"
+    },
+    {
+      "nome": "Léia da Conceição silva",
+      "cpf": "40219700885",
+      "source": "file"
+    },
+    {
+      "nome": "Giovanna Moreira Fidelis",
+      "cpf": "56931518836",
+      "source": "known-fix"
+    },
+    {
+      "nome": "Mariana da Mata Costanzo",
+      "cpf": "41437096867",
+      "source": "file"
+    },
+    {
+      "nome": "Isabella Fernandes",
+      "cpf": "52554895813",
+      "source": "file"
+    },
+    {
+      "nome": "Gabriella Batista Alves",
+      "cpf": "50088462803",
+      "source": "file"
+    },
+    {
+      "nome": "Giovanna Gabriella Fonseca Alves Euzebio",
+      "cpf": "50710216840",
+      "source": "file"
+    },
+    {
+      "nome": "Vanessa Pereira Jacinto",
+      "cpf": "48030403895",
+      "source": "known-fix"
+    },
+    {
+      "nome": "Gabrielle Bueno Lopes",
+      "cpf": "47057588895",
+      "source": "file"
+    }
+  ]
+}
