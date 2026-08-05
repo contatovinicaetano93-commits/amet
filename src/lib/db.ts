@@ -510,7 +510,11 @@ export async function countRecentFailedAttempts(
 
 export type CreateCandidaturaResult =
   | { ok: true; candidatura: CandidaturaRecord }
-  | { ok: false; error: string; code: "AREA_FULL" | "DUPLICATE" | "UNKNOWN" };
+  | {
+      ok: false;
+      error: string;
+      code: "AREA_FULL" | "DUPLICATE" | "CPF_NOT_IN_BASE" | "UNKNOWN";
+    };
 
 export async function createCandidatura(
   input: CandidaturaInput,
@@ -538,6 +542,22 @@ export async function createCandidatura(
     }
 
     if (isAluno(input)) {
+      // Lock the allowlist row for the rest of this transaction so a concurrent
+      // admin delete cannot remove the CPF after the check and before insert.
+      const allowed = await client.query<{ cpf: string }>(
+        `SELECT cpf FROM participantes WHERE cpf = $1 FOR SHARE`,
+        [input.cpf],
+      );
+      if (!allowed.rows[0]) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error:
+            "CPF não encontrado na base de alunos AMET. Selecione “Não sou aluno AMET” ou verifique o CPF.",
+          code: "CPF_NOT_IN_BASE",
+        };
+      }
+
       const area = input.area as AreaCode;
       const unidade = input.unidade as UnidadeCode;
       const periodo = input.periodo as PeriodoCode;

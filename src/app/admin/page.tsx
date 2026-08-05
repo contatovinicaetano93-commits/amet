@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useState, startTransition } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  startTransition,
+} from "react";
 
 import { AREAS, DIAS, PERIODOS, UNIDADES } from "@/lib/constants";
 import type { CandidaturaRecord, ParticipanteRecord } from "@/lib/db";
@@ -14,8 +21,32 @@ import {
 } from "@/lib/xlsxDownload";
 
 const STORAGE_KEY = "amet-admin-key";
+const PARTICIPANTES_PAGE_SIZE = 100;
 
 type AdminTab = "candidaturas" | "alunos";
+
+const adminKeyListeners = new Set<() => void>();
+
+function subscribeAdminKey(onStoreChange: () => void) {
+  adminKeyListeners.add(onStoreChange);
+  return () => {
+    adminKeyListeners.delete(onStoreChange);
+  };
+}
+
+function getAdminKeySnapshot() {
+  return sessionStorage.getItem(STORAGE_KEY) ?? "";
+}
+
+function getServerAdminKeySnapshot() {
+  return "";
+}
+
+function writeAdminKey(key: string) {
+  if (key) sessionStorage.setItem(STORAGE_KEY, key);
+  else sessionStorage.removeItem(STORAGE_KEY);
+  for (const listener of adminKeyListeners) listener();
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("pt-BR");
@@ -48,10 +79,11 @@ function buildWhatsAppLink(telefone: string, nomeCompleto: string): string {
 }
 
 export default function AdminPage() {
-  const [adminKey, setAdminKey] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return sessionStorage.getItem(STORAGE_KEY) ?? "";
-  });
+  const adminKey = useSyncExternalStore(
+    subscribeAdminKey,
+    getAdminKeySnapshot,
+    getServerAdminKeySnapshot,
+  );
   const [inputKey, setInputKey] = useState("");
   const [tab, setTab] = useState<AdminTab>("candidaturas");
   const [candidaturas, setCandidaturas] = useState<CandidaturaRecord[]>([]);
@@ -64,15 +96,17 @@ export default function AdminPage() {
   const [editingCpf, setEditingCpf] = useState<string | null>(null);
   const [editCpfValue, setEditCpfValue] = useState("");
   const [editNomeValue, setEditNomeValue] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingCandidaturas, setLoadingCandidaturas] = useState(false);
+  const [loadingParticipantes, setLoadingParticipantes] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [savingAluno, setSavingAluno] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const loading = tab === "candidaturas" ? loadingCandidaturas : loadingParticipantes;
 
   const fetchCandidaturas = useCallback(async (key: string) => {
     startTransition(() => {
-      setLoading(true);
+      setLoadingCandidaturas(true);
       setError("");
     });
     try {
@@ -99,18 +133,21 @@ export default function AdminPage() {
       });
     } finally {
       startTransition(() => {
-        setLoading(false);
+        setLoadingCandidaturas(false);
       });
     }
   }, []);
 
-  const fetchParticipantes = useCallback(async (key: string, q: string) => {
+  const fetchParticipantes = useCallback(async (key: string, q: string, offset = 0) => {
     startTransition(() => {
-      setLoading(true);
+      setLoadingParticipantes(true);
       setError("");
     });
     try {
-      const params = new URLSearchParams({ limit: "100", offset: "0" });
+      const params = new URLSearchParams({
+        limit: String(PARTICIPANTES_PAGE_SIZE),
+        offset: String(offset),
+      });
       if (q.trim()) params.set("q", q.trim());
       const response = await fetch(`/api/participantes?${params}`, {
         headers: { "x-admin-key": key },
@@ -123,8 +160,10 @@ export default function AdminPage() {
               ? "Chave de acesso inválida."
               : "Erro ao carregar base de alunos.",
           );
-          setParticipantes([]);
-          setParticipantesTotal(0);
+          if (offset === 0) {
+            setParticipantes([]);
+            setParticipantesTotal(0);
+          }
         });
         return;
       }
@@ -133,7 +172,9 @@ export default function AdminPage() {
         total: number;
       };
       startTransition(() => {
-        setParticipantes(data.participantes);
+        setParticipantes((prev) =>
+          offset === 0 ? data.participantes : [...prev, ...data.participantes],
+        );
         setParticipantesTotal(data.total);
       });
     } catch {
@@ -142,7 +183,7 @@ export default function AdminPage() {
       });
     } finally {
       startTransition(() => {
-        setLoading(false);
+        setLoadingParticipantes(false);
       });
     }
   }, []);
@@ -153,7 +194,7 @@ export default function AdminPage() {
       void fetchCandidaturas(adminKey);
       return;
     }
-    void fetchParticipantes(adminKey, deferredAlunoQuery);
+    void fetchParticipantes(adminKey, deferredAlunoQuery, 0);
   }, [adminKey, tab, deferredAlunoQuery, fetchCandidaturas, fetchParticipantes]);
 
   async function handleExport() {
@@ -202,13 +243,11 @@ export default function AdminPage() {
     event.preventDefault();
     const key = inputKey.trim();
     if (!key) return;
-    sessionStorage.setItem(STORAGE_KEY, key);
-    setAdminKey(key);
+    writeAdminKey(key);
   }
 
   function handleLogout() {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setAdminKey("");
+    writeAdminKey("");
     setInputKey("");
     setCandidaturas([]);
     setParticipantes([]);
@@ -680,6 +719,21 @@ export default function AdminPage() {
               <p className="rounded-2xl border border-dashed border-amet-blue/20 p-12 text-center text-sm text-amet-indigo/60">
                 Nenhum aluno encontrado{alunoQuery.trim() ? " para esta busca" : ""}.
               </p>
+            )}
+
+            {participantes.length < participantesTotal && (
+              <div className="flex justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void fetchParticipantes(adminKey, alunoQuery, participantes.length)
+                  }
+                  disabled={loadingParticipantes}
+                  className="rounded-full border border-amet-blue/20 px-5 py-2.5 text-sm font-medium text-amet-blue hover:bg-amet-blue/5 disabled:opacity-50"
+                >
+                  {loadingParticipantes ? "Carregando…" : "Carregar mais"}
+                </button>
+              </div>
             )}
           </div>
         </div>
