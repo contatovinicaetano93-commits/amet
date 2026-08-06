@@ -462,6 +462,151 @@ export async function deleteCandidaturasByCpfs(
   return { deleted: result.rowCount ?? 0, ids: result.rows.map((row) => row.id) };
 }
 
+export type UpdateCandidaturaResult =
+  | { ok: true; candidatura: CandidaturaRecord }
+  | {
+      ok: false;
+      error: string;
+      code: "AREA_FULL" | "DUPLICATE" | "CPF_NOT_IN_BASE" | "NOT_FOUND" | "UNKNOWN";
+    };
+
+export async function updateCandidatura(
+  id: string,
+  input: CandidaturaInput,
+): Promise<UpdateCandidaturaResult> {
+  await ensureSchema();
+  const client = await getPool().connect();
+
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`cpf:${input.cpf}`]);
+
+    const current = await client.query<CandidaturaRow>(
+      `SELECT * FROM candidaturas WHERE id = $1 FOR UPDATE`,
+      [id],
+    );
+    if (!current.rows[0]) {
+      await client.query("ROLLBACK");
+      return { ok: false, error: "Candidatura não encontrada.", code: "NOT_FOUND" };
+    }
+
+    const duplicate = await client.query<{ id: string }>(
+      `SELECT id FROM candidaturas WHERE cpf = $1 AND id <> $2 LIMIT 1`,
+      [input.cpf, id],
+    );
+    if (duplicate.rows[0]) {
+      await client.query("ROLLBACK");
+      return {
+        ok: false,
+        error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
+        code: "DUPLICATE",
+      };
+    }
+
+    if (isAluno(input)) {
+      const allowed = await client.query<{ cpf: string }>(
+        `SELECT cpf FROM participantes WHERE cpf = $1 FOR SHARE`,
+        [input.cpf],
+      );
+      if (!allowed.rows[0]) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error:
+            "CPF não encontrado na base de alunos AMET. Inclua o CPF na base ou marque como não aluno.",
+          code: "CPF_NOT_IN_BASE",
+        };
+      }
+
+      const area = input.area as AreaCode;
+      const unidade = input.unidade as UnidadeCode;
+      const periodo = input.periodo as PeriodoCode;
+      const total = vagaLimit(area, unidade, periodo);
+
+      if (total <= 0) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error: "Esta combinação de área, unidade e turno não está disponível.",
+          code: "AREA_FULL",
+        };
+      }
+
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+        `${area}:${unidade}:${periodo}`,
+      ]);
+
+      const usedResult = await client.query<{ count: string }>(
+        `SELECT COUNT(*) AS count FROM candidaturas
+         WHERE tipo_perfil = 'aluno'
+           AND area = $1 AND unidade = $2 AND periodo = $3
+           AND id <> $4`,
+        [area, unidade, periodo, id],
+      );
+      const used = Number(usedResult.rows[0]?.count ?? 0);
+      if (used >= total) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error: "Vagas esgotadas para esta área nesta unidade e turno.",
+          code: "AREA_FULL",
+        };
+      }
+    }
+
+    const isAlunoInput = isAluno(input);
+    const result = await client.query<CandidaturaRow>(
+      `UPDATE candidaturas SET
+        nome_completo = $2,
+        rgm = $3,
+        cpf = $4,
+        telefone = $5,
+        email = $6,
+        tipo_perfil = $7,
+        unidade = $8,
+        area = $9,
+        periodo = $10,
+        dias = $11
+       WHERE id = $1
+       RETURNING *`,
+      [
+        id,
+        input.nomeCompleto,
+        input.rgm ?? "",
+        input.cpf,
+        input.telefone,
+        input.email,
+        input.tipoPerfil,
+        isAlunoInput ? input.unidade : null,
+        isAlunoInput ? input.area : null,
+        isAlunoInput ? input.periodo : null,
+        isAlunoInput ? input.dias : null,
+      ],
+    );
+
+    await client.query("COMMIT");
+    return { ok: true, candidatura: rowToRecord(result.rows[0]) };
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    const pgError = error as { code?: string };
+    if (pgError.code === "23505") {
+      return {
+        ok: false,
+        error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
+        code: "DUPLICATE",
+      };
+    }
+    console.error("[db] Falha ao atualizar candidatura:", error);
+    return {
+      ok: false,
+      error: "Não foi possível salvar a candidatura. Tente novamente.",
+      code: "UNKNOWN",
+    };
+  } finally {
+    client.release();
+  }
+}
+
 export async function getCandidaturaById(id: string): Promise<CandidaturaRecord | null> {
   await ensureSchema();
   const result = await getPool().query<CandidaturaRow>(

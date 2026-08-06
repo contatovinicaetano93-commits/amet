@@ -9,10 +9,21 @@ import {
   startTransition,
 } from "react";
 
-import { AREAS, DIAS, PERIODOS, UNIDADES } from "@/lib/constants";
+import {
+  AREAS,
+  DIAS,
+  PERIODOS,
+  UNIDADES,
+  areasDisponiveis,
+  diasDisponiveis,
+  periodosDisponiveis,
+  type AreaCode,
+  type PeriodoCode,
+  type UnidadeCode,
+} from "@/lib/constants";
 import type { CandidaturaRecord, ParticipanteRecord } from "@/lib/db";
 import { isAluno } from "@/lib/schemas";
-import { formatCpf, stripDigits } from "@/lib/validators";
+import { formatCpf, formatPhone, stripDigits } from "@/lib/validators";
 import {
   buildCandidaturasXlsxFilename,
   forceXlsxFilename,
@@ -24,6 +35,43 @@ const STORAGE_KEY = "amet-admin-key";
 const PARTICIPANTES_PAGE_SIZE = 100;
 
 type AdminTab = "candidaturas" | "alunos";
+
+type CandidaturaEditForm = {
+  nomeCompleto: string;
+  rgm: string;
+  cpf: string;
+  telefone: string;
+  email: string;
+  tipoPerfil: "aluno" | "nao_aluno";
+  unidade: UnidadeCode;
+  area: AreaCode;
+  periodo: PeriodoCode;
+  dias: string[];
+};
+
+function toEditForm(item: CandidaturaRecord): CandidaturaEditForm {
+  const unidade = (isAluno(item) ? item.unidade : "liberdade") as UnidadeCode;
+  const areas = areasDisponiveis(unidade);
+  const area = (isAluno(item) && areas.includes(item.area as AreaCode)
+    ? item.area
+    : areas[0] ?? "AC") as AreaCode;
+  const periodos = periodosDisponiveis(area, unidade);
+  const periodo = (isAluno(item) && periodos.includes(item.periodo as PeriodoCode)
+    ? item.periodo
+    : periodos[0] ?? "manha") as PeriodoCode;
+  return {
+    nomeCompleto: item.nomeCompleto,
+    rgm: item.rgm,
+    cpf: formatCpf(item.cpf),
+    telefone: formatPhone(item.telefone),
+    email: item.email,
+    tipoPerfil: item.tipoPerfil,
+    unidade,
+    area,
+    periodo,
+    dias: isAluno(item) ? [...item.dias] : [],
+  };
+}
 
 const adminKeyListeners = new Set<() => void>();
 
@@ -96,10 +144,13 @@ export default function AdminPage() {
   const [editingCpf, setEditingCpf] = useState<string | null>(null);
   const [editCpfValue, setEditCpfValue] = useState("");
   const [editNomeValue, setEditNomeValue] = useState("");
+  const [editingCandidaturaId, setEditingCandidaturaId] = useState<string | null>(null);
+  const [candidaturaEdit, setCandidaturaEdit] = useState<CandidaturaEditForm | null>(null);
   const [loadingCandidaturas, setLoadingCandidaturas] = useState(false);
   const [loadingParticipantes, setLoadingParticipantes] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [savingAluno, setSavingAluno] = useState(false);
+  const [savingCandidatura, setSavingCandidatura] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const loading = tab === "candidaturas" ? loadingCandidaturas : loadingParticipantes;
@@ -253,8 +304,157 @@ export default function AdminPage() {
     setParticipantes([]);
     setParticipantesTotal(0);
     setEditingCpf(null);
+    setEditingCandidaturaId(null);
+    setCandidaturaEdit(null);
     setNotice("");
     setError("");
+  }
+
+  function startEditCandidatura(item: CandidaturaRecord) {
+    setEditingCandidaturaId(item.id);
+    setCandidaturaEdit(toEditForm(item));
+    setNotice("");
+    setError("");
+  }
+
+  function cancelEditCandidatura() {
+    setEditingCandidaturaId(null);
+    setCandidaturaEdit(null);
+  }
+
+  async function handleDeleteCandidatura(item: CandidaturaRecord) {
+    const label = `${item.nomeCompleto} (${formatCpf(item.cpf)})`;
+    if (
+      !window.confirm(
+        `Excluir a candidatura de ${label} do relatório final?\n\nA pessoa poderá preencher o formulário novamente.`,
+      )
+    ) {
+      return;
+    }
+    setSavingCandidatura(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/candidaturas/delete", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify({ cpfs: [item.cpf] }),
+      });
+      const data = (await response.json()) as { error?: string; deleted?: number };
+      if (!response.ok) {
+        setError(data.error ?? "Não foi possível excluir a candidatura.");
+        return;
+      }
+      if (editingCandidaturaId === item.id) cancelEditCandidatura();
+      setNotice(
+        data.deleted
+          ? "Candidatura excluída. A pessoa pode preencher de novo."
+          : "Nenhuma candidatura removida.",
+      );
+      await fetchCandidaturas(adminKey);
+    } catch {
+      setError("Não foi possível conectar ao servidor.");
+    } finally {
+      setSavingCandidatura(false);
+    }
+  }
+
+  async function handleSaveCandidatura(event: React.FormEvent) {
+    event.preventDefault();
+    if (!editingCandidaturaId || !candidaturaEdit) return;
+    setSavingCandidatura(true);
+    setError("");
+    setNotice("");
+
+    const payload =
+      candidaturaEdit.tipoPerfil === "aluno"
+        ? {
+            id: editingCandidaturaId,
+            tipoPerfil: "aluno" as const,
+            nomeCompleto: candidaturaEdit.nomeCompleto.trim(),
+            rgm: candidaturaEdit.rgm.trim(),
+            cpf: stripDigits(candidaturaEdit.cpf),
+            telefone: stripDigits(candidaturaEdit.telefone),
+            email: candidaturaEdit.email.trim(),
+            unidade: candidaturaEdit.unidade,
+            area: candidaturaEdit.area,
+            periodo: candidaturaEdit.periodo,
+            dias: candidaturaEdit.dias,
+          }
+        : {
+            id: editingCandidaturaId,
+            tipoPerfil: "nao_aluno" as const,
+            nomeCompleto: candidaturaEdit.nomeCompleto.trim(),
+            rgm: candidaturaEdit.rgm.trim(),
+            cpf: stripDigits(candidaturaEdit.cpf),
+            telefone: stripDigits(candidaturaEdit.telefone),
+            email: candidaturaEdit.email.trim(),
+          };
+
+    try {
+      const response = await fetch("/api/candidaturas", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "Não foi possível salvar a candidatura.");
+        return;
+      }
+      cancelEditCandidatura();
+      setNotice("Candidatura atualizada.");
+      await fetchCandidaturas(adminKey);
+    } catch {
+      setError("Não foi possível conectar ao servidor.");
+    } finally {
+      setSavingCandidatura(false);
+    }
+  }
+
+  function patchCandidaturaEdit(patch: Partial<CandidaturaEditForm>) {
+    setCandidaturaEdit((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+
+      if (patch.unidade || patch.area || patch.periodo || patch.tipoPerfil) {
+        const unidade = next.unidade;
+        const areas = areasDisponiveis(unidade);
+        if (!areas.includes(next.area)) {
+          next.area = areas[0] ?? "AC";
+        }
+        const periodos = periodosDisponiveis(next.area, unidade);
+        if (!periodos.includes(next.periodo)) {
+          next.periodo = periodos[0] ?? "manha";
+        }
+        const allowed = new Set(diasDisponiveis(next.area, next.periodo));
+        next.dias = next.dias.filter((dia) => allowed.has(dia as (typeof DIAS)[number]["code"]));
+      }
+
+      return next;
+    });
+  }
+
+  function toggleEditDia(dia: string) {
+    setCandidaturaEdit((prev) => {
+      if (!prev) return prev;
+      const has = prev.dias.includes(dia);
+      if (dia === "sab") {
+        return { ...prev, dias: has ? [] : ["sab"] };
+      }
+      const withoutSab = prev.dias.filter((d) => d !== "sab");
+      if (has) {
+        return { ...prev, dias: withoutSab.filter((d) => d !== dia) };
+      }
+      if (withoutSab.length >= 2) return prev;
+      return { ...prev, dias: [...withoutSab, dia] };
+    });
   }
 
   async function handleAddAluno(event: React.FormEvent) {
@@ -498,72 +698,276 @@ export default function AdminPage() {
               key={item.id}
               className="rounded-2xl border border-amet-blue/15 bg-white p-6 shadow-sm"
             >
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-amet-blue/10 pb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-amet-indigo">{item.nomeCompleto}</h2>
-                  <p className="text-xs text-amet-indigo/70">
-                    {formatDate(item.createdAt)} · {item.tipoPerfil === "aluno" ? "Aluno" : "Não aluno"}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-amet-blue/10 px-3 py-1 text-xs font-medium text-amet-blue">
-                    RGM {item.rgm}
-                  </span>
-                  {!item.emailSent && (
-                    <span
-                      className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700"
-                      title={item.emailError ?? "Falha ao enviar notificação por e-mail"}
-                    >
-                      E-mail não enviado
-                    </span>
-                  )}
-                  <a
-                    href={buildWhatsAppLink(item.telefone, item.nomeCompleto)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
-                  >
-                    WhatsApp
-                  </a>
-                </div>
-              </div>
+              {editingCandidaturaId === item.id && candidaturaEdit ? (
+                <form onSubmit={(event) => void handleSaveCandidatura(event)} className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold text-amet-indigo">Editar candidatura</h2>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="submit"
+                        disabled={savingCandidatura}
+                        className="rounded-full bg-amet-blue px-4 py-2 text-sm font-semibold text-white hover:bg-amet-indigo disabled:opacity-50"
+                      >
+                        {savingCandidatura ? "Salvando…" : "Salvar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelEditCandidatura}
+                        disabled={savingCandidatura}
+                        className="rounded-full border border-amet-blue/20 px-4 py-2 text-sm font-medium text-amet-blue hover:bg-amet-blue/5 disabled:opacity-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
 
-              <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">CPF</dt>
-                  <dd className="mt-1 text-sm text-amet-indigo">{item.cpf}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Telefone</dt>
-                  <dd className="mt-1 text-sm text-amet-indigo">{item.telefone}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">E-mail</dt>
-                  <dd className="mt-1 text-sm text-amet-indigo">{item.email}</dd>
-                </div>
-                {isAluno(item) && (
-                  <>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block sm:col-span-2">
+                      <span className="text-sm font-medium text-amet-indigo">Nome completo</span>
+                      <input
+                        value={candidaturaEdit.nomeCompleto}
+                        onChange={(e) => patchCandidaturaEdit({ nomeCompleto: e.target.value })}
+                        className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                        required
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium text-amet-indigo">CPF</span>
+                      <input
+                        value={candidaturaEdit.cpf}
+                        onChange={(e) => patchCandidaturaEdit({ cpf: formatCpf(e.target.value) })}
+                        className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                        inputMode="numeric"
+                        required
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium text-amet-indigo">RGM</span>
+                      <input
+                        value={candidaturaEdit.rgm}
+                        onChange={(e) => patchCandidaturaEdit({ rgm: e.target.value })}
+                        className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium text-amet-indigo">Telefone</span>
+                      <input
+                        value={candidaturaEdit.telefone}
+                        onChange={(e) => patchCandidaturaEdit({ telefone: formatPhone(e.target.value) })}
+                        className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                        inputMode="tel"
+                        required
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium text-amet-indigo">E-mail</span>
+                      <input
+                        type="email"
+                        value={candidaturaEdit.email}
+                        onChange={(e) => patchCandidaturaEdit({ email: e.target.value })}
+                        className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                        required
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium text-amet-indigo">Perfil</span>
+                      <select
+                        value={candidaturaEdit.tipoPerfil}
+                        onChange={(e) =>
+                          patchCandidaturaEdit({
+                            tipoPerfil: e.target.value as "aluno" | "nao_aluno",
+                          })
+                        }
+                        className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                      >
+                        <option value="aluno">Aluno</option>
+                        <option value="nao_aluno">Não aluno</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  {candidaturaEdit.tipoPerfil === "aluno" && (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <label className="block">
+                        <span className="text-sm font-medium text-amet-indigo">Unidade</span>
+                        <select
+                          value={candidaturaEdit.unidade}
+                          onChange={(e) =>
+                            patchCandidaturaEdit({ unidade: e.target.value as UnidadeCode })
+                          }
+                          className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                        >
+                          {UNIDADES.map((u) => (
+                            <option key={u.code} value={u.code}>
+                              {u.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-medium text-amet-indigo">Área</span>
+                        <select
+                          value={candidaturaEdit.area}
+                          onChange={(e) =>
+                            patchCandidaturaEdit({ area: e.target.value as AreaCode })
+                          }
+                          className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                        >
+                          {areasDisponiveis(candidaturaEdit.unidade).map((code) => (
+                            <option key={code} value={code}>
+                              {AREAS[code].label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-medium text-amet-indigo">Turno</span>
+                        <select
+                          value={candidaturaEdit.periodo}
+                          onChange={(e) =>
+                            patchCandidaturaEdit({ periodo: e.target.value as PeriodoCode })
+                          }
+                          className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+                        >
+                          {periodosDisponiveis(
+                            candidaturaEdit.area,
+                            candidaturaEdit.unidade,
+                          ).map((code) => (
+                            <option key={code} value={code}>
+                              {labelPeriodo(code)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <fieldset className="sm:col-span-2 lg:col-span-3">
+                        <legend className="text-sm font-medium text-amet-indigo">Dias</legend>
+                        <div className="mt-2 flex flex-wrap gap-3">
+                          {diasDisponiveis(candidaturaEdit.area, candidaturaEdit.periodo).map(
+                            (dia) => (
+                              <label
+                                key={dia}
+                                className="inline-flex items-center gap-2 text-sm text-amet-indigo"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={candidaturaEdit.dias.includes(dia)}
+                                  onChange={() => toggleEditDia(dia)}
+                                />
+                                {labelDias([dia])}
+                              </label>
+                            ),
+                          )}
+                        </div>
+                        <p className="mt-2 text-xs text-amet-indigo/60">
+                          2 dias úteis, ou apenas Sábado.
+                        </p>
+                      </fieldset>
+                    </div>
+                  )}
+                </form>
+              ) : (
+                <>
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-amet-blue/10 pb-4">
                     <div>
-                      <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Unidade</dt>
-                      <dd className="mt-1 text-sm text-amet-indigo">{labelUnidade(item.unidade)}</dd>
+                      <h2 className="text-lg font-semibold text-amet-indigo">{item.nomeCompleto}</h2>
+                      <p className="text-xs text-amet-indigo/70">
+                        {formatDate(item.createdAt)} ·{" "}
+                        {item.tipoPerfil === "aluno" ? "Aluno" : "Não aluno"}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-amet-blue/10 px-3 py-1 text-xs font-medium text-amet-blue">
+                        RGM {item.rgm}
+                      </span>
+                      {!item.emailSent && (
+                        <span
+                          className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700"
+                          title={item.emailError ?? "Falha ao enviar notificação por e-mail"}
+                        >
+                          E-mail não enviado
+                        </span>
+                      )}
+                      <a
+                        href={buildWhatsAppLink(item.telefone, item.nomeCompleto)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
+                      >
+                        WhatsApp
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => startEditCandidatura(item)}
+                        disabled={savingCandidatura}
+                        className="rounded-full border border-amet-blue/20 px-3 py-1 text-xs font-semibold text-amet-blue hover:bg-amet-blue/5 disabled:opacity-50"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteCandidatura(item)}
+                        disabled={savingCandidatura}
+                        className="rounded-full border border-red-200 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+
+                  <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                        CPF
+                      </dt>
+                      <dd className="mt-1 text-sm text-amet-indigo">{item.cpf}</dd>
                     </div>
                     <div>
                       <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
-                        Área de estágio
+                        Telefone
                       </dt>
-                      <dd className="mt-1 text-sm text-amet-indigo">{labelArea(item.area)}</dd>
+                      <dd className="mt-1 text-sm text-amet-indigo">{item.telefone}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Turno</dt>
-                      <dd className="mt-1 text-sm text-amet-indigo">{labelPeriodo(item.periodo)}</dd>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                        E-mail
+                      </dt>
+                      <dd className="mt-1 text-sm text-amet-indigo">{item.email}</dd>
                     </div>
-                    <div>
-                      <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Dias</dt>
-                      <dd className="mt-1 text-sm text-amet-indigo">{labelDias(item.dias)}</dd>
-                    </div>
-                  </>
-                )}
-              </dl>
+                    {isAluno(item) && (
+                      <>
+                        <div>
+                          <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                            Unidade
+                          </dt>
+                          <dd className="mt-1 text-sm text-amet-indigo">
+                            {labelUnidade(item.unidade)}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                            Área de estágio
+                          </dt>
+                          <dd className="mt-1 text-sm text-amet-indigo">{labelArea(item.area)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                            Turno
+                          </dt>
+                          <dd className="mt-1 text-sm text-amet-indigo">
+                            {labelPeriodo(item.periodo)}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                            Dias
+                          </dt>
+                          <dd className="mt-1 text-sm text-amet-indigo">{labelDias(item.dias)}</dd>
+                        </div>
+                      </>
+                    )}
+                  </dl>
+                </>
+              )}
             </article>
           ))}
 
