@@ -1,5 +1,7 @@
 import { Pool } from "pg";
 
+import participantesSeed from "../../data/participantes.json";
+
 import {
   AREAS,
   areasDisponiveis,
@@ -10,6 +12,7 @@ import {
   type UnidadeCode,
 } from "@/lib/constants";
 import { isAluno, type CandidaturaInput } from "@/lib/schemas";
+import { normalizeCpfDigits } from "@/lib/validators";
 
 export type CandidaturaRecord = CandidaturaInput & {
   id: string;
@@ -62,6 +65,14 @@ function ensureSchema(): Promise<void> {
       );
       CREATE INDEX IF NOT EXISTS idx_admin_access_log_ip_created
         ON admin_access_log (ip, created_at);
+      CREATE TABLE IF NOT EXISTS participantes (
+        cpf TEXT PRIMARY KEY,
+        nome TEXT NOT NULL DEFAULT '',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+      CREATE INDEX IF NOT EXISTS idx_participantes_nome
+        ON participantes (nome);
     `).then(async () => {
       await getPool().query(`DROP INDEX IF EXISTS idx_candidaturas_cpf_area_unique`);
       try {
@@ -74,9 +85,231 @@ function ensureSchema(): Promise<void> {
         // enforced no createCandidatura; o índice pode ser criado depois da limpeza.
         console.error("[db] Não foi possível criar índice único de CPF:", error);
       }
+      await seedParticipantesIfEmpty();
     });
   }
   return schemaReady;
+}
+
+async function seedParticipantesIfEmpty(): Promise<void> {
+  const countResult = await getPool().query<{ count: string }>(
+    `SELECT COUNT(*) AS count FROM participantes`,
+  );
+  if (Number(countResult.rows[0]?.count ?? 0) > 0) return;
+
+  const raw = participantesSeed as { cpfs?: string[] } | string[];
+  const list = Array.isArray(raw) ? raw : (raw.cpfs ?? []);
+  const cpfs = [
+    ...new Set(
+      list
+        .map((cpf) => normalizeCpfDigits(String(cpf)))
+        .filter((cpf) => cpf.length === 11),
+    ),
+  ];
+  if (cpfs.length === 0) return;
+
+  // Bulk insert in chunks to keep the first boot under control.
+  const chunkSize = 500;
+  for (let i = 0; i < cpfs.length; i += chunkSize) {
+    const chunk = cpfs.slice(i, i + chunkSize);
+    const values: string[] = [];
+    const params: string[] = [];
+    chunk.forEach((cpf, index) => {
+      values.push(`($${index + 1})`);
+      params.push(cpf);
+    });
+    await getPool().query(
+      `INSERT INTO participantes (cpf) VALUES ${values.join(",")}
+       ON CONFLICT (cpf) DO NOTHING`,
+      params,
+    );
+  }
+  console.log(`[db] Seed participantes: ${cpfs.length} CPF(s).`);
+}
+
+export type ParticipanteRecord = {
+  cpf: string;
+  nome: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ParticipanteRow = {
+  cpf: string;
+  nome: string;
+  created_at: Date;
+  updated_at: Date;
+};
+
+function participanteRowToRecord(row: ParticipanteRow): ParticipanteRecord {
+  return {
+    cpf: row.cpf,
+    nome: row.nome ?? "",
+    createdAt: row.created_at.toISOString(),
+    updatedAt: row.updated_at.toISOString(),
+  };
+}
+
+export async function isParticipanteCpf(cpf: string): Promise<boolean> {
+  await ensureSchema();
+  const normalized = normalizeCpfDigits(cpf);
+  if (normalized.length !== 11) return false;
+  const result = await getPool().query<{ exists: boolean }>(
+    `SELECT EXISTS(SELECT 1 FROM participantes WHERE cpf = $1) AS exists`,
+    [normalized],
+  );
+  return Boolean(result.rows[0]?.exists);
+}
+
+export async function listParticipantes(options?: {
+  q?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{ items: ParticipanteRecord[]; total: number }> {
+  await ensureSchema();
+  const q = (options?.q ?? "").trim();
+  const limit = Math.min(Math.max(options?.limit ?? 50, 1), 200);
+  const offset = Math.max(options?.offset ?? 0, 0);
+  const digits = normalizeCpfDigits(q);
+
+  const params: Array<string | number> = [];
+  let where = "";
+  if (q) {
+    params.push(`%${q}%`);
+    const nomeParam = `$${params.length}`;
+    if (digits.length >= 3) {
+      params.push(`${digits}%`);
+      where = `WHERE nome ILIKE ${nomeParam} OR cpf LIKE $${params.length}`;
+    } else {
+      where = `WHERE nome ILIKE ${nomeParam} OR cpf ILIKE ${nomeParam}`;
+    }
+  }
+
+  const totalResult = await getPool().query<{ count: string }>(
+    `SELECT COUNT(*) AS count FROM participantes ${where}`,
+    params,
+  );
+  const total = Number(totalResult.rows[0]?.count ?? 0);
+
+  params.push(limit, offset);
+  const result = await getPool().query<ParticipanteRow>(
+    `SELECT cpf, nome, created_at, updated_at
+     FROM participantes
+     ${where}
+     ORDER BY COALESCE(NULLIF(nome, ''), cpf) ASC, cpf ASC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params,
+  );
+
+  return { items: result.rows.map(participanteRowToRecord), total };
+}
+
+export type ParticipanteMutationResult =
+  | { ok: true; participante: ParticipanteRecord }
+  | { ok: false; error: string; code: "INVALID" | "DUPLICATE" | "NOT_FOUND" };
+
+export async function addParticipante(
+  cpf: string,
+  nome = "",
+): Promise<ParticipanteMutationResult> {
+  await ensureSchema();
+  const normalized = normalizeCpfDigits(cpf);
+  if (normalized.length !== 11) {
+    return { ok: false, error: "CPF inválido", code: "INVALID" };
+  }
+
+  try {
+    const result = await getPool().query<ParticipanteRow>(
+      `INSERT INTO participantes (cpf, nome)
+       VALUES ($1, $2)
+       RETURNING cpf, nome, created_at, updated_at`,
+      [normalized, nome.trim()],
+    );
+    return { ok: true, participante: participanteRowToRecord(result.rows[0]) };
+  } catch (error) {
+    const pgError = error as { code?: string };
+    if (pgError.code === "23505") {
+      return { ok: false, error: "Este CPF já está na base de alunos.", code: "DUPLICATE" };
+    }
+    throw error;
+  }
+}
+
+export async function updateParticipante(
+  cpf: string,
+  updates: { newCpf?: string; nome?: string },
+): Promise<ParticipanteMutationResult> {
+  await ensureSchema();
+  const current = normalizeCpfDigits(cpf);
+  if (current.length !== 11) {
+    return { ok: false, error: "CPF inválido", code: "INVALID" };
+  }
+
+  const nextCpf =
+    updates.newCpf !== undefined ? normalizeCpfDigits(updates.newCpf) : current;
+  if (nextCpf.length !== 11) {
+    return { ok: false, error: "Novo CPF inválido", code: "INVALID" };
+  }
+
+  const existing = await getPool().query<ParticipanteRow>(
+    `SELECT cpf, nome, created_at, updated_at FROM participantes WHERE cpf = $1`,
+    [current],
+  );
+  if (!existing.rows[0]) {
+    return { ok: false, error: "Aluno não encontrado na base.", code: "NOT_FOUND" };
+  }
+
+  const nextNome =
+    updates.nome !== undefined ? updates.nome.trim() : (existing.rows[0].nome ?? "");
+
+  try {
+    const result = await getPool().query<ParticipanteRow>(
+      `UPDATE participantes
+       SET cpf = $2, nome = $3, updated_at = now()
+       WHERE cpf = $1
+       RETURNING cpf, nome, created_at, updated_at`,
+      [current, nextCpf, nextNome],
+    );
+    if (!result.rows[0]) {
+      return { ok: false, error: "Aluno não encontrado na base.", code: "NOT_FOUND" };
+    }
+    return { ok: true, participante: participanteRowToRecord(result.rows[0]) };
+  } catch (error) {
+    const pgError = error as { code?: string };
+    if (pgError.code === "23505") {
+      return {
+        ok: false,
+        error: "Já existe outro aluno com este CPF.",
+        code: "DUPLICATE",
+      };
+    }
+    throw error;
+  }
+}
+
+export async function deleteParticipantesByCpfs(
+  cpfs: string[],
+): Promise<{ deleted: number; cpfs: string[] }> {
+  await ensureSchema();
+  const normalized = [
+    ...new Set(
+      cpfs
+        .map((cpf) => normalizeCpfDigits(cpf))
+        .filter((cpf) => cpf.length === 11),
+    ),
+  ];
+  if (normalized.length === 0) {
+    return { deleted: 0, cpfs: [] };
+  }
+
+  const result = await getPool().query<{ cpf: string }>(
+    `DELETE FROM participantes WHERE cpf = ANY($1::text[]) RETURNING cpf`,
+    [normalized],
+  );
+  return {
+    deleted: result.rowCount ?? 0,
+    cpfs: result.rows.map((row) => row.cpf),
+  };
 }
 
 type CandidaturaRow = {
@@ -214,8 +447,7 @@ export async function deleteCandidaturasByCpfs(
   const normalized = [
     ...new Set(
       cpfs
-        .map((cpf) => cpf.replace(/\D/g, ""))
-        .map((cpf) => (cpf.length === 10 ? cpf.padStart(11, "0") : cpf))
+        .map((cpf) => normalizeCpfDigits(cpf))
         .filter((cpf) => cpf.length === 11),
     ),
   ];
@@ -228,6 +460,151 @@ export async function deleteCandidaturasByCpfs(
     [normalized],
   );
   return { deleted: result.rowCount ?? 0, ids: result.rows.map((row) => row.id) };
+}
+
+export type UpdateCandidaturaResult =
+  | { ok: true; candidatura: CandidaturaRecord }
+  | {
+      ok: false;
+      error: string;
+      code: "AREA_FULL" | "DUPLICATE" | "CPF_NOT_IN_BASE" | "NOT_FOUND" | "UNKNOWN";
+    };
+
+export async function updateCandidatura(
+  id: string,
+  input: CandidaturaInput,
+): Promise<UpdateCandidaturaResult> {
+  await ensureSchema();
+  const client = await getPool().connect();
+
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`cpf:${input.cpf}`]);
+
+    const current = await client.query<CandidaturaRow>(
+      `SELECT * FROM candidaturas WHERE id = $1 FOR UPDATE`,
+      [id],
+    );
+    if (!current.rows[0]) {
+      await client.query("ROLLBACK");
+      return { ok: false, error: "Candidatura não encontrada.", code: "NOT_FOUND" };
+    }
+
+    const duplicate = await client.query<{ id: string }>(
+      `SELECT id FROM candidaturas WHERE cpf = $1 AND id <> $2 LIMIT 1`,
+      [input.cpf, id],
+    );
+    if (duplicate.rows[0]) {
+      await client.query("ROLLBACK");
+      return {
+        ok: false,
+        error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
+        code: "DUPLICATE",
+      };
+    }
+
+    if (isAluno(input)) {
+      const allowed = await client.query<{ cpf: string }>(
+        `SELECT cpf FROM participantes WHERE cpf = $1 FOR SHARE`,
+        [input.cpf],
+      );
+      if (!allowed.rows[0]) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error:
+            "CPF não encontrado na base de alunos AMET. Inclua o CPF na base ou marque como não aluno.",
+          code: "CPF_NOT_IN_BASE",
+        };
+      }
+
+      const area = input.area as AreaCode;
+      const unidade = input.unidade as UnidadeCode;
+      const periodo = input.periodo as PeriodoCode;
+      const total = vagaLimit(area, unidade, periodo);
+
+      if (total <= 0) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error: "Esta combinação de área, unidade e turno não está disponível.",
+          code: "AREA_FULL",
+        };
+      }
+
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+        `${area}:${unidade}:${periodo}`,
+      ]);
+
+      const usedResult = await client.query<{ count: string }>(
+        `SELECT COUNT(*) AS count FROM candidaturas
+         WHERE tipo_perfil = 'aluno'
+           AND area = $1 AND unidade = $2 AND periodo = $3
+           AND id <> $4`,
+        [area, unidade, periodo, id],
+      );
+      const used = Number(usedResult.rows[0]?.count ?? 0);
+      if (used >= total) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error: "Vagas esgotadas para esta área nesta unidade e turno.",
+          code: "AREA_FULL",
+        };
+      }
+    }
+
+    const isAlunoInput = isAluno(input);
+    const result = await client.query<CandidaturaRow>(
+      `UPDATE candidaturas SET
+        nome_completo = $2,
+        rgm = $3,
+        cpf = $4,
+        telefone = $5,
+        email = $6,
+        tipo_perfil = $7,
+        unidade = $8,
+        area = $9,
+        periodo = $10,
+        dias = $11
+       WHERE id = $1
+       RETURNING *`,
+      [
+        id,
+        input.nomeCompleto,
+        input.rgm ?? "",
+        input.cpf,
+        input.telefone,
+        input.email,
+        input.tipoPerfil,
+        isAlunoInput ? input.unidade : null,
+        isAlunoInput ? input.area : null,
+        isAlunoInput ? input.periodo : null,
+        isAlunoInput ? input.dias : null,
+      ],
+    );
+
+    await client.query("COMMIT");
+    return { ok: true, candidatura: rowToRecord(result.rows[0]) };
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    const pgError = error as { code?: string };
+    if (pgError.code === "23505") {
+      return {
+        ok: false,
+        error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
+        code: "DUPLICATE",
+      };
+    }
+    console.error("[db] Falha ao atualizar candidatura:", error);
+    return {
+      ok: false,
+      error: "Não foi possível salvar a candidatura. Tente novamente.",
+      code: "UNKNOWN",
+    };
+  } finally {
+    client.release();
+  }
 }
 
 export async function getCandidaturaById(id: string): Promise<CandidaturaRecord | null> {
@@ -278,7 +655,11 @@ export async function countRecentFailedAttempts(
 
 export type CreateCandidaturaResult =
   | { ok: true; candidatura: CandidaturaRecord }
-  | { ok: false; error: string; code: "AREA_FULL" | "DUPLICATE" | "UNKNOWN" };
+  | {
+      ok: false;
+      error: string;
+      code: "AREA_FULL" | "DUPLICATE" | "CPF_NOT_IN_BASE" | "UNKNOWN";
+    };
 
 export async function createCandidatura(
   input: CandidaturaInput,
@@ -306,6 +687,22 @@ export async function createCandidatura(
     }
 
     if (isAluno(input)) {
+      // Lock the allowlist row for the rest of this transaction so a concurrent
+      // admin delete cannot remove the CPF after the check and before insert.
+      const allowed = await client.query<{ cpf: string }>(
+        `SELECT cpf FROM participantes WHERE cpf = $1 FOR SHARE`,
+        [input.cpf],
+      );
+      if (!allowed.rows[0]) {
+        await client.query("ROLLBACK");
+        return {
+          ok: false,
+          error:
+            "CPF não encontrado na base de alunos AMET. Selecione “Não sou aluno AMET” ou verifique o CPF.",
+          code: "CPF_NOT_IN_BASE",
+        };
+      }
+
       const area = input.area as AreaCode;
       const unidade = input.unidade as UnidadeCode;
       const periodo = input.periodo as PeriodoCode;

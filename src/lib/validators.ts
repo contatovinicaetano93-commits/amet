@@ -2,6 +2,13 @@ export function stripDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+/** Digits-only CPF; pads 10-digit values with a leading zero. */
+export function normalizeCpfDigits(raw: string): string {
+  let digits = stripDigits(raw);
+  if (digits.length === 10) digits = digits.padStart(11, "0");
+  return digits;
+}
+
 export function isValidCpf(raw: string): boolean {
   const cpf = stripDigits(raw);
 
