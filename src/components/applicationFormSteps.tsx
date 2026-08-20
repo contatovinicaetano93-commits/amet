@@ -6,7 +6,7 @@ import {
   UNIDADES,
   type AreaCode,
   type DiaCode,
-  type Faculdade,
+  type FaculdadeAceita,
   type PeriodoCode,
   type TipoPerfil,
   type UnidadeCode,
@@ -31,7 +31,7 @@ export type FormState = {
   rgm: string;
   telefone: string;
   email: string;
-  faculdade: Faculdade | "";
+  faculdade: FaculdadeAceita | "";
   unidade: UnidadeCode | "";
   area: AreaCode | "";
   periodo: PeriodoCode | "";

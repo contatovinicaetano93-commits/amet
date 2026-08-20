@@ -57,8 +57,10 @@ export const UNIDADE_CODES = UNIDADES.map((u) => u.code) as [
 export const FACULDADES = [
   "Anhanguera",
   "Anhembi Morumbi",
-  "Universidade Cruzeiro do Sul",
-  "UNICID",
+  "Cruzeiro do Sul Presencial",
+  "Cruzeiro do Sul Semipresencial",
+  "Unicid Presencial",
+  "Unicid Semipresencial",
   "UNINTER",
   "Uni Ítalo",
   "Unimais",
@@ -73,10 +75,15 @@ export const FACULDADES = [
   "UniFATECIE",
 ] as const;
 
+/** Nomes antigos ainda aceitos em registros já gravados. */
+const FACULDADES_LEGACY = ["UNICID", "Universidade Cruzeiro do Sul"] as const;
+
 export type Faculdade = (typeof FACULDADES)[number];
-export const FACULDADE_VALUES: [Faculdade, ...Faculdade[]] = [
+export type FaculdadeAceita = Faculdade | (typeof FACULDADES_LEGACY)[number];
+export const FACULDADE_VALUES: [FaculdadeAceita, ...FaculdadeAceita[]] = [
   FACULDADES[0],
   ...FACULDADES.slice(1),
+  ...FACULDADES_LEGACY,
 ];
 
 /**

@@ -205,6 +205,30 @@ describe("candidaturaNaoAlunoSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts Unicid and Cruzeiro do Sul presencial/semipresencial", () => {
+    for (const faculdade of [
+      "Unicid Presencial",
+      "Unicid Semipresencial",
+      "Cruzeiro do Sul Presencial",
+      "Cruzeiro do Sul Semipresencial",
+    ]) {
+      expect(candidaturaNaoAlunoSchema.safeParse(baseNaoAluno({ faculdade })).success).toBe(
+        true,
+      );
+    }
+  });
+
+  it("still accepts legacy UNICID and Universidade Cruzeiro do Sul records", () => {
+    expect(
+      candidaturaNaoAlunoSchema.safeParse(baseNaoAluno({ faculdade: "UNICID" })).success,
+    ).toBe(true);
+    expect(
+      candidaturaNaoAlunoSchema.safeParse(
+        baseNaoAluno({ faculdade: "Universidade Cruzeiro do Sul" }),
+      ).success,
+    ).toBe(true);
+  });
+
   it("rejects a combo that does not exist (Hematologia em Ipiranga)", () => {
     const result = candidaturaNaoAlunoSchema.safeParse(
       baseNaoAluno({
