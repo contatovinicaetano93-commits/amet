@@ -22,13 +22,19 @@ type ParticipanteRow = {
 
 let participantesReady: Promise<void> | null = null;
 
+function toIso(value: Date | string | null | undefined): string {
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string" && value) return value;
+  return new Date().toISOString();
+}
+
 function rowToRecord(row: ParticipanteRow): ParticipanteRecord {
   return {
     cpf: row.cpf,
     nome: row.nome ?? "",
     rgm: row.rgm ?? "",
-    createdAt: row.created_at.toISOString(),
-    updatedAt: row.updated_at.toISOString(),
+    createdAt: toIso(row.created_at),
+    updatedAt: toIso(row.updated_at),
   };
 }
 
@@ -59,22 +65,37 @@ async function seedFromJsonIfEmpty(): Promise<void> {
   );
 }
 
+async function migrateParticipantesTable(): Promise<void> {
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS participantes (
+      cpf TEXT PRIMARY KEY,
+      nome TEXT NOT NULL DEFAULT '',
+      rgm TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `);
+  await getPool().query(
+    `ALTER TABLE participantes ADD COLUMN IF NOT EXISTS nome TEXT NOT NULL DEFAULT ''`,
+  );
+  await getPool().query(
+    `ALTER TABLE participantes ADD COLUMN IF NOT EXISTS rgm TEXT NOT NULL DEFAULT ''`,
+  );
+  await getPool().query(
+    `ALTER TABLE participantes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now()`,
+  );
+  await getPool().query(
+    `ALTER TABLE participantes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`,
+  );
+  await getPool().query(
+    `CREATE INDEX IF NOT EXISTS idx_participantes_nome ON participantes (nome)`,
+  );
+}
+
 export function ensureParticipantesSchema(): Promise<void> {
   if (!participantesReady) {
     participantesReady = ensureSchema()
-      .then(() =>
-        getPool().query(`
-          CREATE TABLE IF NOT EXISTS participantes (
-            cpf TEXT PRIMARY KEY,
-            nome TEXT NOT NULL DEFAULT '',
-            rgm TEXT NOT NULL DEFAULT '',
-            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-          );
-          CREATE INDEX IF NOT EXISTS idx_participantes_nome
-            ON participantes (nome);
-        `),
-      )
+      .then(() => migrateParticipantesTable())
       .then(() => seedFromJsonIfEmpty())
       .catch((error) => {
         participantesReady = null;
