@@ -165,27 +165,54 @@ describe("candidaturaAlunoSchema", () => {
 });
 
 describe("candidaturaNaoAlunoSchema", () => {
-  it("accepts a valid não-aluno submission without unidade/area/turno", () => {
-    const result = candidaturaNaoAlunoSchema.safeParse({
-      tipoPerfil: "nao_aluno",
+  function baseNaoAluno(overrides: Record<string, unknown> = {}) {
+    return {
+      tipoPerfil: "nao_aluno" as const,
       nomeCompleto: "João Teste",
       cpf: VALID_CPF,
       telefone: "11999999999",
       email: "joao@example.com",
-    });
+      faculdade: "UNINOVE",
+      unidade: "ipiranga",
+      area: "EST",
+      periodo: "noite",
+      dias: ["ter", "qua"],
+      ...overrides,
+    };
+  }
+
+  it("accepts a valid não-aluno submission with faculdade and estágio fields", () => {
+    const result = candidaturaNaoAlunoSchema.safeParse(baseNaoAluno());
     expect(result.success).toBe(true);
   });
 
   it("allows an empty RGM for não-alunos", () => {
-    const result = candidaturaNaoAlunoSchema.safeParse({
-      tipoPerfil: "nao_aluno",
-      nomeCompleto: "João Teste",
-      rgm: "",
-      cpf: VALID_CPF,
-      telefone: "11999999999",
-      email: "joao@example.com",
-    });
+    const result = candidaturaNaoAlunoSchema.safeParse(baseNaoAluno({ rgm: "" }));
     expect(result.success).toBe(true);
+  });
+
+  it("rejects a missing faculdade", () => {
+    const result = candidaturaNaoAlunoSchema.safeParse(baseNaoAluno({ faculdade: "" }));
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an unknown faculdade", () => {
+    const result = candidaturaNaoAlunoSchema.safeParse(
+      baseNaoAluno({ faculdade: "Faculdade Inventada" }),
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a combo that does not exist (Hematologia em Ipiranga)", () => {
+    const result = candidaturaNaoAlunoSchema.safeParse(
+      baseNaoAluno({
+        unidade: "ipiranga",
+        area: "HEM",
+        periodo: "manha",
+        dias: ["seg", "ter"],
+      }),
+    );
+    expect(result.success).toBe(false);
   });
 });
 
@@ -202,6 +229,11 @@ describe("candidaturaSchema (discriminated union)", () => {
       cpf: VALID_CPF,
       telefone: "11999999999",
       email: "joao@example.com",
+      faculdade: "Anhanguera",
+      unidade: "liberdade",
+      area: "AC",
+      periodo: "manha",
+      dias: ["seg", "ter"],
     });
     expect(result.success).toBe(true);
   });

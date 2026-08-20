@@ -9,7 +9,7 @@ import {
   type PeriodoCode,
   type UnidadeCode,
 } from "@/lib/constants";
-import { isAluno, type CandidaturaInput } from "@/lib/schemas";
+import { isNaoAluno, type CandidaturaInput } from "@/lib/schemas";
 
 export type CandidaturaRecord = CandidaturaInput & {
   id: string;
@@ -43,6 +43,7 @@ function ensureSchema(): Promise<void> {
         area TEXT,
         periodo TEXT,
         dias TEXT[],
+        faculdade TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       );
       CREATE INDEX IF NOT EXISTS idx_candidaturas_area_periodo
@@ -53,6 +54,7 @@ function ensureSchema(): Promise<void> {
         WHERE tipo_perfil = 'aluno';
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_sent BOOLEAN NOT NULL DEFAULT false;
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_error TEXT;
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS faculdade TEXT;
       CREATE TABLE IF NOT EXISTS admin_access_log (
         id BIGSERIAL PRIMARY KEY,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -91,6 +93,7 @@ type CandidaturaRow = {
   area: string | null;
   periodo: string | null;
   dias: string[] | null;
+  faculdade: string | null;
   created_at: Date;
   email_sent: boolean;
   email_error: string | null;
@@ -109,18 +112,27 @@ function rowToRecord(row: CandidaturaRow): CandidaturaRecord {
     emailError: row.email_error,
   };
 
+  const estagio = {
+    unidade: row.unidade ?? "",
+    area: row.area ?? "",
+    periodo: row.periodo ?? "",
+    dias: row.dias ?? [],
+  };
+
   if (row.tipo_perfil === "aluno") {
     return {
       ...base,
+      ...estagio,
       tipoPerfil: "aluno",
-      unidade: row.unidade ?? "",
-      area: row.area ?? "",
-      periodo: row.periodo ?? "",
-      dias: row.dias ?? [],
     } as CandidaturaRecord;
   }
 
-  return { ...base, tipoPerfil: "nao_aluno" } as CandidaturaRecord;
+  return {
+    ...base,
+    ...estagio,
+    tipoPerfil: "nao_aluno",
+    faculdade: row.faculdade ?? "",
+  } as CandidaturaRecord;
 }
 
 export type PeriodoVacancy = {
@@ -305,51 +317,26 @@ export async function createCandidatura(
       };
     }
 
-    if (isAluno(input)) {
-      const area = input.area as AreaCode;
-      const unidade = input.unidade as UnidadeCode;
-      const periodo = input.periodo as PeriodoCode;
-      const total = vagaLimit(area, unidade, periodo);
+    const area = input.area as AreaCode;
+    const unidade = input.unidade as UnidadeCode;
+    const periodo = input.periodo as PeriodoCode;
+    const total = vagaLimit(area, unidade, periodo);
 
-      if (total <= 0) {
-        await client.query("ROLLBACK");
-        return {
-          ok: false,
-          error: "Esta combinação de área, unidade e turno não está disponível.",
-          code: "AREA_FULL",
-        };
-      }
-
-      // Serializes concurrent submissions for the same area+unidade+turno so the
-      // vacancy check and insert below are atomic together.
-      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
-        `${area}:${unidade}:${periodo}`,
-      ]);
-
-      const usedResult = await client.query<{ count: string }>(
-        `SELECT COUNT(*) AS count FROM candidaturas
-         WHERE tipo_perfil = 'aluno' AND area = $1 AND unidade = $2 AND periodo = $3`,
-        [area, unidade, periodo],
-      );
-      const used = Number(usedResult.rows[0]?.count ?? 0);
-
-      if (used >= total) {
-        await client.query("ROLLBACK");
-        return {
-          ok: false,
-          error: "Vagas esgotadas para esta área nesta unidade e turno.",
-          code: "AREA_FULL",
-        };
-      }
+    if (total <= 0) {
+      await client.query("ROLLBACK");
+      return {
+        ok: false,
+        error: "Esta combinação de área, unidade e turno não está disponível.",
+        code: "AREA_FULL",
+      };
     }
 
     const id = crypto.randomUUID();
-    const isAlunoInput = isAluno(input);
 
     const result = await client.query<CandidaturaRow>(
       `INSERT INTO candidaturas
-        (id, nome_completo, rgm, cpf, telefone, email, tipo_perfil, unidade, area, periodo, dias)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        (id, nome_completo, rgm, cpf, telefone, email, tipo_perfil, unidade, area, periodo, dias, faculdade)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         id,
@@ -359,10 +346,11 @@ export async function createCandidatura(
         input.telefone,
         input.email,
         input.tipoPerfil,
-        isAlunoInput ? input.unidade : null,
-        isAlunoInput ? input.area : null,
-        isAlunoInput ? input.periodo : null,
-        isAlunoInput ? input.dias : null,
+        input.unidade,
+        input.area,
+        input.periodo,
+        input.dias,
+        isNaoAluno(input) ? input.faculdade : null,
       ],
     );
 

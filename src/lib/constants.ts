@@ -54,6 +54,31 @@ export const UNIDADE_CODES = UNIDADES.map((u) => u.code) as [
   ...UnidadeCode[],
 ];
 
+export const FACULDADES = [
+  "Anhanguera",
+  "Anhembi Morumbi",
+  "Universidade Cruzeiro do Sul",
+  "UNICID",
+  "UNINTER",
+  "Uni Ítalo",
+  "Unimais",
+  "UNINOVE",
+  "Braz Cubas",
+  "CTA Ipiranga",
+  "Faculdade Sumaré",
+  "São Judas",
+  "UNG",
+  "UniBF",
+  "UniBTA",
+  "UniFATECIE",
+] as const;
+
+export type Faculdade = (typeof FACULDADES)[number];
+export const FACULDADE_VALUES: [Faculdade, ...Faculdade[]] = [
+  FACULDADES[0],
+  ...FACULDADES.slice(1),
+];
+
 /**
  * Vagas por área × turno × unidade (planilha oficial).
  * 0 = slot inexistente / indisponível naquela unidade.
@@ -85,10 +110,32 @@ export const VAGAS: Record<
 export const TIPOS_PERFIL = ["aluno", "nao_aluno"] as const;
 export type TipoPerfil = (typeof TIPOS_PERFIL)[number];
 
-export const POLLING_INTERVAL_MS = 30_000;
+export function labelTipoPerfil(
+  tipo: TipoPerfil,
+  variant: "short" | "long" = "short",
+): string {
+  switch (tipo) {
+    case "aluno":
+      return variant === "long" ? "Aluno AMET" : "Aluno";
+    case "nao_aluno":
+      return variant === "long" ? "Não aluno AMET" : "Não aluno";
+    default: {
+      const exhaustive: never = tipo;
+      return exhaustive;
+    }
+  }
+}
 
 export const ALUNO_STEPS = ["CPF", "Dados", "Unidade", "Área", "Turno", "Confirmar"] as const;
-export const NAO_ALUNO_STEPS = ["CPF", "Dados"] as const;
+export const NAO_ALUNO_STEPS = [
+  "CPF",
+  "Dados",
+  "Faculdade",
+  "Unidade",
+  "Área",
+  "Turno",
+  "Confirmar",
+] as const;
 
 export function vagaLimit(
   area: AreaCode,

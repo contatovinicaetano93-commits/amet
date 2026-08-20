@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   AREA_CODES,
   DIAS,
+  FACULDADE_VALUES,
   PERIODOS,
   UNIDADES,
   areasDisponiveis,
@@ -34,8 +35,7 @@ export const personalDataSchema = z.object({
   email: z.string().trim().email("E-mail inválido").max(120),
 });
 
-const alunoFields = z.object({
-  tipoPerfil: z.literal("aluno"),
+const estagioFields = z.object({
   unidade: z.enum(unidadeCodes, { message: "Selecione uma unidade" }),
   area: z.enum(AREA_CODES, { message: "Selecione uma área" }),
   periodo: z.enum(periodoCodes, { message: "Selecione um turno" }),
@@ -66,55 +66,67 @@ export function diasSelectionError(dias: readonly string[]): string | null {
   return null;
 }
 
-export const candidaturaAlunoSchema = personalDataSchema
-  .extend({ rgm: z.string().trim().min(1, "Informe seu RGM").max(20) })
-  .merge(alunoFields)
-  .superRefine((data, ctx) => {
-    const area = data.area as AreaCode;
-    const periodo = data.periodo as PeriodoCode;
-    const unidade = data.unidade as UnidadeCode;
+function refineEstagio(
+  data: z.infer<typeof estagioFields>,
+  ctx: z.RefinementCtx,
+) {
+  const area = data.area as AreaCode;
+  const periodo = data.periodo as PeriodoCode;
+  const unidade = data.unidade as UnidadeCode;
 
-    if (!areasDisponiveis(unidade).includes(area)) {
+  if (!areasDisponiveis(unidade).includes(area)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Esta área não está disponível nesta unidade",
+      path: ["area"],
+    });
+  }
+
+  if (!periodosDisponiveis(area, unidade).includes(periodo)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Turno indisponível para esta área nesta unidade",
+      path: ["periodo"],
+    });
+  }
+
+  const allowedDias = new Set<string>(diasDisponiveis(area, periodo));
+  for (const dia of data.dias) {
+    if (!allowedDias.has(dia)) {
       ctx.addIssue({
         code: "custom",
-        message: "Esta área não está disponível nesta unidade",
-        path: ["area"],
-      });
-    }
-
-    if (!periodosDisponiveis(area, unidade).includes(periodo)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Turno indisponível para esta área nesta unidade",
-        path: ["periodo"],
-      });
-    }
-
-    const allowedDias = new Set<string>(diasDisponiveis(area, periodo));
-    for (const dia of data.dias) {
-      if (!allowedDias.has(dia)) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Dia indisponível para o turno selecionado",
-          path: ["dias"],
-        });
-        break;
-      }
-    }
-
-    const diasError = diasSelectionError(data.dias);
-    if (diasError) {
-      ctx.addIssue({
-        code: "custom",
-        message: diasError,
+        message: "Dia indisponível para o turno selecionado",
         path: ["dias"],
       });
+      break;
     }
-  });
+  }
 
-export const candidaturaNaoAlunoSchema = personalDataSchema.extend({
-  tipoPerfil: z.literal("nao_aluno"),
-});
+  const diasError = diasSelectionError(data.dias);
+  if (diasError) {
+    ctx.addIssue({
+      code: "custom",
+      message: diasError,
+      path: ["dias"],
+    });
+  }
+}
+
+export const candidaturaAlunoSchema = personalDataSchema
+  .extend({
+    rgm: z.string().trim().min(1, "Informe seu RGM").max(20),
+    tipoPerfil: z.literal("aluno"),
+  })
+  .merge(estagioFields)
+  .superRefine(refineEstagio);
+
+export const candidaturaNaoAlunoSchema = personalDataSchema
+  .extend({
+    tipoPerfil: z.literal("nao_aluno"),
+    faculdade: z.enum(FACULDADE_VALUES, { message: "Selecione a faculdade" }),
+  })
+  .merge(estagioFields)
+  .superRefine(refineEstagio);
 
 export const candidaturaSchema = z.discriminatedUnion("tipoPerfil", [
   candidaturaAlunoSchema,
@@ -123,8 +135,15 @@ export const candidaturaSchema = z.discriminatedUnion("tipoPerfil", [
 
 export type CandidaturaInput = z.infer<typeof candidaturaSchema>;
 export type CandidaturaAlunoInput = z.infer<typeof candidaturaAlunoSchema>;
+export type CandidaturaNaoAlunoInput = z.infer<typeof candidaturaNaoAlunoSchema>;
 export type PersonalData = z.infer<typeof personalDataSchema>;
 
 export function isAluno(data: CandidaturaInput): data is CandidaturaAlunoInput {
   return data.tipoPerfil === "aluno";
+}
+
+export function isNaoAluno(
+  data: CandidaturaInput,
+): data is CandidaturaNaoAlunoInput {
+  return data.tipoPerfil === "nao_aluno";
 }

@@ -1,50 +1,28 @@
 "use client";
 
-import { cloneElement, isValidElement, useCallback, useEffect, useMemo, useState } from "react";
-import type { ReactElement } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 
+import { ApplicationFormSteps, type FormState, type FormStep } from "@/components/applicationFormSteps";
 import { StepIndicator } from "@/components/StepIndicator";
 import {
   ALUNO_STEPS,
-  AREAS,
-  DIAS,
   NAO_ALUNO_STEPS,
-  PERIODOS,
-  POLLING_INTERVAL_MS,
-  UNIDADES,
   areasDisponiveis,
   diasDisponiveis,
   periodosDisponiveis,
-  totalVagasAreaNaUnidade,
-  vagaLimit,
-  type AreaCode,
   type DiaCode,
   type PeriodoCode,
   type TipoPerfil,
   type UnidadeCode,
 } from "@/lib/constants";
-import type { AreaVacancy } from "@/lib/db";
 import {
   candidaturaSchema,
   cpfLookupSchema,
   diasSelectionError,
   personalDataSchema,
 } from "@/lib/schemas";
-import { formatCpf, formatPhone, stripDigits } from "@/lib/validators";
-
-type FormState = {
-  tipoPerfil: TipoPerfil | "";
-  cpf: string;
-  nomeCompleto: string;
-  rgm: string;
-  telefone: string;
-  email: string;
-  unidade: UnidadeCode | "";
-  area: AreaCode | "";
-  periodo: PeriodoCode | "";
-  dias: DiaCode[];
-};
+import { stripDigits } from "@/lib/validators";
 
 const initialForm: FormState = {
   tipoPerfil: "",
@@ -53,18 +31,47 @@ const initialForm: FormState = {
   rgm: "",
   telefone: "",
   email: "",
+  faculdade: "",
   unidade: "",
   area: "",
   periodo: "",
   dias: [],
 };
 
+function stepsFor(tipoPerfil: TipoPerfil | ""): FormStep[] {
+  switch (tipoPerfil) {
+    case "nao_aluno":
+      return ["cpf", "dados", "faculdade", "unidade", "area", "turno", "confirmar"];
+    case "aluno":
+      return ["cpf", "dados", "unidade", "area", "turno", "confirmar"];
+    case "":
+      return ["cpf"];
+    default: {
+      const exhaustive: never = tipoPerfil;
+      return exhaustive;
+    }
+  }
+}
+
+function stepLabels(tipoPerfil: TipoPerfil | ""): readonly string[] {
+  switch (tipoPerfil) {
+    case "nao_aluno":
+      return NAO_ALUNO_STEPS;
+    case "aluno":
+      return ALUNO_STEPS;
+    case "":
+      return ["CPF"];
+    default: {
+      const exhaustive: never = tipoPerfil;
+      return exhaustive;
+    }
+  }
+}
+
 export function ApplicationForm() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [vagas, setVagas] = useState<AreaVacancy[]>([]);
-  const [loadingVagas, setLoadingVagas] = useState(false);
   const [checkingCpf, setCheckingCpf] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -72,55 +79,27 @@ export function ApplicationForm() {
   const [cpfNotice, setCpfNotice] = useState("");
 
   const isAluno = form.tipoPerfil === "aluno";
-  const isNaoAluno = form.tipoPerfil === "nao_aluno";
-  const stepLabels = isNaoAluno ? NAO_ALUNO_STEPS : ALUNO_STEPS;
-  const maxStep = stepLabels.length;
+  const steps = stepsFor(form.tipoPerfil);
+  const currentStepId = steps[step - 1] ?? "cpf";
+  const labels = stepLabels(form.tipoPerfil);
 
   const availableAreas = useMemo(
     () => (form.unidade ? areasDisponiveis(form.unidade) : []),
     [form.unidade],
   );
-
   const availablePeriodos = useMemo(() => {
     if (!form.area || !form.unidade) return [] as PeriodoCode[];
     return periodosDisponiveis(form.area, form.unidade);
   }, [form.area, form.unidade]);
-
   const availableDias = useMemo(() => {
     if (!form.area || !form.periodo) return [] as DiaCode[];
     return diasDisponiveis(form.area, form.periodo);
   }, [form.area, form.periodo]);
 
-  const fetchVagas = useCallback(async () => {
-    if (!form.unidade) {
-      setVagas([]);
-      return;
-    }
-    setLoadingVagas(true);
-    try {
-      const response = await fetch(
-        `/api/vagas?unidade=${encodeURIComponent(form.unidade)}`,
-        { cache: "no-store" },
-      );
-      if (!response.ok) return;
-      const data = (await response.json()) as { areas: AreaVacancy[] };
-      setVagas(data.areas);
-    } finally {
-      setLoadingVagas(false);
-    }
-  }, [form.unidade]);
-
-  useEffect(() => {
-    if (!isAluno || step < 4 || !form.unidade) return;
-    void fetchVagas();
-    const interval = setInterval(() => void fetchVagas(), POLLING_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [isAluno, step, form.unidade, fetchVagas]);
-
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((c) => ({ ...c, [key]: value }));
-    setErrors((c) => {
-      const next = { ...c };
+    setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => {
+      const next = { ...current };
       delete next[key as string];
       return next;
     });
@@ -184,41 +163,48 @@ export function ApplicationForm() {
   }
 
   function toggleDia(code: DiaCode) {
-    setForm((c) => {
+    setForm((current) => {
       if (code === "sab") {
-        return { ...c, dias: c.dias.includes("sab") ? [] : ["sab"] };
+        return { ...current, dias: current.dias.includes("sab") ? [] : ["sab"] };
       }
-      if (c.dias.includes(code)) {
-        return { ...c, dias: c.dias.filter((d) => d !== code) };
+      if (current.dias.includes(code)) {
+        return { ...current, dias: current.dias.filter((dia) => dia !== code) };
       }
-      if (c.dias.includes("sab")) {
-        return { ...c, dias: [code] };
+      if (current.dias.includes("sab")) {
+        return { ...current, dias: [code] };
       }
-      if (c.dias.length >= 2) {
-        return c;
+      if (current.dias.length >= 2) {
+        return current;
       }
-      return { ...c, dias: [...c.dias, code] };
+      return { ...current, dias: [...current.dias, code] };
     });
-    setErrors((c) => {
-      const n = { ...c };
-      delete n.dias;
-      return n;
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.dias;
+      return next;
+    });
+  }
+
+  function selectUnidade(code: UnidadeCode) {
+    setForm((current) => ({
+      ...current,
+      unidade: code,
+      area: "",
+      periodo: "",
+      dias: [],
+    }));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.unidade;
+      delete next.area;
+      delete next.periodo;
+      delete next.dias;
+      return next;
     });
   }
 
   function buildPayload() {
-    if (isNaoAluno) {
-      return {
-        tipoPerfil: "nao_aluno" as const,
-        nomeCompleto: form.nomeCompleto,
-        rgm: form.rgm,
-        cpf: stripDigits(form.cpf),
-        telefone: form.telefone,
-        email: form.email,
-      };
-    }
-    return {
-      tipoPerfil: "aluno" as const,
+    const shared = {
       nomeCompleto: form.nomeCompleto,
       rgm: form.rgm,
       cpf: stripDigits(form.cpf),
@@ -229,6 +215,19 @@ export function ApplicationForm() {
       periodo: form.periodo,
       dias: form.dias,
     };
+
+    switch (form.tipoPerfil) {
+      case "nao_aluno":
+        return { ...shared, tipoPerfil: "nao_aluno" as const, faculdade: form.faculdade };
+      case "aluno":
+        return { ...shared, tipoPerfil: "aluno" as const };
+      case "":
+        return { ...shared, tipoPerfil: "aluno" as const };
+      default: {
+        const exhaustive: never = form.tipoPerfil;
+        return exhaustive;
+      }
+    }
   }
 
   async function submitCandidatura() {
@@ -251,7 +250,6 @@ export function ApplicationForm() {
 
       if (!response.ok) {
         setSubmitError(data.error ?? "Não foi possível enviar.");
-        if (response.status === 409) void fetchVagas();
         return;
       }
 
@@ -259,7 +257,6 @@ export function ApplicationForm() {
       setForm(initialForm);
       setStep(1);
       setCpfNotice("");
-      void fetchVagas();
     } catch {
       setSubmitError("Erro de conexão. Tente novamente.");
     } finally {
@@ -268,87 +265,100 @@ export function ApplicationForm() {
   }
 
   function goNext() {
-    if (step === 2) {
-      if (!validateDados()) return;
-      if (isNaoAluno) {
+    switch (currentStepId) {
+      case "cpf":
+        void handleCpfSubmit();
+        return;
+      case "dados":
+        if (!validateDados()) return;
+        setStep((current) => current + 1);
+        return;
+      case "faculdade":
+        if (!form.faculdade) {
+          setErrors({ faculdade: "Selecione a faculdade" });
+          return;
+        }
+        setStep((current) => current + 1);
+        return;
+      case "unidade":
+        if (!form.unidade) {
+          setErrors({ unidade: "Selecione uma unidade" });
+          return;
+        }
+        updateField("area", "");
+        updateField("periodo", "");
+        updateField("dias", []);
+        setErrors({});
+        setStep((current) => current + 1);
+        return;
+      case "area":
+        if (!form.area) {
+          setErrors({ area: "Selecione uma área" });
+          return;
+        }
+        updateField("periodo", "");
+        updateField("dias", []);
+        setErrors({});
+        setStep((current) => current + 1);
+        return;
+      case "turno":
+        if (!form.periodo) {
+          setErrors({ periodo: "Selecione um turno" });
+          return;
+        }
+        if (
+          form.area &&
+          form.unidade &&
+          !periodosDisponiveis(form.area, form.unidade).includes(form.periodo)
+        ) {
+          setErrors({ periodo: "Turno indisponível para esta área nesta unidade" });
+          return;
+        }
+        {
+          const diasError = diasSelectionError(form.dias);
+          if (diasError) {
+            setErrors({ dias: diasError });
+            return;
+          }
+        }
+        setErrors({});
+        setStep((current) => current + 1);
+        return;
+      case "confirmar":
         void submitCandidatura();
         return;
+      default: {
+        const exhaustive: never = currentStepId;
+        return exhaustive;
       }
-      setStep(3);
-      return;
-    }
-    if (step === 3) {
-      if (!form.unidade) {
-        setErrors({ unidade: "Selecione uma unidade" });
-        return;
-      }
-      updateField("area", "");
-      updateField("periodo", "");
-      updateField("dias", []);
-      setErrors({});
-      setStep(4);
-      return;
-    }
-    if (step === 4) {
-      if (!form.area) {
-        setErrors({ area: "Selecione uma área" });
-        return;
-      }
-      const vacancy = vagas.find((v) => v.code === form.area);
-      if (vacancy?.full) {
-        setErrors({ area: "Esta área está com vagas esgotadas nesta unidade" });
-        return;
-      }
-      updateField("periodo", "");
-      updateField("dias", []);
-      setErrors({});
-      setStep(5);
-      return;
-    }
-    if (step === 5) {
-      if (!form.periodo) {
-        setErrors({ periodo: "Selecione um turno" });
-        return;
-      }
-      if (
-        form.area &&
-        form.unidade &&
-        !periodosDisponiveis(form.area, form.unidade).includes(form.periodo)
-      ) {
-        setErrors({ periodo: "Turno indisponível para esta área nesta unidade" });
-        return;
-      }
-      const periodoVacancy = vagas
-        .find((v) => v.code === form.area)
-        ?.periodos.find((p) => p.periodo === form.periodo);
-      if (periodoVacancy?.full) {
-        setErrors({ periodo: "Vagas esgotadas neste turno" });
-        return;
-      }
-      const diasError = diasSelectionError(form.dias);
-      if (diasError) {
-        setErrors({ dias: diasError });
-        return;
-      }
-      setErrors({});
-      setStep(6);
-      return;
     }
   }
 
   function goBack() {
     setErrors({});
     setSubmitError("");
-    if (step === 3) {
-      updateField("area", "");
-      updateField("periodo", "");
-      updateField("dias", []);
+    switch (currentStepId) {
+      case "unidade":
+        updateField("area", "");
+        updateField("periodo", "");
+        updateField("dias", []);
+        break;
+      case "area":
+        updateField("periodo", "");
+        updateField("dias", []);
+        break;
+      case "cpf":
+      case "dados":
+      case "faculdade":
+      case "turno":
+      case "confirmar":
+        break;
+      default: {
+        const exhaustive: never = currentStepId;
+        return exhaustive;
+      }
     }
-    if (step === 4) {
-      updateField("periodo", "");
-      updateField("dias", []);
-    }
-    setStep((s) => Math.max(1, s - 1));
+    setStep((current) => Math.max(1, current - 1));
   }
 
   if (success) {
@@ -383,278 +393,21 @@ export function ApplicationForm() {
         ← Voltar para a página inicial
       </Link>
 
-      <StepIndicator currentStep={step} labels={stepLabels} />
+      <StepIndicator currentStep={step} labels={labels} />
 
       <div className="mt-8">
-        {step === 1 && (
-          <div className="space-y-4">
-            <p className="text-sm text-amet-indigo/70">
-              Informe seu CPF para verificarmos se você é aluno AMET.
-            </p>
-            <Field id="cpf" label="CPF" error={errors.cpf}>
-              <input
-                value={form.cpf}
-                onChange={(e) => updateField("cpf", formatCpf(e.target.value))}
-                className={inputClass(errors.cpf)}
-                inputMode="numeric"
-                placeholder="000.000.000-00"
-              />
-            </Field>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {cpfNotice && (
-              <p className="sm:col-span-2 rounded-xl border border-amet-blue/25 bg-amet-blue/5 px-4 py-3 text-sm text-amet-indigo/80">
-                {cpfNotice}
-              </p>
-            )}
-            <Field id="nomeCompleto" label="Nome completo" error={errors.nomeCompleto} className="sm:col-span-2">
-              <input
-                value={form.nomeCompleto}
-                onChange={(e) => updateField("nomeCompleto", e.target.value)}
-                className={inputClass(errors.nomeCompleto)}
-              />
-            </Field>
-            <Field id="rgm" label={isAluno ? "RGM" : "RGM (opcional)"} error={errors.rgm}>
-              <input
-                value={form.rgm}
-                onChange={(e) => updateField("rgm", e.target.value)}
-                className={inputClass(errors.rgm)}
-              />
-            </Field>
-            <Field id="email" label="E-mail" error={errors.email}>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => updateField("email", e.target.value)}
-                className={inputClass(errors.email)}
-              />
-            </Field>
-            <Field id="telefone" label="Telefone / WhatsApp" error={errors.telefone} className="sm:col-span-2">
-              <input
-                value={form.telefone}
-                onChange={(e) => updateField("telefone", formatPhone(e.target.value))}
-                className={inputClass(errors.telefone)}
-                inputMode="tel"
-              />
-            </Field>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-4">
-            <p className="text-sm text-amet-indigo/70">Selecione sua unidade.</p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {UNIDADES.map((u) => (
-                <button
-                  key={u.code}
-                  type="button"
-                  aria-pressed={form.unidade === u.code}
-                  onClick={() => {
-                    setForm((current) => ({
-                      ...current,
-                      unidade: u.code,
-                      area: "",
-                      periodo: "",
-                      dias: [],
-                    }));
-                    setErrors((current) => {
-                      const next = { ...current };
-                      delete next.unidade;
-                      delete next.area;
-                      delete next.periodo;
-                      delete next.dias;
-                      return next;
-                    });
-                  }}
-                  className={`rounded-2xl border px-4 py-4 font-medium transition ${
-                    form.unidade === u.code
-                      ? "border-amet-purple bg-amet-purple/10 text-amet-purple"
-                      : "border-amet-indigo/15 text-amet-indigo/80 hover:border-amet-blue"
-                  }`}
-                >
-                  {u.label}
-                </button>
-              ))}
-            </div>
-            {errors.unidade && <p className="text-sm text-amet-purple">{errors.unidade}</p>}
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-4">
-            <p className="text-sm text-amet-indigo/70">
-              Escolha a área disponível na unidade{" "}
-              {UNIDADES.find((u) => u.code === form.unidade)?.label}. Vagas variam
-              por turno.
-            </p>
-            {loadingVagas ? (
-              <p className="text-sm text-amet-indigo/70">Carregando vagas...</p>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {availableAreas.map((code) => {
-                  const config = AREAS[code];
-                  const vacancy = vagas.find((v) => v.code === code);
-                  const disabled = vacancy?.full ?? false;
-                  const selected = form.area === code;
-                  const total = form.unidade
-                    ? totalVagasAreaNaUnidade(code, form.unidade)
-                    : 0;
-                  const available =
-                    vacancy?.periodos.reduce((sum, p) => sum + p.available, 0) ??
-                    total;
-                  return (
-                    <button
-                      key={code}
-                      type="button"
-                      disabled={disabled}
-                      aria-pressed={selected}
-                      onClick={() => updateField("area", code)}
-                      className={`rounded-2xl border p-5 text-left transition-all ${
-                        disabled
-                          ? "cursor-not-allowed border-amet-indigo/10 bg-amet-indigo/[0.03] opacity-60"
-                          : selected
-                            ? "border-amet-purple bg-amet-purple/5 shadow-md shadow-amet-purple/10"
-                            : "border-amet-blue/15 bg-amet-white hover:border-amet-blue hover:shadow-sm"
-                      }`}
-                    >
-                      <p className="text-lg font-bold text-amet-indigo">{config.label}</p>
-                      <p className="mt-1 text-sm text-amet-indigo/60">
-                        {disabled
-                          ? "Vagas esgotadas nesta unidade"
-                          : `${available} de ${total} vagas nesta unidade`}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {errors.area && <p className="text-sm text-amet-purple">{errors.area}</p>}
-          </div>
-        )}
-
-        {step === 5 && form.area && form.unidade && (
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <p className="text-sm text-amet-indigo/70">
-                Escolha o turno disponível para {AREAS[form.area].label} em{" "}
-                {UNIDADES.find((u) => u.code === form.unidade)?.label}.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {availablePeriodos.map((periodo) => {
-                  const label = PERIODOS.find((p) => p.code === periodo)?.label ?? periodo;
-                  const areaVacancy = vagas.find((v) => v.code === form.area);
-                  const periodoVacancy = areaVacancy?.periodos.find((p) => p.periodo === periodo);
-                  const total =
-                    periodoVacancy?.total ??
-                    vagaLimit(form.area as AreaCode, form.unidade as UnidadeCode, periodo);
-                  const available = periodoVacancy?.available ?? total;
-                  const disabled = periodoVacancy?.full ?? false;
-                  const selected = form.periodo === periodo;
-                  return (
-                    <button
-                      key={periodo}
-                      type="button"
-                      disabled={disabled}
-                      aria-pressed={selected}
-                      onClick={() => {
-                        updateField("periodo", periodo);
-                        updateField("dias", []);
-                      }}
-                      className={`rounded-2xl border px-4 py-4 font-medium transition ${
-                        disabled
-                          ? "cursor-not-allowed border-amet-indigo/10 bg-amet-indigo/[0.03] opacity-60"
-                          : selected
-                            ? "border-amet-blue bg-amet-blue/10 text-amet-blue"
-                            : "border-amet-indigo/15 text-amet-indigo/80 hover:border-amet-purple"
-                      }`}
-                    >
-                      {label}
-                      <span className="mt-1 block text-xs font-normal opacity-80">
-                        {disabled
-                          ? "Esgotado"
-                          : `${available} de ${total} vagas`}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.periodo && <p className="text-sm text-amet-purple">{errors.periodo}</p>}
-            </div>
-
-            {form.periodo && (
-              <div className="space-y-3">
-                <p className="text-sm text-amet-indigo/70">
-                  Escolha exatamente 2 dias — ou apenas Sábado (sozinho). Não é
-                  possível escolher 1 dia útil nem 3 dias.
-                </p>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {availableDias.map((dia) => {
-                    const label = DIAS.find((d) => d.code === dia)?.label ?? dia;
-                    const selected = form.dias.includes(dia);
-                    const disabled =
-                      !selected &&
-                      dia !== "sab" &&
-                      (form.dias.includes("sab") || form.dias.length >= 2);
-                    return (
-                      <button
-                        key={dia}
-                        type="button"
-                        disabled={disabled}
-                        aria-pressed={selected}
-                        onClick={() => toggleDia(dia)}
-                        className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                          disabled
-                            ? "cursor-not-allowed border-amet-indigo/10 bg-amet-indigo/[0.03] opacity-50"
-                            : selected
-                              ? "border-amet-purple bg-amet-purple/10 text-amet-purple"
-                              : "border-amet-indigo/15 text-amet-indigo/80 hover:border-amet-blue"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {errors.dias && <p className="text-sm text-amet-purple">{errors.dias}</p>}
-              </div>
-            )}
-          </div>
-        )}
-
-        {step === 6 && (
-          <div className="space-y-4">
-            <p className="text-sm text-amet-indigo/70">Confirme os dados antes de enviar.</p>
-            <dl className="grid gap-4 rounded-2xl border border-amet-blue/15 bg-amet-white p-5 sm:grid-cols-2">
-              <SummaryItem label="Nome" value={form.nomeCompleto} />
-              <SummaryItem label="RGM" value={form.rgm} />
-              <SummaryItem label="CPF" value={form.cpf} />
-              <SummaryItem label="Telefone" value={form.telefone} />
-              <SummaryItem label="E-mail" value={form.email} className="sm:col-span-2" />
-              <SummaryItem
-                label="Unidade"
-                value={UNIDADES.find((u) => u.code === form.unidade)?.label ?? ""}
-              />
-              <SummaryItem
-                label="Área"
-                value={form.area ? AREAS[form.area].label : ""}
-              />
-              <SummaryItem
-                label="Turno"
-                value={PERIODOS.find((p) => p.code === form.periodo)?.label ?? ""}
-              />
-              <SummaryItem
-                label="Dias"
-                value={form.dias
-                  .map((d) => DIAS.find((x) => x.code === d)?.label ?? d)
-                  .join(", ")}
-                className="sm:col-span-2"
-              />
-            </dl>
-          </div>
-        )}
+        <ApplicationFormSteps
+          currentStepId={currentStepId}
+          form={form}
+          errors={errors}
+          cpfNotice={cpfNotice}
+          availableAreas={availableAreas}
+          availablePeriodos={availablePeriodos}
+          availableDias={availableDias}
+          updateField={updateField}
+          onSelectUnidade={selectUnidade}
+          toggleDia={toggleDia}
+        />
       </div>
 
       {submitError && (
@@ -680,39 +433,7 @@ export function ApplicationForm() {
           <span />
         )}
 
-        {step === 1 && (
-          <button
-            type="button"
-            disabled={checkingCpf}
-            onClick={() => void handleCpfSubmit()}
-            className="rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-purple disabled:opacity-60"
-          >
-            {checkingCpf ? "Verificando CPF..." : "Continuar"}
-          </button>
-        )}
-
-        {step === 2 && (
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={goNext}
-            className="rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-purple disabled:opacity-60"
-          >
-            {isNaoAluno ? (submitting ? "Enviando..." : "Enviar") : "Continuar"}
-          </button>
-        )}
-
-        {step >= 3 && step < maxStep && (
-          <button
-            type="button"
-            onClick={goNext}
-            className="rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-purple"
-          >
-            Continuar
-          </button>
-        )}
-
-        {step === maxStep && step >= 6 && (
+        {currentStepId === "confirmar" ? (
           <button
             type="button"
             onClick={() => void submitCandidatura()}
@@ -721,64 +442,17 @@ export function ApplicationForm() {
           >
             {submitting ? "Enviando..." : "Enviar candidatura"}
           </button>
+        ) : (
+          <button
+            type="button"
+            disabled={checkingCpf}
+            onClick={() => void goNext()}
+            className="rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-amet-white hover:bg-amet-purple disabled:opacity-60"
+          >
+            {currentStepId === "cpf" && checkingCpf ? "Verificando CPF..." : "Continuar"}
+          </button>
         )}
       </div>
     </div>
   );
-}
-
-function SummaryItem({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">{label}</dt>
-      <dd className="mt-1 text-sm text-amet-indigo">{value || "—"}</dd>
-    </div>
-  );
-}
-
-function Field({
-  id,
-  label,
-  error,
-  className,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  className?: string;
-  children: ReactElement<React.InputHTMLAttributes<HTMLInputElement>>;
-}) {
-  const errorId = `${id}-error`;
-  return (
-    <label className={`block space-y-2 ${className ?? ""}`}>
-      <span className="text-sm font-medium text-amet-indigo/80">{label}</span>
-      {isValidElement(children)
-        ? cloneElement(children, {
-            id,
-            "aria-invalid": !!error,
-            "aria-describedby": error ? errorId : undefined,
-          })
-        : children}
-      {error && (
-        <span id={errorId} role="alert" className="block text-sm text-amet-purple">
-          {error}
-        </span>
-      )}
-    </label>
-  );
-}
-
-function inputClass(error?: string) {
-  return `w-full rounded-xl border bg-amet-white px-4 py-3 text-amet-indigo outline-none transition placeholder:text-amet-indigo/60 ${
-    error ? "border-amet-purple" : "border-amet-indigo/15 focus:border-amet-blue"
-  }`;
 }

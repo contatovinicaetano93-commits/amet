@@ -17,14 +17,13 @@ afterAll(async () => {
 });
 
 describe("createCandidatura concurrency", () => {
-  it("never lets concurrent submissions exceed the area/unidade/turno vacancy limit", async () => {
-    // EST/tarde/liberdade limit is 30 in the official vacancy matrix
-    const N = 35;
+  it("does not cap registrations by the old vacancy totals", async () => {
+    const N = 4;
     const results = await Promise.all(
       Array.from({ length: N }, (_, i) =>
         createCandidatura({
           tipoPerfil: "aluno",
-          nomeCompleto: `TESTE CONCORRENCIA VAGAS ${i}`,
+          nomeCompleto: `TESTE SEM LIMITE VAGAS ${i}`,
           rgm: `TESTE-${i}`,
           cpf: fakeCpf(1, i),
           telefone: "11999999999",
@@ -38,11 +37,28 @@ describe("createCandidatura concurrency", () => {
     );
 
     const ok = results.filter((r) => r.ok).length;
-    const areaFull = results.filter((r) => !r.ok && r.code === "AREA_FULL").length;
-
-    expect(ok).toBe(30);
-    expect(areaFull).toBe(5);
+    expect(ok).toBe(N);
   }, 60_000);
+
+  it("still rejects a combination that does not exist", async () => {
+    const result = await createCandidatura({
+      tipoPerfil: "aluno",
+      nomeCompleto: "TESTE COMBO INEXISTENTE",
+      rgm: "TESTE-HEM",
+      cpf: fakeCpf(4, 1),
+      telefone: "11999999999",
+      email: "teste-combo@example.com",
+      unidade: "ipiranga",
+      area: "HEM",
+      periodo: "manha",
+      dias: ["seg", "ter"],
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe("AREA_FULL");
+    }
+  }, 30_000);
 
   it("never lets the same CPF register twice under concurrent submission", async () => {
     const N = 10;
@@ -79,6 +95,11 @@ describe("createCandidatura concurrency", () => {
       cpf,
       telefone: "11999999999",
       email: "teste-unico-1@example.com",
+      faculdade: "UNICID",
+      unidade: "guarulhos",
+      area: "AC",
+      periodo: "manha",
+      dias: ["seg", "ter"],
     });
     expect(first.ok).toBe(true);
 

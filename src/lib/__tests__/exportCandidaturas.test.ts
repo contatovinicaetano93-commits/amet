@@ -8,7 +8,7 @@ import {
 import type { CandidaturaRecord } from "@/lib/db";
 
 describe("exportCandidaturas", () => {
-  it("maps aluno fields into separate columns", () => {
+  it("maps aluno fields into separate columns and leaves faculdade empty", () => {
     const item = {
       id: "1",
       createdAt: "2026-07-23T17:32:15.000Z",
@@ -31,12 +31,13 @@ describe("exportCandidaturas", () => {
     expect(row[1]).toBe("Aluno");
     expect(row[2]).toBe("Maria Teste");
     expect(row[4]).toBe("39053344705");
-    expect(row[7]).toBeTruthy();
-    expect(row[8]).toBe("Estética");
-    expect(row[11]).toBe("Enviado");
+    expect(row[7]).toBe("");
+    expect(row[8]).toBeTruthy();
+    expect(row[9]).toBe("Estética");
+    expect(row[12]).toBe("Enviado");
   });
 
-  it("leaves stage fields empty for nao_aluno", () => {
+  it("fills faculdade and stage fields for nao_aluno", () => {
     const item = {
       id: "2",
       createdAt: "2026-07-23T17:32:15.000Z",
@@ -48,15 +49,20 @@ describe("exportCandidaturas", () => {
       cpf: "52998224725",
       telefone: "11988887777",
       email: "joao@example.com",
+      faculdade: "UNINOVE",
+      unidade: "ipiranga",
+      area: "IMG",
+      periodo: "noite",
+      dias: ["qua", "qui"],
     } as CandidaturaRecord;
 
     const row = candidaturaToExportRow(item);
     expect(row[1]).toBe("Não aluno");
-    expect(row[7]).toBe("");
-    expect(row[8]).toBe("");
-    expect(row[9]).toBe("");
-    expect(row[10]).toBe("");
-    expect(row[11]).toBe("Falhou");
+    expect(row[7]).toBe("UNINOVE");
+    expect(row[8]).toBe("Ipiranga");
+    expect(row[9]).toBe("Imagenologia");
+    expect(row[10]).toBe("Noite");
+    expect(row[12]).toBe("Falhou");
   });
 
   it("builds a real xlsx buffer with one column per header", async () => {
@@ -71,11 +77,15 @@ describe("exportCandidaturas", () => {
       cpf: "11144477735",
       telefone: "11977776666",
       email: "ana@example.com",
+      faculdade: "São Judas",
+      unidade: "guarulhos",
+      area: "AC",
+      periodo: "manha",
+      dias: ["seg", "ter"],
     } as CandidaturaRecord;
 
     const buffer = await buildCandidaturasWorkbook([item]);
     expect(buffer.byteLength).toBeGreaterThan(1000);
-    // xlsx files are zip archives starting with PK
     expect(buffer.subarray(0, 2).toString()).toBe("PK");
   });
 });

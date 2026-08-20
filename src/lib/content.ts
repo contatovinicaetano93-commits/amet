@@ -138,7 +138,7 @@ export const estagiosContent = {
   subtitle:
     "Residência Clínica em Saúde: formação complementar em ambiente real, com acompanhamento de profissionais experientes.",
   intro:
-    "A residência permite que os participantes atuem em ambiente real, com acompanhamento de profissionais experientes, desenvolvendo habilidades técnicas, raciocínio clínico e postura ética diante de situações do dia a dia. As oportunidades são organizadas por área, unidade e turno nas unidades Guarulhos, Ipiranga e Liberdade, com vagas limitadas e acompanhamento docente em todas as etapas.",
+    "A residência permite que os participantes atuem em ambiente real, com acompanhamento de profissionais experientes, desenvolvendo habilidades técnicas, raciocínio clínico e postura ética diante de situações do dia a dia. As oportunidades são organizadas por área, unidade e turno nas unidades Guarulhos, Ipiranga e Liberdade, com acompanhamento docente em todas as etapas.",
   highlights: [
     {
       title: "Supervisão especializada",
@@ -146,9 +146,9 @@ export const estagiosContent = {
         "Atendimentos clínicos supervisionados por professores e profissionais atuantes em cada etapa.",
     },
     {
-      title: "Vagas por unidade e turno",
+      title: "Inscrições por unidade e turno",
       description:
-        "Inscrições organizadas por especialidade, unidade e turno, com controle de vagas em tempo real.",
+        "Inscrições organizadas por especialidade, unidade e turno, com acompanhamento docente em todas as etapas.",
     },
     {
       title: "Três unidades",
@@ -209,7 +209,7 @@ export const unidadesEquipamentosContent = {
         "Unidade central com salas de aula, laboratórios de análises clínicas e espaços de prática supervisionada.",
     },
     {
-      nome: "CTA",
+      nome: "Ipiranga",
       descricao:
         "Unidade com foco em tecnologias aplicadas à saúde, estética e rotinas laboratoriais avançadas.",
     },

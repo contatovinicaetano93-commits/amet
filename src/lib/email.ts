@@ -1,15 +1,20 @@
 import { Resend } from "resend";
 
-import { AREAS, DIAS, PERIODOS, UNIDADES } from "@/lib/constants";
+import { AREAS, DIAS, PERIODOS, UNIDADES, labelTipoPerfil } from "@/lib/constants";
 import { siteContent } from "@/lib/content";
-import { isAluno, type CandidaturaInput } from "@/lib/schemas";
+import { isNaoAluno, type CandidaturaInput } from "@/lib/schemas";
 
 function buildSubject(nomeCompleto: string): string {
   return `Inscrições AMET 2026 — ${nomeCompleto}`;
 }
 
 function formatCandidaturaBody(data: CandidaturaInput): string {
-  const perfil = data.tipoPerfil === "aluno" ? "Aluno AMET" : "Não aluno AMET";
+  const perfil = labelTipoPerfil(data.tipoPerfil, "long");
+  const unidade = UNIDADES.find((u) => u.code === data.unidade)?.label ?? data.unidade;
+  const periodo = PERIODOS.find((p) => p.code === data.periodo)?.label ?? data.periodo;
+  const dias = data.dias
+    .map((code) => DIAS.find((d) => d.code === code)?.label ?? code)
+    .join(", ");
 
   const lines = [
     buildSubject(data.nomeCompleto),
@@ -22,22 +27,15 @@ function formatCandidaturaBody(data: CandidaturaInput): string {
     `E-mail: ${data.email}`,
   ];
 
-  if (isAluno(data)) {
-    const unidade = UNIDADES.find((u) => u.code === data.unidade)?.label ?? data.unidade;
-    const periodo = PERIODOS.find((p) => p.code === data.periodo)?.label ?? data.periodo;
-    const dias = data.dias
-      .map((code) => DIAS.find((d) => d.code === code)?.label ?? code)
-      .join(", ");
-
-    lines.push(
-      `Unidade: ${unidade}`,
-      `Área de estágio: ${AREAS[data.area].label}`,
-      `Turno: ${periodo}`,
-      `Dias: ${dias}`,
-    );
+  if (isNaoAluno(data)) {
+    lines.push(`Faculdade: ${data.faculdade}`);
   }
 
   lines.push(
+    `Unidade: ${unidade}`,
+    `Área de estágio: ${AREAS[data.area].label}`,
+    `Turno: ${periodo}`,
+    `Dias: ${dias}`,
     "",
     `Enviado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`,
   );

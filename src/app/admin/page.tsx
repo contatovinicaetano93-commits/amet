@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { AREAS, DIAS, PERIODOS, UNIDADES } from "@/lib/constants";
+import { AREAS, DIAS, PERIODOS, UNIDADES, labelTipoPerfil } from "@/lib/constants";
 import type { CandidaturaRecord } from "@/lib/db";
-import { isAluno } from "@/lib/schemas";
+import { isNaoAluno } from "@/lib/schemas";
 import {
   buildCandidaturasXlsxFilename,
   forceXlsxFilename,
@@ -223,7 +223,7 @@ export default function AdminPage() {
               <div>
                 <h2 className="text-lg font-semibold text-amet-indigo">{item.nomeCompleto}</h2>
                 <p className="text-xs text-amet-indigo/70">
-                  {formatDate(item.createdAt)} · {item.tipoPerfil === "aluno" ? "Aluno" : "Não aluno"}
+                  {formatDate(item.createdAt)} · {labelTipoPerfil(item.tipoPerfil)}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -262,28 +262,30 @@ export default function AdminPage() {
                 <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">E-mail</dt>
                 <dd className="mt-1 text-sm text-amet-indigo">{item.email}</dd>
               </div>
-              {isAluno(item) && (
-                <>
-                  <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Unidade</dt>
-                    <dd className="mt-1 text-sm text-amet-indigo">{labelUnidade(item.unidade)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
-                      Área de estágio
-                    </dt>
-                    <dd className="mt-1 text-sm text-amet-indigo">{labelArea(item.area)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Turno</dt>
-                    <dd className="mt-1 text-sm text-amet-indigo">{labelPeriodo(item.periodo)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Dias</dt>
-                    <dd className="mt-1 text-sm text-amet-indigo">{labelDias(item.dias)}</dd>
-                  </div>
-                </>
+              {isNaoAluno(item) && (
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Faculdade</dt>
+                  <dd className="mt-1 text-sm text-amet-indigo">{item.faculdade || "—"}</dd>
+                </div>
               )}
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Unidade</dt>
+                <dd className="mt-1 text-sm text-amet-indigo">{labelUnidade(item.unidade) || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                  Área de estágio
+                </dt>
+                <dd className="mt-1 text-sm text-amet-indigo">{labelArea(item.area) || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Turno</dt>
+                <dd className="mt-1 text-sm text-amet-indigo">{labelPeriodo(item.periodo) || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Dias</dt>
+                <dd className="mt-1 text-sm text-amet-indigo">{labelDias(item.dias) || "—"}</dd>
+              </div>
             </dl>
           </article>
         ))}
