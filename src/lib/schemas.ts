@@ -147,3 +147,17 @@ export function isNaoAluno(
 ): data is CandidaturaNaoAlunoInput {
   return data.tipoPerfil === "nao_aluno";
 }
+
+export const participanteCreateSchema = z.object({
+  cpf: z.string().trim().refine(isValidCpf, "CPF inválido").transform(stripDigits),
+  nome: z.string().trim().min(3, "Informe o nome completo").max(120),
+  rgm: z.string().trim().max(20).default(""),
+});
+
+export const participanteUpdateSchema = z.object({
+  nome: z.string().trim().min(3, "Informe o nome completo").max(120),
+  rgm: z.string().trim().max(20).default(""),
+});
+
+export type ParticipanteCreateInput = z.infer<typeof participanteCreateSchema>;
+export type ParticipanteUpdateInput = z.infer<typeof participanteUpdateSchema>;

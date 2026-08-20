@@ -28,8 +28,8 @@ function normalizeCpf(raw) {
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    console.error("[delete-candidaturas] DATABASE_URL ausente — nada a fazer.");
-    process.exit(1);
+    console.log("[delete-candidaturas] DATABASE_URL ausente — nada a fazer.");
+    return;
   }
 
   const payload = JSON.parse(readFileSync(LIST_FILE, "utf8"));

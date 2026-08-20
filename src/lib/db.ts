@@ -21,14 +21,14 @@ export type CandidaturaRecord = CandidaturaInput & {
 let pool: Pool | null = null;
 let schemaReady: Promise<void> | null = null;
 
-function getPool(): Pool {
+export function getPool(): Pool {
   if (!pool) {
     pool = new Pool({ connectionString: process.env.DATABASE_URL });
   }
   return pool;
 }
 
-function ensureSchema(): Promise<void> {
+export function ensureSchema(): Promise<void> {
   if (!schemaReady) {
     schemaReady = getPool().query(`
       CREATE TABLE IF NOT EXISTS candidaturas (
@@ -375,4 +375,108 @@ export async function createCandidatura(
   } finally {
     client.release();
   }
+}
+
+export type UpdateCandidaturaResult =
+  | { ok: true; candidatura: CandidaturaRecord }
+  | { ok: false; error: string; code: "NOT_FOUND" | "DUPLICATE" | "AREA_FULL" | "UNKNOWN" };
+
+export async function updateCandidatura(
+  id: string,
+  input: CandidaturaInput,
+): Promise<UpdateCandidaturaResult> {
+  await ensureSchema();
+  const client = await getPool().connect();
+
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`cpf:${input.cpf}`]);
+
+    const current = await client.query<{ id: string }>(
+      `SELECT id FROM candidaturas WHERE id = $1 LIMIT 1`,
+      [id],
+    );
+    if (!current.rows[0]) {
+      await client.query("ROLLBACK");
+      return { ok: false, error: "Candidatura não encontrada.", code: "NOT_FOUND" };
+    }
+
+    const duplicate = await client.query<{ id: string }>(
+      `SELECT id FROM candidaturas WHERE cpf = $1 AND id <> $2 LIMIT 1`,
+      [input.cpf, id],
+    );
+    if (duplicate.rows[0]) {
+      await client.query("ROLLBACK");
+      return {
+        ok: false,
+        error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
+        code: "DUPLICATE",
+      };
+    }
+
+    const area = input.area as AreaCode;
+    const unidade = input.unidade as UnidadeCode;
+    const periodo = input.periodo as PeriodoCode;
+    const total = vagaLimit(area, unidade, periodo);
+    if (total <= 0) {
+      await client.query("ROLLBACK");
+      return {
+        ok: false,
+        error: "Esta combinação de área, unidade e turno não está disponível.",
+        code: "AREA_FULL",
+      };
+    }
+
+    const result = await client.query<CandidaturaRow>(
+      `UPDATE candidaturas SET
+        nome_completo = $2, rgm = $3, cpf = $4, telefone = $5, email = $6,
+        tipo_perfil = $7, unidade = $8, area = $9, periodo = $10, dias = $11, faculdade = $12
+       WHERE id = $1
+       RETURNING *`,
+      [
+        id,
+        input.nomeCompleto,
+        input.rgm ?? "",
+        input.cpf,
+        input.telefone,
+        input.email,
+        input.tipoPerfil,
+        input.unidade,
+        input.area,
+        input.periodo,
+        input.dias,
+        isNaoAluno(input) ? input.faculdade : null,
+      ],
+    );
+
+    await client.query("COMMIT");
+    return { ok: true, candidatura: rowToRecord(result.rows[0]) };
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    const pgError = error as { code?: string };
+    if (pgError.code === "23505") {
+      return {
+        ok: false,
+        error: "Já existe um cadastro com este CPF. Só é permitido um cadastro por CPF.",
+        code: "DUPLICATE",
+      };
+    }
+    console.error("[db] Falha ao atualizar candidatura:", error);
+    return {
+      ok: false,
+      error: "Não foi possível salvar a candidatura. Tente novamente.",
+      code: "UNKNOWN",
+    };
+  } finally {
+    client.release();
+  }
+}
+
+export async function deleteCandidaturaById(id: string): Promise<boolean> {
+  await ensureSchema();
+  const result = await getPool().query(
+    `DELETE FROM candidaturas WHERE id = $1`,
+    [id],
+  );
+  return (result.rowCount ?? 0) > 0;
 }

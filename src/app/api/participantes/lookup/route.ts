@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const found = isParticipanteCpf(parsed.data.cpf);
+    const found = await isParticipanteCpf(parsed.data.cpf);
 
     return NextResponse.json({
       cpf: parsed.data.cpf,

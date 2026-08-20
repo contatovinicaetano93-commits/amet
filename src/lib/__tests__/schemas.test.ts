@@ -5,6 +5,8 @@ import {
   candidaturaNaoAlunoSchema,
   candidaturaSchema,
   diasSelectionError,
+  participanteCreateSchema,
+  participanteUpdateSchema,
 } from "@/lib/schemas";
 
 const VALID_CPF = "111.444.777-35"; // known-valid check-digit test CPF
@@ -241,5 +243,43 @@ describe("candidaturaSchema (discriminated union)", () => {
   it("rejects an unknown tipoPerfil", () => {
     const result = candidaturaSchema.safeParse({ tipoPerfil: "outro" });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("participante schemas", () => {
+  it("accepts a valid aluno record with name and CPF", () => {
+    const result = participanteCreateSchema.safeParse({
+      cpf: VALID_CPF,
+      nome: "Maria Aluna",
+      rgm: "123",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.cpf).toBe("11144477735");
+    }
+  });
+
+  it("rejects a create without a name", () => {
+    const result = participanteCreateSchema.safeParse({
+      cpf: VALID_CPF,
+      nome: "Al",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an invalid CPF", () => {
+    const result = participanteCreateSchema.safeParse({
+      cpf: "123",
+      nome: "Maria Aluna",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("updates name and optional RGM", () => {
+    const result = participanteUpdateSchema.safeParse({
+      nome: "Maria Atualizada",
+      rgm: "",
+    });
+    expect(result.success).toBe(true);
   });
 });

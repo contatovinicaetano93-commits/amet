@@ -26,11 +26,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    if (parsed.data.tipoPerfil === "aluno" && !isParticipanteCpf(parsed.data.cpf)) {
+    if (parsed.data.tipoPerfil === "aluno" && !(await isParticipanteCpf(parsed.data.cpf))) {
       return NextResponse.json(
         {
           error:
-            "CPF não encontrado na base de alunos AMET. Selecione “Não sou aluno AMET” ou verifique o CPF.",
+            "CPF não encontrado na base de alunos AMET.",
           code: "CPF_NOT_IN_BASE",
         },
         { status: 400 },
