@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CandidaturaEditor } from "@/components/admin/CandidaturaEditor";
 import { formatDate, labelArea, labelDias, labelPeriodo, labelUnidade } from "@/components/admin/adminLabels";
 import { adminHeaders, readAdminError } from "@/lib/adminClient";
+import { matchesAdminSearch } from "@/lib/adminSearch";
 import { labelTipoPerfil } from "@/lib/constants";
 import type { CandidaturaRecord } from "@/lib/db";
 import { isNaoAluno, type CandidaturaInput } from "@/lib/schemas";
@@ -89,15 +90,12 @@ export function CandidaturasPanel({ adminKey }: CandidaturasPanelProps) {
   }, [fetchCandidaturas]);
 
   const visible = useMemo(() => {
-    const needle = query.trim().toLowerCase();
     return candidaturas.filter((item) => {
       if (!matchesFilter(item, filter)) return false;
-      if (!needle) return true;
-      return (
-        item.nomeCompleto.toLowerCase().includes(needle) ||
-        item.cpf.includes(needle.replace(/\D/g, "")) ||
-        item.email.toLowerCase().includes(needle)
-      );
+      return matchesAdminSearch(query, {
+        text: [item.nomeCompleto, item.email, item.rgm],
+        cpf: item.cpf,
+      });
     });
   }, [candidaturas, filter, query]);
 
@@ -214,7 +212,11 @@ export function CandidaturasPanel({ adminKey }: CandidaturasPanelProps) {
   return (
     <section>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <p className="text-sm text-amet-indigo/70">{candidaturas.length} registro(s)</p>
+        <p className="text-sm text-amet-indigo/70">
+          {query.trim() || filter !== "todos"
+            ? `${visible.length} de ${candidaturas.length} registro(s)`
+            : `${candidaturas.length} registro(s)`}
+        </p>
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
@@ -250,6 +252,8 @@ export function CandidaturasPanel({ adminKey }: CandidaturasPanelProps) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Buscar por nome, CPF ou e-mail"
+          autoComplete="off"
+          spellCheck={false}
           className="w-full rounded-xl border border-amet-blue/20 px-4 py-2 text-sm outline-none focus:border-amet-blue"
         />
         <div className="flex gap-2">
