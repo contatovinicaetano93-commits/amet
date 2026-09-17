@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Field, inputClass } from "@/components/applicationFormUi";
 import { adminHeaders, readAdminError } from "@/lib/adminClient";
+import { matchesAdminSearch } from "@/lib/adminSearch";
 import { formatCpf, stripDigits } from "@/lib/validators";
 
 type AlunoRecord = {
@@ -61,16 +62,12 @@ export function AlunosPanel({ adminKey }: AlunosPanelProps) {
   }, [fetchAlunos]);
 
   const visible = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    const digits = stripDigits(query);
-    return alunos.filter((item) => {
-      if (!needle) return true;
-      return (
-        item.nome.toLowerCase().includes(needle) ||
-        item.cpf.includes(digits) ||
-        item.rgm.toLowerCase().includes(needle)
-      );
-    });
+    return alunos.filter((item) =>
+      matchesAdminSearch(query, {
+        text: [item.nome, item.rgm],
+        cpf: item.cpf,
+      }),
+    );
   }, [alunos, query]);
 
   function openCreate() {
@@ -218,6 +215,8 @@ export function AlunosPanel({ adminKey }: AlunosPanelProps) {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Buscar por nome, CPF ou RGM"
+        autoComplete="off"
+        spellCheck={false}
         className="mt-6 w-full rounded-xl border border-amet-blue/20 px-4 py-2 text-sm outline-none focus:border-amet-blue"
       />
 
