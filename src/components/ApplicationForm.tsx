@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+
+import { getLenis } from "@/lib/lenis";
 
 import {
   ApplicationFormSteps,
@@ -77,6 +79,7 @@ export function ApplicationForm() {
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [cpfNotice, setCpfNotice] = useState("");
+  const formShellRef = useRef<HTMLDivElement>(null);
 
   const isAluno = form.tipoPerfil === "aluno";
   const steps = stepsFor(form.tipoPerfil, form.faculdade);
@@ -95,6 +98,18 @@ export function ApplicationForm() {
     if (!form.area || !form.periodo) return [] as DiaCode[];
     return diasDisponiveis(form.area, form.periodo);
   }, [form.area, form.periodo]);
+
+  useEffect(() => {
+    const node = formShellRef.current;
+    if (!node) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      getLenis()?.resize();
+      node.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [step, currentStepId]);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -388,7 +403,10 @@ export function ApplicationForm() {
   }
 
   return (
-    <div className="rounded-3xl border border-amet-blue/15 bg-gradient-to-br from-amet-blue/10 via-amet-white to-amet-purple/10 p-6 shadow-lg shadow-amet-blue/10 sm:p-8">
+    <div
+      ref={formShellRef}
+      className="scroll-mt-24 rounded-3xl border border-amet-blue/15 bg-gradient-to-br from-amet-blue/10 via-amet-white to-amet-purple/10 p-6 shadow-lg shadow-amet-blue/10 sm:p-8"
+    >
       <Link
         href="/#estagios"
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-amet-blue transition hover:text-amet-purple"
@@ -424,7 +442,7 @@ export function ApplicationForm() {
         </p>
       )}
 
-      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+      <div className="mt-8 mb-16 flex flex-col-reverse gap-3 sm:mb-0 sm:flex-row sm:justify-between">
         {step > 1 ? (
           <button
             type="button"
