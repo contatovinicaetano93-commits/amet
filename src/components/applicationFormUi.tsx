@@ -29,7 +29,7 @@ export function Field({
   label: string;
   error?: string;
   className?: string;
-  children: ReactElement<React.InputHTMLAttributes<HTMLInputElement>>;
+  children: ReactElement;
 }) {
   const errorId = `${id}-error`;
   return (
@@ -40,7 +40,7 @@ export function Field({
             id,
             "aria-invalid": !!error,
             "aria-describedby": error ? errorId : undefined,
-          })
+          } as never)
         : children}
       {error && (
         <span id={errorId} role="alert" className="block text-sm text-amet-purple">

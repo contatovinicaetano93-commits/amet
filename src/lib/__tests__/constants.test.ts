@@ -4,6 +4,7 @@ import {
   areasDisponiveis,
   diasDisponiveis,
   periodosDisponiveis,
+  requiresFormaPagamento,
   totalVagasAreaNaUnidade,
   vagaLimit,
 } from "@/lib/constants";
@@ -67,5 +68,23 @@ describe("diasDisponiveis", () => {
   it("returns weekday-only lists for HEM and IMG", () => {
     expect(diasDisponiveis("HEM", "manha")).toEqual(["seg", "ter", "qua", "qui"]);
     expect(diasDisponiveis("IMG", "noite")).toEqual(["seg", "ter", "qua", "qui"]);
+  });
+});
+
+describe("requiresFormaPagamento", () => {
+  it("skips payment only for the 4 presencial partner faculties", () => {
+    expect(requiresFormaPagamento("Cruzeiro do Sul Presencial")).toBe(false);
+    expect(requiresFormaPagamento("Unicid Presencial")).toBe(false);
+    expect(requiresFormaPagamento("Anhembi Presencial")).toBe(false);
+    expect(requiresFormaPagamento("Anhanguera Presencial")).toBe(false);
+  });
+
+  it("requires payment for every other faculty", () => {
+    expect(requiresFormaPagamento("UNINOVE")).toBe(true);
+    expect(requiresFormaPagamento("Unicid Semipresencial")).toBe(true);
+    expect(requiresFormaPagamento("Cruzeiro do Sul Semipresencial")).toBe(true);
+    expect(requiresFormaPagamento("Anhanguera")).toBe(true);
+    expect(requiresFormaPagamento("Anhembi Morumbi")).toBe(true);
+    expect(requiresFormaPagamento("UNICID")).toBe(true);
   });
 });

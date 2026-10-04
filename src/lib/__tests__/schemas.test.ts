@@ -8,6 +8,7 @@ import {
   participanteCreateSchema,
   participanteUpdateSchema,
 } from "@/lib/schemas";
+import { COMPLEMENTO } from "@/lib/__tests__/candidaturaFixture";
 
 const VALID_CPF = "111.444.777-35"; // known-valid check-digit test CPF
 
@@ -23,6 +24,7 @@ function baseAluno(overrides: Record<string, unknown> = {}) {
     area: "AC",
     periodo: "manha",
     dias: ["seg", "ter"],
+    ...COMPLEMENTO,
     ...overrides,
   };
 }
@@ -164,6 +166,46 @@ describe("candidaturaAlunoSchema", () => {
     const result = candidaturaAlunoSchema.safeParse(baseAluno({ rgm: "" }));
     expect(result.success).toBe(false);
   });
+
+  it("requires address, birth date, course and semester", () => {
+    const result = candidaturaAlunoSchema.safeParse(
+      baseAluno({
+        rua: "",
+        numero: "",
+        bairro: "",
+        cep: "",
+        cidade: "",
+        estado: "",
+        dataNascimento: "",
+        horarioFaculdade: "",
+        semestreAtual: "",
+        curso: "",
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const paths = result.error.issues.map((issue) => issue.path[0]);
+      expect(paths).toEqual(
+        expect.arrayContaining([
+          "rua",
+          "numero",
+          "bairro",
+          "cep",
+          "cidade",
+          "estado",
+          "dataNascimento",
+          "horarioFaculdade",
+          "semestreAtual",
+          "curso",
+        ]),
+      );
+    }
+  });
+
+  it("allows an empty address complemento", () => {
+    const result = candidaturaAlunoSchema.safeParse(baseAluno({ complemento: "" }));
+    expect(result.success).toBe(true);
+  });
 });
 
 describe("candidaturaNaoAlunoSchema", () => {
@@ -175,10 +217,12 @@ describe("candidaturaNaoAlunoSchema", () => {
       telefone: "11999999999",
       email: "joao@example.com",
       faculdade: "UNINOVE",
+      formaPagamento: "pix_vista",
       unidade: "ipiranga",
       area: "EST",
       periodo: "noite",
       dias: ["ter", "qua"],
+      ...COMPLEMENTO,
       ...overrides,
     };
   }
@@ -205,26 +249,85 @@ describe("candidaturaNaoAlunoSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts Unicid and Cruzeiro do Sul presencial/semipresencial", () => {
+  it("does not require payment for the 4 presencial partner faculties", () => {
     for (const faculdade of [
-      "Unicid Presencial",
-      "Unicid Semipresencial",
       "Cruzeiro do Sul Presencial",
-      "Cruzeiro do Sul Semipresencial",
+      "Unicid Presencial",
+      "Anhembi Presencial",
+      "Anhanguera Presencial",
     ]) {
-      expect(candidaturaNaoAlunoSchema.safeParse(baseNaoAluno({ faculdade })).success).toBe(
-        true,
+      const result = candidaturaNaoAlunoSchema.safeParse(
+        baseNaoAluno({ faculdade, formaPagamento: undefined }),
       );
+      expect(result.success).toBe(true);
     }
+  });
+
+  it("requires payment for other faculties, including semipresencial and legacy names", () => {
+    for (const faculdade of [
+      "UNINOVE",
+      "Unicid Semipresencial",
+      "Cruzeiro do Sul Semipresencial",
+      "Anhanguera",
+      "Anhembi Morumbi",
+      "UNICID",
+      "Universidade Cruzeiro do Sul",
+    ]) {
+      const missing = candidaturaNaoAlunoSchema.safeParse(
+        baseNaoAluno({ faculdade, formaPagamento: undefined }),
+      );
+      expect(missing.success).toBe(false);
+      if (!missing.success) {
+        expect(missing.error.issues.some((issue) => issue.path[0] === "formaPagamento")).toBe(
+          true,
+        );
+      }
+      expect(
+        candidaturaNaoAlunoSchema.safeParse(
+          baseNaoAluno({ faculdade, formaPagamento: "boleto" }),
+        ).success,
+      ).toBe(true);
+    }
+  });
+
+  it("accepts Unicid and Cruzeiro do Sul presencial/semipresencial", () => {
+    expect(
+      candidaturaNaoAlunoSchema.safeParse(
+        baseNaoAluno({ faculdade: "Unicid Presencial", formaPagamento: undefined }),
+      ).success,
+    ).toBe(true);
+    expect(
+      candidaturaNaoAlunoSchema.safeParse(
+        baseNaoAluno({ faculdade: "Cruzeiro do Sul Presencial", formaPagamento: undefined }),
+      ).success,
+    ).toBe(true);
+    expect(
+      candidaturaNaoAlunoSchema.safeParse(
+        baseNaoAluno({ faculdade: "Unicid Semipresencial", formaPagamento: "cartao_10x" }),
+      ).success,
+    ).toBe(true);
+    expect(
+      candidaturaNaoAlunoSchema.safeParse(
+        baseNaoAluno({
+          faculdade: "Cruzeiro do Sul Semipresencial",
+          formaPagamento: "pix_vista",
+        }),
+      ).success,
+    ).toBe(true);
   });
 
   it("still accepts legacy UNICID and Universidade Cruzeiro do Sul records", () => {
     expect(
-      candidaturaNaoAlunoSchema.safeParse(baseNaoAluno({ faculdade: "UNICID" })).success,
+      candidaturaNaoAlunoSchema.safeParse(
+        baseNaoAluno({ faculdade: "UNICID", formaPagamento: "pix_vista" }),
+      ).success,
     ).toBe(true);
     expect(
       candidaturaNaoAlunoSchema.safeParse(
-        baseNaoAluno({ faculdade: "Universidade Cruzeiro do Sul" }),
+        baseNaoAluno({
+          faculdade: "Universidade Cruzeiro do Sul",
+          formaPagamento: "boleto",
+        }),
       ).success,
     ).toBe(true);
   });
@@ -256,10 +359,12 @@ describe("candidaturaSchema (discriminated union)", () => {
       telefone: "11999999999",
       email: "joao@example.com",
       faculdade: "Anhanguera",
+      formaPagamento: "cartao_10x",
       unidade: "liberdade",
       area: "AC",
       periodo: "manha",
       dias: ["seg", "ter"],
+      ...COMPLEMENTO,
     });
     expect(result.success).toBe(true);
   });

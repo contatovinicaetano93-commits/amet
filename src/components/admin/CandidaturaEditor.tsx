@@ -3,36 +3,44 @@
 import { useState } from "react";
 
 import { Field, choiceButtonClass, inputClass } from "@/components/applicationFormUi";
-import type { FormState } from "@/components/applicationFormSteps";
+import {
+  buildCandidaturaPayload,
+  emptyFormState,
+  type FormState,
+} from "@/components/applicationFormSteps";
 import {
   AREAS,
+  CURSOS,
   DIAS,
+  ESTADOS_BR,
   FACULDADES,
+  FORMAS_PAGAMENTO,
+  HORARIOS_FACULDADE,
   PERIODOS,
+  SEMESTRES,
   UNIDADES,
   areasDisponiveis,
   diasDisponiveis,
+  labelSemestre,
   periodosDisponiveis,
+  requiresFormaPagamento,
+  type CursoCode,
   type DiaCode,
+  type EstadoCode,
+  type FaculdadeAceita,
+  type FormaPagamentoCode,
+  type HorarioFaculdadeCode,
+  type SemestreValue,
   type TipoPerfil,
   type UnidadeCode,
 } from "@/lib/constants";
 import type { CandidaturaRecord } from "@/lib/db";
 import { candidaturaSchema, isNaoAluno, type CandidaturaInput } from "@/lib/schemas";
-import { formatCpf, formatPhone, stripDigits } from "@/lib/validators";
+import { formatCep, formatCpf, formatPhone, stripDigits } from "@/lib/validators";
 
 const emptyForm: FormState = {
+  ...emptyFormState,
   tipoPerfil: "aluno",
-  cpf: "",
-  nomeCompleto: "",
-  rgm: "",
-  telefone: "",
-  email: "",
-  faculdade: "",
-  unidade: "",
-  area: "",
-  periodo: "",
-  dias: [],
 };
 
 function formFromRecord(item: CandidaturaRecord): FormState {
@@ -43,7 +51,22 @@ function formFromRecord(item: CandidaturaRecord): FormState {
     rgm: item.rgm,
     telefone: formatPhone(item.telefone),
     email: item.email,
+    rua: item.rua,
+    numero: item.numero,
+    complemento: item.complemento ?? "",
+    bairro: item.bairro,
+    cep: formatCep(item.cep),
+    cidade: item.cidade,
+    estado: (item.estado as FormState["estado"]) || "",
+    dataNascimento: item.dataNascimento,
+    horarioFaculdade: (item.horarioFaculdade as FormState["horarioFaculdade"]) || "",
+    semestreAtual: (item.semestreAtual as FormState["semestreAtual"]) || "",
+    curso: (item.curso as FormState["curso"]) || "",
     faculdade: isNaoAluno(item) ? item.faculdade : "",
+    formaPagamento:
+      isNaoAluno(item) && item.formaPagamento
+        ? (item.formaPagamento as FormaPagamentoCode)
+        : "",
     unidade: item.unidade as FormState["unidade"],
     area: item.area as FormState["area"],
     periodo: item.periodo as FormState["periodo"],
@@ -65,33 +88,6 @@ function toggleDia(current: DiaCode[], code: DiaCode): DiaCode[] {
     return current;
   }
   return [...current, code];
-}
-
-function buildPayload(form: FormState) {
-  const shared = {
-    nomeCompleto: form.nomeCompleto,
-    rgm: form.rgm,
-    cpf: stripDigits(form.cpf),
-    telefone: form.telefone,
-    email: form.email,
-    unidade: form.unidade,
-    area: form.area,
-    periodo: form.periodo,
-    dias: form.dias,
-  };
-
-  switch (form.tipoPerfil) {
-    case "nao_aluno":
-      return { ...shared, tipoPerfil: "nao_aluno" as const, faculdade: form.faculdade };
-    case "aluno":
-      return { ...shared, tipoPerfil: "aluno" as const };
-    case "":
-      return { ...shared, tipoPerfil: "aluno" as const };
-    default: {
-      const exhaustive: never = form.tipoPerfil;
-      return exhaustive;
-    }
-  }
 }
 
 type CandidaturaEditorProps = {
@@ -117,6 +113,10 @@ export function CandidaturaEditor({
     form.area && form.unidade ? periodosDisponiveis(form.area, form.unidade) : [];
   const availableDias =
     form.area && form.periodo ? diasDisponiveis(form.area, form.periodo) : [];
+  const showPagamento =
+    form.tipoPerfil === "nao_aluno" &&
+    Boolean(form.faculdade) &&
+    requiresFormaPagamento(form.faculdade);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -127,6 +127,15 @@ export function CandidaturaEditor({
       ...current,
       tipoPerfil: tipo,
       faculdade: tipo === "aluno" ? "" : current.faculdade,
+      formaPagamento: tipo === "aluno" ? "" : current.formaPagamento,
+    }));
+  }
+
+  function selectFaculdade(faculdade: FaculdadeAceita) {
+    setForm((current) => ({
+      ...current,
+      faculdade,
+      formaPagamento: requiresFormaPagamento(faculdade) ? current.formaPagamento : "",
     }));
   }
 
@@ -141,7 +150,10 @@ export function CandidaturaEditor({
   }
 
   function handleSubmit() {
-    const parsed = candidaturaSchema.safeParse(buildPayload(form));
+    const parsed = candidaturaSchema.safeParse({
+      ...buildCandidaturaPayload(form),
+      cpf: stripDigits(form.cpf),
+    });
     if (!parsed.success) {
       setLocalError(parsed.error.issues[0]?.message ?? "Revise os dados.");
       return;
@@ -213,6 +225,125 @@ export function CandidaturaEditor({
             inputMode="tel"
           />
         </Field>
+        <Field id="admin-nascimento" label="Data de nascimento">
+          <input
+            type="date"
+            value={form.dataNascimento}
+            onChange={(event) => updateField("dataNascimento", event.target.value)}
+            className={inputClass()}
+          />
+        </Field>
+        <Field id="admin-rua" label="Rua" className="sm:col-span-2">
+          <input
+            value={form.rua}
+            onChange={(event) => updateField("rua", event.target.value)}
+            className={inputClass()}
+          />
+        </Field>
+        <Field id="admin-numero" label="Número">
+          <input
+            value={form.numero}
+            onChange={(event) => updateField("numero", event.target.value)}
+            className={inputClass()}
+          />
+        </Field>
+        <Field id="admin-complemento" label="Complemento (opcional)">
+          <input
+            value={form.complemento}
+            onChange={(event) => updateField("complemento", event.target.value)}
+            className={inputClass()}
+          />
+        </Field>
+        <Field id="admin-bairro" label="Bairro">
+          <input
+            value={form.bairro}
+            onChange={(event) => updateField("bairro", event.target.value)}
+            className={inputClass()}
+          />
+        </Field>
+        <Field id="admin-cep" label="CEP">
+          <input
+            value={form.cep}
+            onChange={(event) => updateField("cep", formatCep(event.target.value))}
+            className={inputClass()}
+            inputMode="numeric"
+          />
+        </Field>
+        <Field id="admin-cidade" label="Cidade">
+          <input
+            value={form.cidade}
+            onChange={(event) => updateField("cidade", event.target.value)}
+            className={inputClass()}
+          />
+        </Field>
+        <Field id="admin-estado" label="Estado">
+          <select
+            value={form.estado}
+            onChange={(event) => updateField("estado", event.target.value as EstadoCode | "")}
+            className={inputClass()}
+          >
+            <option value="">Selecione</option>
+            {ESTADOS_BR.map((estado) => (
+              <option key={estado.code} value={estado.code}>
+                {estado.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field id="admin-semestre" label="Semestre atual">
+          <select
+            value={form.semestreAtual}
+            onChange={(event) =>
+              updateField("semestreAtual", event.target.value as SemestreValue | "")
+            }
+            className={inputClass()}
+          >
+            <option value="">Selecione</option>
+            {SEMESTRES.map((semestre) => (
+              <option key={semestre} value={semestre}>
+                {labelSemestre(semestre)}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-medium text-amet-indigo/80">Horário da faculdade</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {HORARIOS_FACULDADE.map((horario) => (
+            <button
+              key={horario.code}
+              type="button"
+              aria-pressed={form.horarioFaculdade === horario.code}
+              onClick={() => updateField("horarioFaculdade", horario.code as HorarioFaculdadeCode)}
+              className={`rounded-xl border px-3 py-2 text-sm font-medium ${choiceButtonClass(
+                form.horarioFaculdade === horario.code,
+              )}`}
+            >
+              {horario.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-medium text-amet-indigo/80">Curso</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {CURSOS.map((curso) => (
+            <button
+              key={curso.code}
+              type="button"
+              aria-pressed={form.curso === curso.code}
+              onClick={() => updateField("curso", curso.code as CursoCode)}
+              className={`rounded-xl border px-3 py-2 text-left text-sm font-medium ${choiceButtonClass(
+                form.curso === curso.code,
+              )}`}
+            >
+              {curso.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {form.tipoPerfil === "nao_aluno" && (
@@ -224,7 +355,7 @@ export function CandidaturaEditor({
                 key={faculdade}
                 type="button"
                 aria-pressed={form.faculdade === faculdade}
-                onClick={() => updateField("faculdade", faculdade)}
+                onClick={() => selectFaculdade(faculdade)}
                 className={`rounded-xl border px-3 py-2 text-left text-sm ${choiceButtonClass(
                   form.faculdade === faculdade,
                 )}`}
@@ -235,6 +366,27 @@ export function CandidaturaEditor({
           </div>
         </div>
       )}
+
+      {showPagamento ? (
+        <div>
+          <p className="mb-2 text-sm font-medium text-amet-indigo/80">Forma de pagamento</p>
+          <div className="grid gap-2">
+            {FORMAS_PAGAMENTO.map((forma) => (
+              <button
+                key={forma.code}
+                type="button"
+                aria-pressed={form.formaPagamento === forma.code}
+                onClick={() => updateField("formaPagamento", forma.code)}
+                className={`rounded-xl border px-3 py-2 text-left text-sm ${choiceButtonClass(
+                  form.formaPagamento === forma.code,
+                )}`}
+              >
+                {forma.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div>
         <p className="mb-2 text-sm font-medium text-amet-indigo/80">Unidade</p>

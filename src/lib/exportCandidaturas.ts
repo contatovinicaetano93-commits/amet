@@ -1,8 +1,20 @@
 import ExcelJS from "exceljs";
 
-import { AREAS, DIAS, PERIODOS, UNIDADES, labelTipoPerfil } from "@/lib/constants";
+import {
+  AREAS,
+  DIAS,
+  PERIODOS,
+  UNIDADES,
+  labelCurso,
+  labelEstado,
+  labelFormaPagamento,
+  labelHorarioFaculdade,
+  labelSemestre,
+  labelTipoPerfil,
+} from "@/lib/constants";
 import type { CandidaturaRecord } from "@/lib/db";
 import { isNaoAluno } from "@/lib/schemas";
+import { formatBirthDate, formatCep } from "@/lib/validators";
 
 export const EXPORT_HEADERS = [
   "Data/Hora",
@@ -12,7 +24,19 @@ export const EXPORT_HEADERS = [
   "CPF",
   "Telefone",
   "E-mail",
+  "Data de nascimento",
+  "Rua",
+  "Número",
+  "Complemento",
+  "Bairro",
+  "CEP",
+  "Cidade",
+  "Estado",
+  "Horário da faculdade",
+  "Semestre atual",
+  "Curso",
   "Faculdade",
+  "Forma de pagamento",
   "Unidade",
   "Área de estágio",
   "Turno",
@@ -41,7 +65,19 @@ export function candidaturaToExportRow(item: CandidaturaRecord): string[] {
     item.cpf,
     item.telefone,
     item.email,
+    item.dataNascimento ? formatBirthDate(item.dataNascimento) : "",
+    item.rua,
+    item.numero,
+    item.complemento ?? "",
+    item.bairro,
+    item.cep ? formatCep(item.cep) : "",
+    item.cidade,
+    item.estado ? labelEstado(item.estado) : "",
+    item.horarioFaculdade ? labelHorarioFaculdade(item.horarioFaculdade) : "",
+    item.semestreAtual ? labelSemestre(item.semestreAtual) : "",
+    item.curso ? labelCurso(item.curso) : "",
     isNaoAluno(item) ? item.faculdade : "",
+    isNaoAluno(item) && item.formaPagamento ? labelFormaPagamento(item.formaPagamento) : "",
     unidade,
     area,
     periodo,
@@ -71,9 +107,10 @@ export async function buildCandidaturasWorkbook(
   sheet.getColumn(3).width = 32;
   sheet.getColumn(5).width = 16;
   sheet.getColumn(7).width = 32;
-  sheet.getColumn(8).width = 28;
-  sheet.getColumn(10).width = 18;
-  sheet.getColumn(13).width = 22;
+  sheet.getColumn(9).width = 28;
+  sheet.getColumn(19).width = 28;
+  sheet.getColumn(22).width = 18;
+  sheet.getColumn(25).width = 22;
 
   const headerRow = sheet.getRow(1);
   headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };

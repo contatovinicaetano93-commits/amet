@@ -8,6 +8,7 @@ import {
   isParticipanteCpf,
   updateParticipante,
 } from "@/lib/dbParticipantes";
+import { COMPLEMENTO } from "@/lib/__tests__/candidaturaFixture";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -66,10 +67,12 @@ describe("admin candidatura update/delete", () => {
       telefone: "11999999999",
       email: "teste-edit@example.com",
       faculdade: "UNICID",
+      formaPagamento: "pix_vista",
       unidade: "guarulhos",
       area: "AC",
       periodo: "manha",
       dias: ["seg", "ter"],
+      ...COMPLEMENTO,
     });
     expect(created.ok).toBe(true);
     if (!created.ok) return;
@@ -82,10 +85,13 @@ describe("admin candidatura update/delete", () => {
       telefone: "11988887777",
       email: "teste-editada@example.com",
       faculdade: "UNINOVE",
+      formaPagamento: "boleto",
       unidade: "liberdade",
       area: "EST",
       periodo: "noite",
       dias: ["qua", "qui"],
+      ...COMPLEMENTO,
+      curso: "enfermagem",
     });
     expect(updated.ok).toBe(true);
     if (updated.ok) {

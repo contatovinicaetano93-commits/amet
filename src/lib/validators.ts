@@ -32,6 +32,46 @@ export function formatCpf(value: string): string {
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
+export function formatCep(value: string): string {
+  const digits = stripDigits(value).slice(0, 8);
+  return digits.replace(/(\d{5})(\d{1,3})/, "$1-$2");
+}
+
+export function isValidCep(raw: string): boolean {
+  return stripDigits(raw).length === 8;
+}
+
+/** Accepts YYYY-MM-DD; must be a real past date, age between 14 and 90. */
+export function isValidBirthDate(raw: string): boolean {
+  const value = raw.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return false;
+  }
+  const today = new Date();
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  if (date.getTime() >= todayUtc) return false;
+  const age =
+    today.getFullYear() -
+    year -
+    (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day)
+      ? 1
+      : 0);
+  return age >= 14 && age <= 90;
+}
+
+export function formatBirthDate(iso: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  const [year, month, day] = iso.split("-");
+  return `${day}/${month}/${year}`;
+}
+
 export function formatPhone(value: string): string {
   const digits = stripDigits(value).slice(0, 11);
   if (digits.length <= 10) {
