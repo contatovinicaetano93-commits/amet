@@ -8,12 +8,9 @@ import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
 import { setLenis } from "@/lib/lenis";
+import { isNativeScrollRoute } from "@/lib/nativeScrollRoutes";
 
 gsap.registerPlugin(ScrollTrigger);
-
-function isNativeScrollRoute(pathname: string) {
-  return pathname === "/estagios" || pathname.startsWith("/estagios/") || pathname === "/admin";
-}
 
 /**
  * Liga Lenis (scroll suave) ao ticker do GSAP para que ScrollTrigger

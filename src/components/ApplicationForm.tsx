@@ -442,7 +442,7 @@ export function ApplicationForm() {
         </p>
       )}
 
-      <div className="mt-8 mb-16 flex flex-col-reverse gap-3 sm:mb-0 sm:flex-row sm:justify-between">
+      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         {step > 1 ? (
           <button
             type="button"
