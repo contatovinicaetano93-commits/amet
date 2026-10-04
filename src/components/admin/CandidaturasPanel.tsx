@@ -5,7 +5,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CandidaturaEditor } from "@/components/admin/CandidaturaEditor";
 import { formatDate, labelArea, labelDias, labelPeriodo, labelUnidade } from "@/components/admin/adminLabels";
 import { adminHeaders, readAdminError } from "@/lib/adminClient";
-import { labelTipoPerfil } from "@/lib/constants";
+import {
+  labelCurso,
+  labelEstado,
+  labelFormaPagamento,
+  labelHorarioFaculdade,
+  labelSemestre,
+  labelTipoPerfil,
+} from "@/lib/constants";
+import { formatBirthDate, formatCep } from "@/lib/validators";
 import type { CandidaturaRecord } from "@/lib/db";
 import { isNaoAluno, type CandidaturaInput } from "@/lib/schemas";
 import {
@@ -338,12 +346,68 @@ export function CandidaturasPanel({ adminKey }: CandidaturasPanelProps) {
                 <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">E-mail</dt>
                 <dd className="mt-1 text-sm text-amet-indigo">{item.email}</dd>
               </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                  Data de nascimento
+                </dt>
+                <dd className="mt-1 text-sm text-amet-indigo">
+                  {item.dataNascimento ? formatBirthDate(item.dataNascimento) : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Curso</dt>
+                <dd className="mt-1 text-sm text-amet-indigo">
+                  {item.curso ? labelCurso(item.curso) : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                  Horário da faculdade
+                </dt>
+                <dd className="mt-1 text-sm text-amet-indigo">
+                  {item.horarioFaculdade ? labelHorarioFaculdade(item.horarioFaculdade) : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Semestre</dt>
+                <dd className="mt-1 text-sm text-amet-indigo">
+                  {item.semestreAtual ? labelSemestre(item.semestreAtual) : "—"}
+                </dd>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-3">
+                <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                  Endereço
+                </dt>
+                <dd className="mt-1 text-sm text-amet-indigo">
+                  {[
+                    [item.rua, item.numero].filter(Boolean).join(", "),
+                    item.complemento,
+                    item.bairro,
+                    item.cep ? formatCep(item.cep) : "",
+                    [item.cidade, item.estado ? labelEstado(item.estado) : ""]
+                      .filter(Boolean)
+                      .join(" / "),
+                  ]
+                    .filter(Boolean)
+                    .join(" — ") || "—"}
+                </dd>
+              </div>
               {isNaoAluno(item) && (
                 <div>
                   <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Faculdade</dt>
                   <dd className="mt-1 text-sm text-amet-indigo">{item.faculdade || "—"}</dd>
                 </div>
               )}
+              {isNaoAluno(item) && item.formaPagamento ? (
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">
+                    Forma de pagamento
+                  </dt>
+                  <dd className="mt-1 text-sm text-amet-indigo">
+                    {labelFormaPagamento(item.formaPagamento)}
+                  </dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-amet-indigo/70">Unidade</dt>
                 <dd className="mt-1 text-sm text-amet-indigo">{labelUnidade(item.unidade) || "—"}</dd>

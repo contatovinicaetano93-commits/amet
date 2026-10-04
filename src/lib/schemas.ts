@@ -2,18 +2,24 @@ import { z } from "zod";
 
 import {
   AREA_CODES,
+  CURSO_CODES,
   DIAS,
+  ESTADO_CODES,
   FACULDADE_VALUES,
+  FORMA_PAGAMENTO_CODES,
+  HORARIO_FACULDADE_CODES,
   PERIODOS,
+  SEMESTRES,
   UNIDADES,
   areasDisponiveis,
   diasDisponiveis,
   periodosDisponiveis,
+  requiresFormaPagamento,
   type AreaCode,
   type PeriodoCode,
   type UnidadeCode,
 } from "@/lib/constants";
-import { isValidCpf, stripDigits } from "@/lib/validators";
+import { isValidBirthDate, isValidCep, isValidCpf, stripDigits } from "@/lib/validators";
 
 const unidadeCodes = UNIDADES.map((u) => u.code) as [string, ...string[]];
 const diaCodes = DIAS.map((d) => d.code) as [string, ...string[]];
@@ -33,6 +39,26 @@ export const personalDataSchema = z.object({
     .transform(stripDigits)
     .refine((v) => v.length >= 10 && v.length <= 11, "Telefone inválido"),
   email: z.string().trim().email("E-mail inválido").max(120),
+  rua: z.string().trim().min(2, "Informe a rua").max(120),
+  numero: z.string().trim().min(1, "Informe o número").max(20),
+  complemento: z.string().trim().max(60).default(""),
+  bairro: z.string().trim().min(2, "Informe o bairro").max(80),
+  cep: z
+    .string()
+    .trim()
+    .refine(isValidCep, "CEP inválido")
+    .transform(stripDigits),
+  cidade: z.string().trim().min(2, "Informe a cidade").max(80),
+  estado: z.enum(ESTADO_CODES, { message: "Selecione o estado" }),
+  dataNascimento: z
+    .string()
+    .trim()
+    .refine(isValidBirthDate, "Data de nascimento inválida"),
+  horarioFaculdade: z.enum(HORARIO_FACULDADE_CODES, {
+    message: "Selecione o horário da faculdade",
+  }),
+  semestreAtual: z.enum(SEMESTRES, { message: "Selecione o semestre atual" }),
+  curso: z.enum(CURSO_CODES, { message: "Selecione o curso" }),
 });
 
 const estagioFields = z.object({
@@ -124,9 +150,19 @@ export const candidaturaNaoAlunoSchema = personalDataSchema
   .extend({
     tipoPerfil: z.literal("nao_aluno"),
     faculdade: z.enum(FACULDADE_VALUES, { message: "Selecione a faculdade" }),
+    formaPagamento: z.enum(FORMA_PAGAMENTO_CODES).optional(),
   })
   .merge(estagioFields)
-  .superRefine(refineEstagio);
+  .superRefine((data, ctx) => {
+    refineEstagio(data, ctx);
+    if (requiresFormaPagamento(data.faculdade) && !data.formaPagamento) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Selecione a forma de pagamento",
+        path: ["formaPagamento"],
+      });
+    }
+  });
 
 export const candidaturaSchema = z.discriminatedUnion("tipoPerfil", [
   candidaturaAlunoSchema,

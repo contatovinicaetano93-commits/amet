@@ -3,15 +3,24 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
-import { ApplicationFormSteps, type FormState, type FormStep } from "@/components/applicationFormSteps";
+import {
+  ApplicationFormSteps,
+  buildCandidaturaPayload,
+  emptyFormState,
+  type FormState,
+  type FormStep,
+} from "@/components/applicationFormSteps";
 import { StepIndicator } from "@/components/StepIndicator";
 import {
   ALUNO_STEPS,
   NAO_ALUNO_STEPS,
+  NAO_ALUNO_STEPS_COM_PAGAMENTO,
   areasDisponiveis,
   diasDisponiveis,
   periodosDisponiveis,
+  requiresFormaPagamento,
   type DiaCode,
+  type FaculdadeAceita,
   type PeriodoCode,
   type TipoPerfil,
   type UnidadeCode,
@@ -24,23 +33,12 @@ import {
 } from "@/lib/schemas";
 import { stripDigits } from "@/lib/validators";
 
-const initialForm: FormState = {
-  tipoPerfil: "",
-  cpf: "",
-  nomeCompleto: "",
-  rgm: "",
-  telefone: "",
-  email: "",
-  faculdade: "",
-  unidade: "",
-  area: "",
-  periodo: "",
-  dias: [],
-};
-
-function stepsFor(tipoPerfil: TipoPerfil | ""): FormStep[] {
+function stepsFor(tipoPerfil: TipoPerfil | "", faculdade: string): FormStep[] {
   switch (tipoPerfil) {
     case "nao_aluno":
+      if (faculdade && requiresFormaPagamento(faculdade)) {
+        return ["cpf", "dados", "faculdade", "pagamento", "unidade", "area", "turno", "confirmar"];
+      }
       return ["cpf", "dados", "faculdade", "unidade", "area", "turno", "confirmar"];
     case "aluno":
       return ["cpf", "dados", "unidade", "area", "turno", "confirmar"];
@@ -53,10 +51,12 @@ function stepsFor(tipoPerfil: TipoPerfil | ""): FormStep[] {
   }
 }
 
-function stepLabels(tipoPerfil: TipoPerfil | ""): readonly string[] {
+function stepLabels(tipoPerfil: TipoPerfil | "", faculdade: string): readonly string[] {
   switch (tipoPerfil) {
     case "nao_aluno":
-      return NAO_ALUNO_STEPS;
+      return faculdade && requiresFormaPagamento(faculdade)
+        ? NAO_ALUNO_STEPS_COM_PAGAMENTO
+        : NAO_ALUNO_STEPS;
     case "aluno":
       return ALUNO_STEPS;
     case "":
@@ -70,7 +70,7 @@ function stepLabels(tipoPerfil: TipoPerfil | ""): readonly string[] {
 
 export function ApplicationForm() {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<FormState>(initialForm);
+  const [form, setForm] = useState<FormState>(emptyFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [checkingCpf, setCheckingCpf] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -79,9 +79,9 @@ export function ApplicationForm() {
   const [cpfNotice, setCpfNotice] = useState("");
 
   const isAluno = form.tipoPerfil === "aluno";
-  const steps = stepsFor(form.tipoPerfil);
+  const steps = stepsFor(form.tipoPerfil, form.faculdade);
   const currentStepId = steps[step - 1] ?? "cpf";
-  const labels = stepLabels(form.tipoPerfil);
+  const labels = stepLabels(form.tipoPerfil, form.faculdade);
 
   const availableAreas = useMemo(
     () => (form.unidade ? areasDisponiveis(form.unidade) : []),
@@ -101,6 +101,20 @@ export function ApplicationForm() {
     setErrors((current) => {
       const next = { ...current };
       delete next[key as string];
+      return next;
+    });
+  }
+
+  function selectFaculdade(faculdade: FaculdadeAceita) {
+    setForm((current) => ({
+      ...current,
+      faculdade,
+      formaPagamento: requiresFormaPagamento(faculdade) ? current.formaPagamento : "",
+    }));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.faculdade;
+      if (!requiresFormaPagamento(faculdade)) delete next.formaPagamento;
       return next;
     });
   }
@@ -203,35 +217,11 @@ export function ApplicationForm() {
     });
   }
 
-  function buildPayload() {
-    const shared = {
-      nomeCompleto: form.nomeCompleto,
-      rgm: form.rgm,
-      cpf: stripDigits(form.cpf),
-      telefone: form.telefone,
-      email: form.email,
-      unidade: form.unidade,
-      area: form.area,
-      periodo: form.periodo,
-      dias: form.dias,
-    };
-
-    switch (form.tipoPerfil) {
-      case "nao_aluno":
-        return { ...shared, tipoPerfil: "nao_aluno" as const, faculdade: form.faculdade };
-      case "aluno":
-        return { ...shared, tipoPerfil: "aluno" as const };
-      case "":
-        return { ...shared, tipoPerfil: "aluno" as const };
-      default: {
-        const exhaustive: never = form.tipoPerfil;
-        return exhaustive;
-      }
-    }
-  }
-
   async function submitCandidatura() {
-    const parsed = candidaturaSchema.safeParse(buildPayload());
+    const parsed = candidaturaSchema.safeParse({
+      ...buildCandidaturaPayload(form),
+      cpf: stripDigits(form.cpf),
+    });
     if (!parsed.success) {
       setSubmitError("Revise os dados antes de enviar.");
       return;
@@ -254,7 +244,7 @@ export function ApplicationForm() {
       }
 
       setSuccess(true);
-      setForm(initialForm);
+      setForm(emptyFormState);
       setStep(1);
       setCpfNotice("");
     } catch {
@@ -278,6 +268,18 @@ export function ApplicationForm() {
           setErrors({ faculdade: "Selecione a faculdade" });
           return;
         }
+        if (!requiresFormaPagamento(form.faculdade)) {
+          updateField("formaPagamento", "");
+        }
+        setErrors({});
+        setStep((current) => current + 1);
+        return;
+      case "pagamento":
+        if (!form.formaPagamento) {
+          setErrors({ formaPagamento: "Selecione a forma de pagamento" });
+          return;
+        }
+        setErrors({});
         setStep((current) => current + 1);
         return;
       case "unidade":
@@ -350,6 +352,7 @@ export function ApplicationForm() {
       case "cpf":
       case "dados":
       case "faculdade":
+      case "pagamento":
       case "turno":
       case "confirmar":
         break;
@@ -406,6 +409,7 @@ export function ApplicationForm() {
           availableDias={availableDias}
           updateField={updateField}
           onSelectUnidade={selectUnidade}
+          onSelectFaculdade={selectFaculdade}
           toggleDia={toggleDia}
         />
       </div>

@@ -6,6 +6,11 @@ import {
   EXPORT_HEADERS,
 } from "@/lib/exportCandidaturas";
 import type { CandidaturaRecord } from "@/lib/db";
+import { COMPLEMENTO } from "@/lib/__tests__/candidaturaFixture";
+
+function col(name: (typeof EXPORT_HEADERS)[number]) {
+  return EXPORT_HEADERS.indexOf(name);
+}
 
 describe("exportCandidaturas", () => {
   it("maps aluno fields into separate columns and leaves faculdade empty", () => {
@@ -24,20 +29,24 @@ describe("exportCandidaturas", () => {
       area: "EST",
       periodo: "manha",
       dias: ["seg", "ter"],
+      ...COMPLEMENTO,
     } as CandidaturaRecord;
 
     const row = candidaturaToExportRow(item);
     expect(row).toHaveLength(EXPORT_HEADERS.length);
-    expect(row[1]).toBe("Aluno");
-    expect(row[2]).toBe("Maria Teste");
-    expect(row[4]).toBe("39053344705");
-    expect(row[7]).toBe("");
-    expect(row[8]).toBeTruthy();
-    expect(row[9]).toBe("Estética");
-    expect(row[12]).toBe("Enviado");
+    expect(row[col("Perfil")]).toBe("Aluno");
+    expect(row[col("Nome")]).toBe("Maria Teste");
+    expect(row[col("CPF")]).toBe("39053344705");
+    expect(row[col("Faculdade")]).toBe("");
+    expect(row[col("Forma de pagamento")]).toBe("");
+    expect(row[col("Unidade")]).toBeTruthy();
+    expect(row[col("Área de estágio")]).toBe("Estética");
+    expect(row[col("Curso")]).toBe("Biomedicina");
+    expect(row[col("CEP")]).toBe("01310-100");
+    expect(row[col("Notificação por e-mail")]).toBe("Enviado");
   });
 
-  it("fills faculdade and stage fields for nao_aluno", () => {
+  it("fills faculdade, payment and stage fields for nao_aluno", () => {
     const item = {
       id: "2",
       createdAt: "2026-07-23T17:32:15.000Z",
@@ -50,19 +59,22 @@ describe("exportCandidaturas", () => {
       telefone: "11988887777",
       email: "joao@example.com",
       faculdade: "UNINOVE",
+      formaPagamento: "pix_vista",
       unidade: "ipiranga",
       area: "IMG",
       periodo: "noite",
       dias: ["qua", "qui"],
+      ...COMPLEMENTO,
     } as CandidaturaRecord;
 
     const row = candidaturaToExportRow(item);
-    expect(row[1]).toBe("Não aluno");
-    expect(row[7]).toBe("UNINOVE");
-    expect(row[8]).toBe("Ipiranga");
-    expect(row[9]).toBe("Imagenologia");
-    expect(row[10]).toBe("Noite");
-    expect(row[12]).toBe("Falhou");
+    expect(row[col("Perfil")]).toBe("Não aluno");
+    expect(row[col("Faculdade")]).toBe("UNINOVE");
+    expect(row[col("Forma de pagamento")]).toBe("À vista no Pix");
+    expect(row[col("Unidade")]).toBe("Ipiranga");
+    expect(row[col("Área de estágio")]).toBe("Imagenologia");
+    expect(row[col("Turno")]).toBe("Noite");
+    expect(row[col("Notificação por e-mail")]).toBe("Falhou");
   });
 
   it("builds a real xlsx buffer with one column per header", async () => {
@@ -78,10 +90,12 @@ describe("exportCandidaturas", () => {
       telefone: "11977776666",
       email: "ana@example.com",
       faculdade: "São Judas",
+      formaPagamento: "boleto",
       unidade: "guarulhos",
       area: "AC",
       periodo: "manha",
       dias: ["seg", "ter"],
+      ...COMPLEMENTO,
     } as CandidaturaRecord;
 
     const buffer = await buildCandidaturasWorkbook([item]);

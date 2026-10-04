@@ -55,6 +55,18 @@ export function ensureSchema(): Promise<void> {
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_sent BOOLEAN NOT NULL DEFAULT false;
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS email_error TEXT;
       ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS faculdade TEXT;
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS rua TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS numero TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS complemento TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS bairro TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS cep TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS cidade TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS estado TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS data_nascimento TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS horario_faculdade TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS semestre_atual TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS curso TEXT NOT NULL DEFAULT '';
+      ALTER TABLE candidaturas ADD COLUMN IF NOT EXISTS forma_pagamento TEXT;
       CREATE TABLE IF NOT EXISTS admin_access_log (
         id BIGSERIAL PRIMARY KEY,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -94,10 +106,55 @@ type CandidaturaRow = {
   periodo: string | null;
   dias: string[] | null;
   faculdade: string | null;
+  rua: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cep: string | null;
+  cidade: string | null;
+  estado: string | null;
+  data_nascimento: string | null;
+  horario_faculdade: string | null;
+  semestre_atual: string | null;
+  curso: string | null;
+  forma_pagamento: string | null;
   created_at: Date;
   email_sent: boolean;
   email_error: string | null;
 };
+
+function complementoFromRow(row: CandidaturaRow) {
+  return {
+    rua: row.rua ?? "",
+    numero: row.numero ?? "",
+    complemento: row.complemento ?? "",
+    bairro: row.bairro ?? "",
+    cep: row.cep ?? "",
+    cidade: row.cidade ?? "",
+    estado: row.estado ?? "",
+    dataNascimento: row.data_nascimento ?? "",
+    horarioFaculdade: row.horario_faculdade ?? "",
+    semestreAtual: row.semestre_atual ?? "",
+    curso: row.curso ?? "",
+  };
+}
+
+function complementoParams(input: CandidaturaInput) {
+  return [
+    input.rua,
+    input.numero,
+    input.complemento ?? "",
+    input.bairro,
+    input.cep,
+    input.cidade,
+    input.estado,
+    input.dataNascimento,
+    input.horarioFaculdade,
+    input.semestreAtual,
+    input.curso,
+    isNaoAluno(input) && input.formaPagamento ? input.formaPagamento : null,
+  ];
+}
 
 function rowToRecord(row: CandidaturaRow): CandidaturaRecord {
   const base = {
@@ -107,6 +164,7 @@ function rowToRecord(row: CandidaturaRow): CandidaturaRecord {
     cpf: row.cpf,
     telefone: row.telefone,
     email: row.email,
+    ...complementoFromRow(row),
     createdAt: row.created_at.toISOString(),
     emailSent: row.email_sent,
     emailError: row.email_error,
@@ -132,6 +190,7 @@ function rowToRecord(row: CandidaturaRow): CandidaturaRecord {
     ...estagio,
     tipoPerfil: "nao_aluno",
     faculdade: row.faculdade ?? "",
+    ...(row.forma_pagamento ? { formaPagamento: row.forma_pagamento } : {}),
   } as CandidaturaRecord;
 }
 
@@ -335,8 +394,10 @@ export async function createCandidatura(
 
     const result = await client.query<CandidaturaRow>(
       `INSERT INTO candidaturas
-        (id, nome_completo, rgm, cpf, telefone, email, tipo_perfil, unidade, area, periodo, dias, faculdade)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        (id, nome_completo, rgm, cpf, telefone, email, tipo_perfil, unidade, area, periodo, dias, faculdade,
+         rua, numero, complemento, bairro, cep, cidade, estado, data_nascimento, horario_faculdade, semestre_atual, curso, forma_pagamento)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+         $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
        RETURNING *`,
       [
         id,
@@ -351,6 +412,7 @@ export async function createCandidatura(
         input.periodo,
         input.dias,
         isNaoAluno(input) ? input.faculdade : null,
+        ...complementoParams(input),
       ],
     );
 
@@ -430,7 +492,9 @@ export async function updateCandidatura(
     const result = await client.query<CandidaturaRow>(
       `UPDATE candidaturas SET
         nome_completo = $2, rgm = $3, cpf = $4, telefone = $5, email = $6,
-        tipo_perfil = $7, unidade = $8, area = $9, periodo = $10, dias = $11, faculdade = $12
+        tipo_perfil = $7, unidade = $8, area = $9, periodo = $10, dias = $11, faculdade = $12,
+        rua = $13, numero = $14, complemento = $15, bairro = $16, cep = $17, cidade = $18, estado = $19,
+        data_nascimento = $20, horario_faculdade = $21, semestre_atual = $22, curso = $23, forma_pagamento = $24
        WHERE id = $1
        RETURNING *`,
       [
@@ -446,6 +510,7 @@ export async function updateCandidatura(
         input.periodo,
         input.dias,
         isNaoAluno(input) ? input.faculdade : null,
+        ...complementoParams(input),
       ],
     );
 

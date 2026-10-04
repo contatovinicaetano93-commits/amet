@@ -2,6 +2,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 
 import { createCandidatura } from "@/lib/db";
+import { COMPLEMENTO } from "@/lib/__tests__/candidaturaFixture";
 
 // These tests hit the real Neon database via DATABASE_URL. They create rows
 // prefixed with "TESTE " and clean up after themselves in afterAll.
@@ -32,6 +33,7 @@ describe("createCandidatura concurrency", () => {
           area: "EST",
           periodo: "tarde",
           dias: ["seg", "ter"],
+          ...COMPLEMENTO,
         }),
       ),
     );
@@ -52,6 +54,7 @@ describe("createCandidatura concurrency", () => {
       area: "HEM",
       periodo: "manha",
       dias: ["seg", "ter"],
+      ...COMPLEMENTO,
     });
 
     expect(result.ok).toBe(false);
@@ -75,6 +78,7 @@ describe("createCandidatura concurrency", () => {
           area: "AC",
           periodo: "tarde",
           dias: ["ter", "qua"],
+          ...COMPLEMENTO,
         }),
       ),
     );
@@ -96,10 +100,12 @@ describe("createCandidatura concurrency", () => {
       telefone: "11999999999",
       email: "teste-unico-1@example.com",
       faculdade: "UNICID",
+      formaPagamento: "pix_vista",
       unidade: "guarulhos",
       area: "AC",
       periodo: "manha",
       dias: ["seg", "ter"],
+      ...COMPLEMENTO,
     });
     expect(first.ok).toBe(true);
 
@@ -114,6 +120,7 @@ describe("createCandidatura concurrency", () => {
       area: "IMG",
       periodo: "noite",
       dias: ["qua", "qui"],
+      ...COMPLEMENTO,
     });
     expect(second.ok).toBe(false);
     if (!second.ok) {

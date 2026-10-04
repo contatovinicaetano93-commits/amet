@@ -55,7 +55,9 @@ export const UNIDADE_CODES = UNIDADES.map((u) => u.code) as [
 ];
 
 export const FACULDADES = [
+  "Anhanguera Presencial",
   "Anhanguera",
+  "Anhembi Presencial",
   "Anhembi Morumbi",
   "Cruzeiro do Sul Presencial",
   "Cruzeiro do Sul Semipresencial",
@@ -143,6 +145,118 @@ export const NAO_ALUNO_STEPS = [
   "Turno",
   "Confirmar",
 ] as const;
+export const NAO_ALUNO_STEPS_COM_PAGAMENTO = [
+  "CPF",
+  "Dados",
+  "Faculdade",
+  "Pagamento",
+  "Unidade",
+  "Área",
+  "Turno",
+  "Confirmar",
+] as const;
+
+/** Estas 4 presenciais não pedem forma de pagamento. */
+export const FACULDADES_SEM_PAGAMENTO = [
+  "Cruzeiro do Sul Presencial",
+  "Unicid Presencial",
+  "Anhembi Presencial",
+  "Anhanguera Presencial",
+] as const;
+
+export function requiresFormaPagamento(faculdade: string): boolean {
+  return !(FACULDADES_SEM_PAGAMENTO as readonly string[]).includes(faculdade);
+}
+
+export const CURSOS = [
+  { code: "biomedicina", label: "Biomedicina" },
+  { code: "farmacia", label: "Farmácia" },
+  { code: "enfermagem", label: "Enfermagem" },
+  { code: "nutricao", label: "Nutrição" },
+  { code: "fisioterapia", label: "Fisioterapia" },
+] as const;
+
+export type CursoCode = (typeof CURSOS)[number]["code"];
+export const CURSO_CODES = CURSOS.map((c) => c.code) as [CursoCode, ...CursoCode[]];
+
+export const HORARIOS_FACULDADE = [
+  { code: "manha", label: "Manhã" },
+  { code: "noite", label: "Noite" },
+] as const;
+
+export type HorarioFaculdadeCode = (typeof HORARIOS_FACULDADE)[number]["code"];
+export const HORARIO_FACULDADE_CODES = HORARIOS_FACULDADE.map((h) => h.code) as [
+  HorarioFaculdadeCode,
+  ...HorarioFaculdadeCode[],
+];
+
+export const FORMAS_PAGAMENTO = [
+  { code: "pix_vista", label: "À vista no Pix" },
+  { code: "cartao_10x", label: "Até 10x no cartão de crédito" },
+  { code: "boleto", label: "Boleto bancário" },
+] as const;
+
+export type FormaPagamentoCode = (typeof FORMAS_PAGAMENTO)[number]["code"];
+export const FORMA_PAGAMENTO_CODES = FORMAS_PAGAMENTO.map((f) => f.code) as [
+  FormaPagamentoCode,
+  ...FormaPagamentoCode[],
+];
+
+export const SEMESTRES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] as const;
+export type SemestreValue = (typeof SEMESTRES)[number];
+
+export const ESTADOS_BR = [
+  { code: "AC", label: "Acre" },
+  { code: "AL", label: "Alagoas" },
+  { code: "AP", label: "Amapá" },
+  { code: "AM", label: "Amazonas" },
+  { code: "BA", label: "Bahia" },
+  { code: "CE", label: "Ceará" },
+  { code: "DF", label: "Distrito Federal" },
+  { code: "ES", label: "Espírito Santo" },
+  { code: "GO", label: "Goiás" },
+  { code: "MA", label: "Maranhão" },
+  { code: "MT", label: "Mato Grosso" },
+  { code: "MS", label: "Mato Grosso do Sul" },
+  { code: "MG", label: "Minas Gerais" },
+  { code: "PA", label: "Pará" },
+  { code: "PB", label: "Paraíba" },
+  { code: "PR", label: "Paraná" },
+  { code: "PE", label: "Pernambuco" },
+  { code: "PI", label: "Piauí" },
+  { code: "RJ", label: "Rio de Janeiro" },
+  { code: "RN", label: "Rio Grande do Norte" },
+  { code: "RS", label: "Rio Grande do Sul" },
+  { code: "RO", label: "Rondônia" },
+  { code: "RR", label: "Roraima" },
+  { code: "SC", label: "Santa Catarina" },
+  { code: "SP", label: "São Paulo" },
+  { code: "SE", label: "Sergipe" },
+  { code: "TO", label: "Tocantins" },
+] as const;
+
+export type EstadoCode = (typeof ESTADOS_BR)[number]["code"];
+export const ESTADO_CODES = ESTADOS_BR.map((e) => e.code) as [EstadoCode, ...EstadoCode[]];
+
+export function labelCurso(code: string): string {
+  return CURSOS.find((c) => c.code === code)?.label ?? code;
+}
+
+export function labelHorarioFaculdade(code: string): string {
+  return HORARIOS_FACULDADE.find((h) => h.code === code)?.label ?? code;
+}
+
+export function labelFormaPagamento(code: string): string {
+  return FORMAS_PAGAMENTO.find((f) => f.code === code)?.label ?? code;
+}
+
+export function labelEstado(code: string): string {
+  return ESTADOS_BR.find((e) => e.code === code)?.label ?? code;
+}
+
+export function labelSemestre(value: string): string {
+  return value ? `${value}º semestre` : "";
+}
 
 export function vagaLimit(
   area: AreaCode,

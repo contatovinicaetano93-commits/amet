@@ -1,8 +1,20 @@
 import { Resend } from "resend";
 
-import { AREAS, DIAS, PERIODOS, UNIDADES, labelTipoPerfil } from "@/lib/constants";
+import {
+  AREAS,
+  DIAS,
+  PERIODOS,
+  UNIDADES,
+  labelCurso,
+  labelEstado,
+  labelFormaPagamento,
+  labelHorarioFaculdade,
+  labelSemestre,
+  labelTipoPerfil,
+} from "@/lib/constants";
 import { siteContent } from "@/lib/content";
 import { isNaoAluno, type CandidaturaInput } from "@/lib/schemas";
+import { formatBirthDate, formatCep } from "@/lib/validators";
 
 function buildSubject(nomeCompleto: string): string {
   return `Inscrições AMET 2026 — ${nomeCompleto}`;
@@ -16,6 +28,16 @@ function formatCandidaturaBody(data: CandidaturaInput): string {
     .map((code) => DIAS.find((d) => d.code === code)?.label ?? code)
     .join(", ");
 
+  const endereco = [
+    [data.rua, data.numero].filter(Boolean).join(", "),
+    data.complemento,
+    data.bairro,
+    data.cep ? formatCep(data.cep) : "",
+    [data.cidade, data.estado ? labelEstado(data.estado) : ""].filter(Boolean).join(" / "),
+  ]
+    .filter(Boolean)
+    .join(" — ");
+
   const lines = [
     buildSubject(data.nomeCompleto),
     "",
@@ -25,10 +47,20 @@ function formatCandidaturaBody(data: CandidaturaInput): string {
     `CPF: ${data.cpf}`,
     `Telefone: ${data.telefone}`,
     `E-mail: ${data.email}`,
+    `Data de nascimento: ${data.dataNascimento ? formatBirthDate(data.dataNascimento) : "—"}`,
+    `Endereço: ${endereco || "—"}`,
+    `Curso: ${data.curso ? labelCurso(data.curso) : "—"}`,
+    `Horário da faculdade: ${
+      data.horarioFaculdade ? labelHorarioFaculdade(data.horarioFaculdade) : "—"
+    }`,
+    `Semestre atual: ${data.semestreAtual ? labelSemestre(data.semestreAtual) : "—"}`,
   ];
 
   if (isNaoAluno(data)) {
     lines.push(`Faculdade: ${data.faculdade}`);
+    if (data.formaPagamento) {
+      lines.push(`Forma de pagamento: ${labelFormaPagamento(data.formaPagamento)}`);
+    }
   }
 
   lines.push(
