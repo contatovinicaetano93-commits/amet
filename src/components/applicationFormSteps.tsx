@@ -222,7 +222,12 @@ export function ApplicationFormSteps({
               inputMode="tel"
             />
           </Field>
-          <Field id="dataNascimento" label="Data de nascimento" error={errors.dataNascimento}>
+          <Field
+            id="dataNascimento"
+            label="Data de nascimento"
+            error={errors.dataNascimento}
+            className="sm:col-span-2"
+          >
             <input
               type="date"
               value={form.dataNascimento}

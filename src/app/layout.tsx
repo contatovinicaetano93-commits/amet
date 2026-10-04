@@ -39,9 +39,9 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${leagueSpartan.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${leagueSpartan.variable} ${fraunces.variable} min-h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-amet-paper font-sans text-amet-indigo">
+      <body className="flex min-h-dvh flex-col bg-amet-paper font-sans text-amet-indigo">
         <SmoothScroll />
         <ScrollProgress />
         <SiteHeader />

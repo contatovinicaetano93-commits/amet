@@ -1,7 +1,17 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 import { siteContent } from "@/lib/content";
+import { isNativeScrollRoute } from "@/lib/nativeScrollRoutes";
 
 export function WhatsAppFloat() {
+  const pathname = usePathname();
   const href = `https://wa.me/${siteContent.whatsapp.replace(/\D/g, "")}`;
+
+  if (isNativeScrollRoute(pathname)) {
+    return null;
+  }
 
   return (
     <a

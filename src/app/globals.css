@@ -23,6 +23,10 @@
   --font-editorial: var(--font-fraunces);
 }
 
+html {
+  scroll-padding-top: 5.5rem;
+}
+
 body {
   background: var(--amet-paper);
   color: var(--amet-indigo);

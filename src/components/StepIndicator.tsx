@@ -1,13 +1,22 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 type StepIndicatorProps = {
   currentStep: number;
   labels: readonly string[];
 };
 
 export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
+  const listRef = useRef<HTMLOListElement>(null);
+
+  useEffect(() => {
+    const active = listRef.current?.querySelector<HTMLElement>("[aria-current='step']");
+    active?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [currentStep, labels]);
+
   return (
-    <ol className="flex flex-wrap gap-2">
+    <ol ref={listRef} className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
       {labels.map((label, index) => {
         const number = index + 1;
         const isActive = number === currentStep;
@@ -17,7 +26,7 @@ export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
           <li
             key={label}
             aria-current={isActive ? "step" : undefined}
-            className={`min-w-[90px] flex-1 rounded-xl border px-2 py-2 sm:px-3 sm:py-3 ${
+            className={`min-w-[7.25rem] shrink-0 rounded-xl border px-2 py-2 sm:min-w-0 sm:flex-1 sm:px-3 sm:py-3 ${
               isActive
                 ? "border-amet-blue bg-amet-blue/5"
                 : isComplete
