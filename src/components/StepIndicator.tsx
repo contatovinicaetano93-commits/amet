@@ -16,7 +16,10 @@ export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
   }, [currentStep, labels]);
 
   return (
-    <ol ref={listRef} className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+    <ol
+      ref={listRef}
+      className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]"
+    >
       {labels.map((label, index) => {
         const number = index + 1;
         const isActive = number === currentStep;
@@ -24,9 +27,9 @@ export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
 
         return (
           <li
-            key={label}
+            key={`${number}-${label}`}
             aria-current={isActive ? "step" : undefined}
-            className={`min-w-[7.25rem] shrink-0 rounded-xl border px-2 py-2 sm:min-w-0 sm:flex-1 sm:px-3 sm:py-3 ${
+            className={`shrink-0 rounded-xl border px-3 py-2.5 ${
               isActive
                 ? "border-amet-blue bg-amet-blue/5"
                 : isComplete
@@ -46,7 +49,11 @@ export function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
               >
                 {number}
               </span>
-              <span className={`text-xs font-medium sm:text-sm ${isActive ? "text-amet-blue" : "text-amet-indigo/70"}`}>
+              <span
+                className={`whitespace-nowrap text-xs font-medium sm:text-sm ${
+                  isActive ? "text-amet-blue" : "text-amet-indigo/70"
+                }`}
+              >
                 {label}
               </span>
             </div>

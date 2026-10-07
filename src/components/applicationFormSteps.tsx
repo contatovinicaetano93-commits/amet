@@ -237,7 +237,7 @@ export function ApplicationFormSteps({
           </Field>
 
           <p className="sm:col-span-2 mt-2 text-sm font-semibold text-amet-indigo">Endereço</p>
-          <Field id="rua" label="Rua" error={errors.rua} className="sm:col-span-2">
+          <Field id="rua" label="Endereço" error={errors.rua} className="sm:col-span-2">
             <input
               value={form.rua}
               onChange={(event) => updateField("rua", event.target.value)}
@@ -548,18 +548,15 @@ export function ApplicationFormSteps({
               label="Semestre atual"
               value={form.semestreAtual ? labelSemestre(form.semestreAtual) : ""}
             />
+            <SummaryItem label="Endereço" value={form.rua} className="sm:col-span-2" />
+            <SummaryItem label="Número" value={form.numero} />
+            <SummaryItem label="Complemento" value={form.complemento} />
+            <SummaryItem label="Bairro" value={form.bairro} />
+            <SummaryItem label="CEP" value={form.cep} />
+            <SummaryItem label="Cidade" value={form.cidade} />
             <SummaryItem
-              label="Endereço"
-              value={[
-                [form.rua, form.numero].filter(Boolean).join(", "),
-                form.complemento,
-                form.bairro,
-                form.cep,
-                [form.cidade, form.estado ? labelEstado(form.estado) : ""].filter(Boolean).join(" / "),
-              ]
-                .filter(Boolean)
-                .join(" — ")}
-              className="sm:col-span-2"
+              label="Estado"
+              value={form.estado ? labelEstado(form.estado) : ""}
             />
             {isNaoAluno && (
               <SummaryItem label="Faculdade" value={form.faculdade} className="sm:col-span-2" />
