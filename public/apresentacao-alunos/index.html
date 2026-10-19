@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AMET Alunos 2025 — Capacitação e Prática</title>
+  <link rel="preload" href="/fonts/league-spartan/League_Spartan/static/LeagueSpartan-Bold.ttf" as="font" type="font/ttf" crossorigin />
+  <style>
+    @font-face {
+      font-family: "League Spartan";
+      src: url("/fonts/league-spartan/League_Spartan/static/LeagueSpartan-Regular.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "League Spartan";
+      src: url("/fonts/league-spartan/League_Spartan/static/LeagueSpartan-Medium.ttf") format("truetype");
+      font-weight: 500;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "League Spartan";
+      src: url("/fonts/league-spartan/League_Spartan/static/LeagueSpartan-SemiBold.ttf") format("truetype");
+      font-weight: 600;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "League Spartan";
+      src: url("/fonts/league-spartan/League_Spartan/static/LeagueSpartan-Bold.ttf") format("truetype");
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "League Spartan";
+      src: url("/fonts/league-spartan/League_Spartan/static/LeagueSpartan-ExtraBold.ttf") format("truetype");
+      font-weight: 800;
+      font-display: swap;
+    }
+
+    :root {
+      --purple: #b355c9;
+      --blue: #285ace;
+      --indigo: #1c2493;
+      --ink: #0e1648;
+      --muted: #4a5480;
+      --paper: #f7f4ee;
+      --white: #ffffff;
+      --line: color-mix(in srgb, var(--indigo) 14%, transparent);
+      --w: 1440px;
+      --h: 810px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: #0a0f2e;
+      color: var(--ink);
+      font-family: "League Spartan", Arial, Helvetica, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .deck {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      padding: 28px 16px 64px;
+    }
+
+    .slide {
+      position: relative;
+      width: var(--w);
+      height: var(--h);
+      overflow: hidden;
+      background: var(--white);
+      flex-shrink: 0;
+      box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    }
+
+    .bg-paper { background: var(--paper); }
+    .bg-indigo { background: var(--indigo); color: var(--white); }
+    .bg-blue { background: var(--blue); color: var(--white); }
+    .bg-split {
+      background:
+        linear-gradient(105deg, var(--indigo) 0 42%, var(--paper) 42% 100%);
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(2px);
+    }
+    .orb-a {
+      width: 520px; height: 520px;
+      right: -160px; top: -180px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--purple) 55%, transparent), transparent 70%);
+      opacity: .55;
+    }
+    .orb-b {
+      width: 420px; height: 420px;
+      left: -140px; bottom: -160px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--blue) 50%, transparent), transparent 70%);
+      opacity: .45;
+    }
+    .tri-bleed {
+      position: absolute;
+      width: 380px; height: 340px;
+      right: -90px; bottom: -70px;
+      opacity: .18;
+      background:
+        linear-gradient(135deg, var(--purple), var(--blue) 55%, var(--indigo));
+      clip-path: polygon(50% 0%, 100% 86%, 0% 86%);
+    }
+
+    .mark {
+      width: 56px;
+      height: 52px;
+      object-fit: contain;
+      display: block;
+    }
+    .mark-lg { width: 280px; height: 260px; }
+    .mark-md { width: 120px; height: 112px; }
+
+    .kicker {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--purple);
+    }
+    .kicker.on-dark { color: color-mix(in srgb, var(--purple) 70%, white); }
+
+    h1 {
+      font-size: 64px;
+      line-height: .95;
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+    h2 {
+      font-size: 48px;
+      line-height: 1.02;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: var(--indigo);
+    }
+    .bg-indigo h2, .bg-blue h2, .on-dark h2 { color: var(--white); }
+
+    .lead {
+      font-size: 22px;
+      line-height: 1.35;
+      font-weight: 500;
+      color: var(--muted);
+      max-width: 34ch;
+      text-align: justify;
+      hyphens: auto;
+    }
+    .bg-indigo .lead, .on-dark .lead { color: color-mix(in srgb, white 78%, transparent); }
+
+    .body {
+      font-size: 20px;
+      line-height: 1.45;
+      font-weight: 500;
+      color: var(--ink);
+      text-align: justify;
+      hyphens: auto;
+    }
+    .card p,
+    .diff-item p,
+    .course p,
+    .lab-copy .lead {
+      text-align: justify;
+      hyphens: auto;
+    }
+    .kicker,
+    h1, h2, h3,
+    .stat span,
+    .pill,
+    .tag,
+    .chip,
+    .footer-mini,
+    .contact-grid small,
+    .contact-grid strong {
+      text-align: inherit;
+    }
+    .muted { color: var(--muted); }
+    .accent { color: var(--purple); }
+    .blue { color: var(--blue); }
+
+.pad { padding: 64px 72px; height: 100%; }
+    .pad-sm { padding: 48px 64px; height: 100%; }
+
+    .row { display: flex; gap: 40px; height: 100%; }
+    .col { display: flex; flex-direction: column; }
+    .grow { flex: 1; }
+    .center { align-items: center; justify-content: center; }
+    .between { justify-content: space-between; }
+    .end { justify-content: flex-end; }
+    .gap-sm { gap: 12px; }
+    .gap-md { gap: 20px; }
+    .gap-lg { gap: 32px; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--indigo) 8%, white);
+      color: var(--indigo);
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .chip.on-dark {
+      background: color-mix(in srgb, white 12%, transparent);
+      color: white;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 140px;
+    }
+    .stat strong {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--white);
+    }
+    .stat span {
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, white 70%, transparent);
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--indigo);
+      border-radius: 10px;
+      padding: 22px 22px 20px;
+    }
+    .card.purple { border-left-color: var(--purple); }
+    .card.blue { border-left-color: var(--blue); }
+    .card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--indigo);
+      margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+
+    .fill-grid {
+      flex: 1 1 auto;
+      min-height: 0;
+      align-content: stretch;
+      height: 100%;
+    }
+    .grid-2.fill-grid .diff-item,
+    .grid-6.fill-grid .diff-item {
+      align-items: center;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .grid-6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    .diff-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 18px 18px 16px;
+      background: var(--white);
+      border-radius: 10px;
+      border: 1px solid var(--line);
+    }
+    .diff-item .n {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      background: var(--indigo);
+      color: white;
+      display: grid; place-items: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .diff-item.purple .n { background: var(--purple); }
+    .diff-item.blue .n { background: var(--blue); }
+    .diff-item h3 { font-size: 17px; font-weight: 700; color: var(--indigo); margin-bottom: 4px; }
+    .diff-item p { font-size: 14px; line-height: 1.35; color: var(--muted); font-weight: 500; }
+
+    .course {
+      position: relative;
+      background: var(--white);
+      border-radius: 14px;
+      padding: 28px 24px 24px;
+      border: 1px solid var(--line);
+      min-height: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: hidden;
+      box-shadow: 0 18px 40px -28px color-mix(in srgb, var(--indigo) 45%, transparent);
+    }
+    .course::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--purple), var(--blue), var(--indigo));
+    }
+    .course h3 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--indigo);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--indigo);
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .pill.soft {
+      background: color-mix(in srgb, var(--indigo) 8%, white);
+      color: var(--indigo);
+    }
+
+    .photo-pane {
+      position: absolute;
+      inset: 0 0 0 46%;
+      overflow: hidden;
+    }
+    .photo-pane img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      display: block;
+    }
+    .photo-pane::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, var(--paper), transparent 28%);
+      pointer-events: none;
+    }
+    .photo-full {
+      position: absolute;
+      inset: 0;
+    }
+    .photo-full img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: saturate(.9) contrast(1.05);
+    }
+    .photo-full::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--indigo) 92%, black) 0%, color-mix(in srgb, var(--indigo) 55%, transparent) 46%, transparent 72%),
+        linear-gradient(0deg, color-mix(in srgb, var(--indigo) 70%, transparent), transparent 40%);
+    }
+
+    .lab-copy {
+      position: relative;
+      z-index: 2;
+      width: 48%;
+      height: 100%;
+      padding: 56px 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: white;
+    }
+    .lab-copy h2 { color: white; font-size: 40px; max-width: 12ch; }
+    .lab-copy .lead { color: color-mix(in srgb, white 80%, transparent); max-width: 28ch; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: color-mix(in srgb, white 14%, transparent);
+      border: 1px solid color-mix(in srgb, white 22%, transparent);
+      font-size: 13px;
+      font-weight: 600;
+      color: white;
+    }
+
+.faculty {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px 14px;
+      flex: 1;
+      align-content: stretch;
+      height: 100%;
+      min-height: 0;
+    }
+    .faculty li {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      padding: 12px 14px;
+      background: #fff;
+      border: 1px solid color-mix(in srgb, var(--indigo) 10%, transparent);
+      border-radius: 10px;
+    }
+    .faculty strong {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--indigo);
+      line-height: 1.25;
+    }
+    .faculty span {
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--indigo) 55%, transparent);
+    }
+
+.logo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 18px;
+      align-items: stretch;
+      flex: 1;
+      min-height: 0;
+    }
+    .logo-cell {
+      min-height: 0;
+      background: #fff;
+      border: 1px solid color-mix(in srgb, var(--indigo) 12%, transparent);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 18px 14px 12px;
+      box-shadow: 0 10px 28px -22px color-mix(in srgb, var(--indigo) 40%, transparent);
+    }
+    .logo-cell img {
+      max-width: 90%;
+      max-height: 70px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .logo-cell span {
+      font-size: 11px;
+      font-weight: 700;
+      color: color-mix(in srgb, var(--indigo) 70%, transparent);
+      text-align: center;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+    .logo-cell-dark {
+      background: linear-gradient(160deg, var(--indigo), #151a6e) !important;
+      border: none !important;
+      border-radius: 14px !important;
+      padding: 28px 22px 18px !important;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 16px 32px rgba(28,36,147,0.22);
+    }
+    .logo-cell-dark img {
+      max-height: 64px !important;
+      max-width: 88% !important;
+      filter: none !important;
+    }
+    .logo-cell-dark span {
+      color: rgba(255,255,255,0.78) !important;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+
+    .footer-mini {
+      position: absolute;
+      left: 64px;
+      bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--indigo) 55%, white);
+    }
+    .bg-paper .footer-mini, .bg-split .footer-mini { color: color-mix(in srgb, var(--indigo) 45%, transparent); }
+    .footer-mini img { width: 22px; height: 20px; }
+
+    .rule {
+      width: 72px;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--purple), var(--blue));
+    }
+    .rule.on-dark { background: linear-gradient(90deg, var(--purple), white); }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 28px;
+      margin-top: 24px;
+    }
+    .contact-grid div {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .contact-grid small {
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, white 55%, transparent);
+      font-weight: 600;
+    }
+    .contact-grid strong {
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+    }
+
+    @media print {
+      @page { size: 1440px 810px; margin: 0; }
+      html, body { background: white; }
+      .deck { gap: 0; padding: 0; }
+      .slide {
+        box-shadow: none;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slide:last-child { page-break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+
+    <!-- 1 Cover -->
+    <section class="slide bg-indigo" data-slide="1">
+      <div class="orb orb-a"></div>
+      <div class="orb orb-b"></div>
+      <div class="tri-bleed"></div>
+      <div class="pad row between" style="position:relative;z-index:1;align-items:center;">
+        <div class="col gap-lg" style="max-width:52%;">
+          <img class="mark-md" src="./img/mark.png" alt="AMET" />
+          <div class="col gap-md">
+            <p class="kicker on-dark">Saúde e Estética · Grupo Aquila</p>
+            <h1>AMET</h1>
+            <div class="rule on-dark"></div>
+            <p class="lead">Vivencie o cotidiano clínico com supervisão e saia pronto para a carreira.</p>
+          </div>
+        </div>
+        <div class="col gap-lg" style="align-items:flex-end;text-align:right;">
+          <div class="stat"><strong>1992</strong><span>Grupo Aquila</span></div>
+          <div class="stat"><strong>20+</strong><span>Anos de experiência</span></div>
+          <div class="stat"><strong>3</strong><span>Áreas de formação</span></div>
+        </div>
+      </div>
+      <div class="footer-mini"><img src="./img/mark.png" alt="" /> Alunos 2025</div>
+    </section>
+
+    <!-- 2 Instituição -->
+    <section class="slide bg-paper" data-slide="2">
+      <div class="pad row" style="gap:48px;">
+        <div class="col gap-lg grow" style="max-width:58%;justify-content:center;">
+          <p class="kicker">Para alunos</p>
+          <h2>Do estágio à<br/>carreira profissional.</h2>
+          <div class="rule"></div>
+          <p class="body muted">
+            A AMET Saúde e Estética, empresa do Grupo Aquila, atua desde 1992.
+            Fundada pelo Dr. Vinicius Aquila (CRBM 46.886), com mais de 20 anos em docência e laboratório,
+            pós-graduação em Diagnóstico por Imagem e Biologia Molecular pelo Hospital Albert Einstein.
+          </p>
+          <div class="row gap-sm" style="flex-wrap:wrap;height:auto;">
+            <span class="chip">Biomédico · Cirurgião-Dentista</span>
+            <span class="chip">SBAC · ABBM</span>
+            <span class="chip">São Paulo</span>
+          </div>
+        </div>
+        <div class="col gap-md" style="width:38%;justify-content:center;">
+          <div class="card purple">
+            <h3>Residência Clínica em Saúde</h3>
+            <p>Programa inovador que aproxima a teoria da prática com vivência supervisionada do cotidiano clínico.</p>
+          </div>
+          <div class="card blue">
+            <h3>Objetivo</h3>
+            <p>Preparar profissionais mais qualificados, com raciocínio clínico, técnica e postura ética.</p>
+          </div>
+          <div class="card">
+            <h3>Método</h3>
+            <p>Ambiente real, equipamentos de mercado e acompanhamento multiprofissional.</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-mini"><img src="./img/mark.png" alt="" /> AMET</div>
+    </section>
+
+    <!-- 3 Residência -->
+    <section class="slide bg-paper" data-slide="3">
+      <div class="pad col gap-lg">
+        <div class="col gap-sm">
+          <p class="kicker">Formação complementar</p>
+          <h2>O que o residente vivencia</h2>
+        </div>
+        <div class="grid-2 fill-grid">
+          <div class="diff-item"><div class="n">01</div><div><h3>Atendimentos supervisionados</h3><p>Participação em rotinas clínicas com acompanhamento de profissionais experientes.</p></div></div>
+          <div class="diff-item purple"><div class="n">02</div><div><h3>Teoria aplicada</h3><p>Conhecimentos teóricos colocados em situações reais do dia a dia.</p></div></div>
+          <div class="diff-item blue"><div class="n">03</div><div><h3>Competências essenciais</h3><p>Desenvolvimento técnico, raciocínio clínico e postura ética profissional.</p></div></div>
+          <div class="diff-item"><div class="n">04</div><div><h3>Visão multiprofissional</h3><p>Interação entre áreas da saúde para uma formação ampla e integrada.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 Missão Visão Valores -->
+    <section class="slide bg-indigo" data-slide="4">
+      <div class="orb orb-a"></div>
+      <div class="pad col gap-lg" style="position:relative;z-index:1;">
+        <div class="col gap-sm">
+          <p class="kicker on-dark">Diretrizes</p>
+          <h2>Missão, visão e valores</h2>
+        </div>
+        <div class="grid-3 fill-grid">
+          <div class="card" style="background:color-mix(in srgb,white 8%,transparent);border-color:color-mix(in srgb,white 18%,transparent);border-left-color:var(--purple);">
+            <h3 style="color:white;">Missão</h3>
+            <p style="color:color-mix(in srgb,white 78%,transparent);">Oferecer excelência em saúde e geração de conhecimento, com ética, sustentabilidade e responsabilidade social.</p>
+          </div>
+          <div class="card" style="background:color-mix(in srgb,white 8%,transparent);border-color:color-mix(in srgb,white 18%,transparent);border-left-color:var(--blue);">
+            <h3 style="color:white;">Visão</h3>
+            <p style="color:color-mix(in srgb,white 78%,transparent);">Ser referência na formação de profissionais qualificados, com inovação e qualidade em todas as atividades.</p>
+          </div>
+          <div class="card" style="background:color-mix(in srgb,white 8%,transparent);border-color:color-mix(in srgb,white 18%,transparent);border-left-color:white;">
+            <h3 style="color:white;">Valores</h3>
+            <p style="color:color-mix(in srgb,white 78%,transparent);">Transparência, segurança, compromisso com a prática e respeito à comunidade atendida.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 Quem somos + foto -->
+    <section class="slide bg-paper" data-slide="5">
+      <div class="pad col gap-lg" style="width:46%;justify-content:center;position:relative;z-index:2;">
+        <img class="mark" src="./img/mark.png" alt="" />
+        <h2>Quem somos?</h2>
+        <div class="rule"></div>
+        <p class="body muted">
+          Somos uma instituição dedicada à formação prática supervisionada,
+          que desenvolve habilidades técnicas, raciocínio clínico e postura ética
+          diante das demandas do dia a dia profissional.
+        </p>
+      </div>
+      <div class="photo-pane" style="background:#0a0f2e;">
+        <img src="./img/equipe.jpg" alt="Equipe AMET" style="object-fit:contain;object-position:center bottom;background:#0a0f2e;" />
+      </div>
+    </section>
+
+    <!-- 6 Diferenciais -->
+    <section class="slide bg-paper" data-slide="6">
+      <div class="pad col gap-lg">
+        <div class="col gap-sm">
+          <p class="kicker">Por que escolher a AMET</p>
+          <h2>Vantagens para o aluno</h2>
+        </div>
+        <div class="grid-6 fill-grid">
+          <div class="diff-item"><div class="n">01</div><div><h3>Prática diária</h3><p>Rotinas reais com equipamentos do mercado.</p></div></div>
+          <div class="diff-item purple"><div class="n">02</div><div><h3>Flexibilidade</h3><p>Horários e turmas pensados para a sua rotina.</p></div></div>
+          <div class="diff-item blue"><div class="n">03</div><div><h3>Conteúdo atualizado</h3><p>Alinhado às exigências do mercado de trabalho.</p></div></div>
+          <div class="diff-item"><div class="n">04</div><div><h3>Exigências acadêmicas</h3><p>Atendimento a graduação e pós-graduação.</p></div></div>
+          <div class="diff-item purple"><div class="n">05</div><div><h3>Laboratórios profissionais</h3><p>Tecnologia e estrutura de ambiente clínico.</p></div></div>
+          <div class="diff-item blue"><div class="n">06</div><div><h3>Parcerias universitárias</h3><p>Convênios com grandes instituições de ensino.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 Cursos -->
+    <section class="slide bg-paper" data-slide="7">
+      <div class="pad col gap-lg">
+        <div class="col gap-sm" style="align-items:center;text-align:center;">
+          <p class="kicker">Sua formação</p>
+          <h2>Cursos e modalidades</h2>
+        </div>
+        <div class="grid-3" style="flex:1;align-content:start;padding-top:8px;">
+          <div class="course" style="min-height:280px;">
+            <h3>Imagenologia</h3>
+            <p class="body muted" style="font-size:16px;">Tomógrafo, DICOM e console para práticas de exames.</p>
+            <div class="col gap-sm" style="margin-top:auto;">
+              <div class="pill soft">Estágio obrigatório</div>
+            </div>
+          </div>
+          <div class="course" style="min-height:280px;">
+            <h3>Análises Clínicas</h3>
+            <p class="body muted" style="font-size:16px;">Rotina laboratorial completa com equipamentos reais.</p>
+            <div class="col gap-sm" style="margin-top:auto;">
+              <div class="pill soft">Estágio obrigatório</div>
+            </div>
+          </div>
+          <div class="course" style="min-height:280px;">
+            <h3>Estética</h3>
+            <p class="body muted" style="font-size:16px;">Atendimento assistido sob supervisão de Biomédico.</p>
+            <div class="col gap-sm" style="margin-top:auto;">
+              <div class="pill soft">Estágio obrigatório</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;">
+          <div class="pill" style="min-width:420px;padding:16px 28px;font-size:18px;">Carreira profissional</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 Lab análises -->
+    <section class="slide bg-indigo" data-slide="8">
+      <div class="photo-full"><img src="./img/lab-analises.jpg" alt="Laboratório de Análises Clínicas" /></div>
+      <div class="lab-copy">
+        <div class="col gap-md">
+          <p class="kicker on-dark">Metodologia na prática</p>
+          <h2>Laboratório de Análises Clínicas</h2>
+          <p class="lead">Ambiente completo para rotinas de coleta, bioquímica, hematologia e microscopia.</p>
+        </div>
+        <div class="tags">
+          <span class="tag">Homogeneizador</span>
+          <span class="tag">Microcentrífugas</span>
+          <span class="tag">Microscópio</span>
+          <span class="tag">URIT 50</span>
+          <span class="tag">URIT 880</span>
+          <span class="tag">URIT 610</span>
+          <span class="tag">URIT 5160</span>
+          <span class="tag">PK125</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 Anatomia -->
+    <section class="slide bg-indigo" data-slide="9">
+      <div class="photo-full"><img src="./img/lab-anatomia.jpg" alt="Laboratório de Anatomia" /></div>
+      <div class="lab-copy">
+        <div class="col gap-md">
+          <p class="kicker on-dark">Campus</p>
+          <h2>Laboratório de Anatomia</h2>
+          <p class="lead">Sala com estrutura dedicada a estudos anatômicos e apoio à formação prática.</p>
+        </div>
+        <div class="tags">
+          <span class="tag">Modelos anatômicos</span>
+          <span class="tag">Estudo supervisionado</span>
+          <span class="tag">Base clínica</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 Imagenologia -->
+    <section class="slide bg-indigo" data-slide="10">
+      <div class="photo-full"><img src="./img/lab-imagenologia.jpg" alt="Laboratório de Imagenologia" /></div>
+      <div class="lab-copy">
+        <div class="col gap-md">
+          <p class="kicker on-dark">Imagem</p>
+          <h2>Laboratório de Imagenologia</h2>
+          <p class="lead">Práticas com tomógrafo e simulador de plataforma DICOM em console profissional.</p>
+        </div>
+        <div class="tags">
+          <span class="tag">Tomógrafo</span>
+          <span class="tag">DICOM / Weasis</span>
+          <span class="tag">Console Siemens</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 Consultório -->
+    <section class="slide bg-indigo" data-slide="11">
+      <div class="photo-full"><img src="./img/consultorio.jpg" alt="Consultório estético" /></div>
+      <div class="lab-copy">
+        <div class="col gap-md">
+          <p class="kicker on-dark">Estética</p>
+          <h2>Consultório de atendimento estético assistido</h2>
+          <p class="lead">Simulação de atendimento sob supervisão de um Biomédico.</p>
+        </div>
+        <div class="tags">
+          <span class="tag">Atendimento assistido</span>
+          <span class="tag">Supervisão clínica</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 Clínica -->
+    <section class="slide bg-indigo" data-slide="12">
+      <div class="photo-full"><img src="./img/clinica.jpg" alt="Clínica de Estética" /></div>
+      <div class="lab-copy">
+        <div class="col gap-md">
+          <p class="kicker on-dark">Clínica</p>
+          <h2>Clínica de Estética</h2>
+          <p class="lead">Equipamentos para protocolos avançados em ambiente profissional.</p>
+        </div>
+        <div class="tags">
+          <span class="tag">Ares · Carboxiterapia</span>
+          <span class="tag">Heccus Turbo</span>
+          <span class="tag">Ultrafocus HTM</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 Coleta -->
+    <section class="slide bg-indigo" data-slide="13">
+      <div class="photo-full"><img src="./img/coleta.jpg" alt="Sala de coleta" /></div>
+      <div class="lab-copy">
+        <div class="col gap-md">
+          <p class="kicker on-dark">Coleta</p>
+          <h2>Sala de coleta e anamnese assistida</h2>
+          <p class="lead">Simulação de ambiente de atendimento sob supervisão biomédica.</p>
+        </div>
+        <div class="tags">
+          <span class="tag">Materiais biológicos</span>
+          <span class="tag">Anamnese</span>
+          <span class="tag">Biossegurança</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 Docente -->
+    <section class="slide bg-paper" data-slide="14">
+      <div class="pad-sm col gap-md" style="height:100%;">
+        <div class="col gap-sm">
+          <p class="kicker">Equipe</p>
+          <h2 style="font-size:36px;">Corpo docente</h2>
+        </div>
+        <ul class="faculty">
+          <li><strong>Dr. Vinicius Aquila</strong><span>CEO · CRBM 46.886</span></li>
+          <li><strong>Dra. Bianca Yoshie Ikari</strong><span>CRBM 33.130</span></li>
+          <li><strong>Dra. Bruna Freitas Santa Cruz</strong><span>CRBM 60.324-SP</span></li>
+          <li><strong>Dra. Flavia Enira Gomes Pereira</strong><span>CRBM 3.066-SP</span></li>
+          <li><strong>Dra. Gabriela P. Thomaz Cordeiro</strong><span>CRBM 33.93</span></li>
+          <li><strong>Dra. Jahsmine Emmanuelle Viana</strong><span>CRBM 46.369</span></li>
+          <li><strong>Dr. João Moraes</strong><span>CRBM 63.766-S</span></li>
+          <li><strong>Dra. Laiza Miranda de Sousa</strong><span>CRBM 33.955</span></li>
+          <li><strong>Dra. Marcelly Antunes Marques</strong><span>CRBM 53.840</span></li>
+          <li><strong>Dra. Priscila Flor Bezerra</strong><span>CRBM 10.741-SP</span></li>
+          <li><strong>Dra. Roberta Kelly Silva</strong><span>CRBM 61.336</span></li>
+          <li><strong>Katia Selene Polete Novaes</strong><span>CRF 20.465-SP</span></li>
+          <li><strong>Luana Rodrigues Pires</strong><span>CREFITO 139765-SP</span></li>
+          <li><strong>Marcos Rodrigues Sant´Ana</strong><span>CRTR 45.798T-SP</span></li>
+          <li><strong>Wendell da Luz Silva</strong><span>CRTR 08.468N-SP</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 15 Parceiros acadêmicos -->
+    <section class="slide bg-paper" data-slide="15">
+      <div class="pad col gap-lg">
+        <div class="col gap-sm">
+          <p class="kicker">Rede</p>
+          <h2>Parceiros acadêmicos</h2>
+        </div>
+        <div class="logo-grid">
+          <div class="logo-cell"><img src="./img/partner-anhanguera.png" alt="Anhanguera" /><span>Anhanguera</span></div>
+          <div class="logo-cell"><img src="./img/partner-cruzeiro.png" alt="Cruzeiro do Sul" /><span>Cruzeiro do Sul</span></div>
+          <div class="logo-cell"><img src="./img/partner-uninove.png" alt="UNINOVE" /><span>UNINOVE</span></div>
+          <div class="logo-cell"><img src="./img/partner-anhembi.png" alt="Anhembi Morumbi" /><span>Anhembi Morumbi</span></div>
+          <div class="logo-cell"><img src="./img/partner-unicid.png" alt="UNICID" /><span>UNICID</span></div>
+          <div class="logo-cell"><img src="./img/partner-uninter.png" alt="UNINTER" /><span>UNINTER</span></div>
+          <div class="logo-cell"><img src="./img/partner-anima.png" alt="Ânima" /><span>Ânima</span></div>
+          <div class="logo-cell"><img src="./img/partner-estacio.png" alt="Estácio" /><span>Estácio</span></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 16 Parceiros comerciais -->
+    <section class="slide bg-split" data-slide="16">
+      <div class="pad row" style="align-items:center;">
+        <div class="col gap-md" style="width:36%;color:white;">
+          <p class="kicker on-dark">Tecnologia</p>
+          <h2 style="color:white;font-size:40px;">Parceiros<br/>comerciais</h2>
+          <div class="rule on-dark"></div>
+          <p class="lead">Equipamentos e soluções que sustentam a prática profissional na AMET.</p>
+        </div>
+        <div class="row gap-lg grow center" style="align-items:center;justify-content:center;flex-wrap:wrap;">
+          <div class="logo-cell logo-cell-dark" style="width:380px;min-height:220px;"><img src="./img/partner-phd.png" alt="PHD" style="max-height:96px;" /><span>PHD</span></div>
+          <div class="logo-cell" style="width:380px;min-height:220px;background:#fff;"><img src="./img/partner-siemens.png" alt="Siemens Healthineers" style="max-height:96px;" /><span>Siemens Healthineers</span></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 17 CTA -->
+    <section class="slide bg-indigo" data-slide="17">
+      <div class="orb orb-a"></div>
+      <div class="orb orb-b"></div>
+      <div class="pad row between" style="position:relative;z-index:1;align-items:center;">
+        <div class="col gap-lg" style="max-width:58%;">
+          <img class="mark-md" src="./img/mark.png" alt="AMET" />
+          <h1 style="font-size:56px;">Garanta sua vaga e transforme prática em carreira.</h1>
+          <div class="rule on-dark"></div>
+          <p class="lead">Inscreva-se nos estágios e programas da AMET.</p>
+          <div class="contact-grid">
+            <div><small>WhatsApp</small><strong>(11) 99348-7886</strong></div>
+            <div><small>Instagram</small><strong>@AMETSAUDE</strong></div>
+            <div><small>Site</small><strong>www.ametsaude.com.br</strong></div>
+            <div><small>E-mail</small><strong>amet@ametsaude.com.br</strong></div>
+          </div>
+        </div>
+        <div class="col center" style="width:34%;">
+          <img class="mark-lg" src="./img/mark.png" alt="" style="opacity:.95;" />
+          <p style="margin-top:18px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:color-mix(in srgb,white 75%,transparent);">Saúde e Estética</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
