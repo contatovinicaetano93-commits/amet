@@ -1,5 +1,6 @@
 import crypto from "crypto";
 
+import { ADMIN_SESSION_COOKIE, adminSessionValid, readCookieValue } from "@/lib/adminSession";
 import { countRecentFailedAttempts, logAdminAccess } from "@/lib/db";
 
 const RATE_LIMIT_WINDOW_MINUTES = 15;
@@ -15,8 +16,6 @@ function timingSafeEqual(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);
   if (bufA.length !== bufB.length) {
-    // Compare against itself so a length mismatch doesn't short-circuit faster
-    // than a full comparison would, which would otherwise leak length via timing.
     crypto.timingSafeEqual(bufA, bufA);
     return false;
   }
@@ -24,6 +23,10 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 export type AdminCheckResult = { ok: true } | { ok: false; status: number; error: string };
+
+export function expectedAdminKey(): string {
+  return process.env.ADMIN_KEY ?? "amet-admin";
+}
 
 export async function checkAdminAccess(request: Request, action: string): Promise<AdminCheckResult> {
   const ip = getClientIp(request);
@@ -33,9 +36,10 @@ export async function checkAdminAccess(request: Request, action: string): Promis
     return { ok: false, status: 429, error: "Muitas tentativas. Tente novamente mais tarde." };
   }
 
-  const expected = process.env.ADMIN_KEY ?? "amet-admin";
+  const sessionOk = adminSessionValid(readCookieValue(request.headers.get("cookie"), ADMIN_SESSION_COOKIE));
+  const expected = expectedAdminKey();
   const provided = request.headers.get("x-admin-key") ?? "";
-  const success = timingSafeEqual(provided, expected);
+  const success = sessionOk || timingSafeEqual(provided, expected);
 
   await logAdminAccess(ip, action, success);
 
