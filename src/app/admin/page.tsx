@@ -2,83 +2,101 @@
 
 import { useEffect, useState } from "react";
 
+import { AdminLogoutButton } from "@/components/admin/AdminLogoutButton";
+import { AdminSectionNav } from "@/components/admin/AdminSectionNav";
 import { AlunosPanel } from "@/components/admin/AlunosPanel";
 import { CandidaturasPanel } from "@/components/admin/CandidaturasPanel";
-import { ADMIN_STORAGE_KEY } from "@/lib/adminClient";
 
-type AdminTab = "candidaturas" | "alunos";
-
-function tabLabel(tab: AdminTab): string {
-  switch (tab) {
-    case "candidaturas":
-      return "Candidaturas";
-    case "alunos":
-      return "Base de alunos";
-    default: {
-      const exhaustive: never = tab;
-      return exhaustive;
-    }
-  }
-}
+type AdminTab = "inscricoes" | "alunos";
 
 export default function AdminPage() {
-  const [adminKey, setAdminKey] = useState("");
-  const [inputKey, setInputKey] = useState("");
-  const [tab, setTab] = useState<AdminTab>("candidaturas");
+  const [ready, setReady] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [tab, setTab] = useState<AdminTab>("inscricoes");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(ADMIN_STORAGE_KEY);
-    if (saved) setAdminKey(saved);
+    const aba = new URLSearchParams(window.location.search).get("aba");
+    if (aba === "alunos" || aba === "inscricoes") setTab(aba);
+    void fetch("/api/admin/session", { cache: "no-store" })
+      .then((response) => setAuthed(response.ok))
+      .finally(() => setReady(true));
   }, []);
 
-  function handleLogin(event: React.FormEvent) {
+  async function handleLogin(event: React.FormEvent) {
     event.preventDefault();
-    const key = inputKey.trim();
-    if (!key) return;
-    sessionStorage.setItem(ADMIN_STORAGE_KEY, key);
     setError("");
-    setAdminKey(key);
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/admin/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
+        setError(data?.error ?? "E-mail ou senha incorretos.");
+        return;
+      }
+      setPassword("");
+      setAuthed(true);
+    } catch {
+      setError("Não foi possível entrar. Tente de novo.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  function handleLogout() {
-    sessionStorage.removeItem(ADMIN_STORAGE_KEY);
-    setAdminKey("");
-    setInputKey("");
-    setTab("candidaturas");
+  if (!ready) {
+    return (
+      <main className="mx-auto flex min-h-[70vh] max-w-md items-center px-6 py-16">
+        <p className="text-sm text-amet-indigo/70">Abrindo o acesso...</p>
+      </main>
+    );
   }
 
-  if (!adminKey) {
+  if (!authed) {
     return (
       <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
         <h1 className="text-2xl font-bold text-amet-indigo">Admin — AMET</h1>
         <p className="mt-2 text-sm text-amet-indigo/70">
-          Informe a chave de administrador para gerenciar alunos e candidaturas.
+          Entre com o e-mail e a senha do admin para conferir as inscrições de estágio, o ERP e as aulas online.
         </p>
         <form onSubmit={handleLogin} className="mt-8 space-y-4">
           <label className="block">
-            <span className="text-sm font-medium text-amet-indigo">Chave de acesso</span>
+            <span className="text-sm font-medium text-amet-indigo">E-mail</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
+              autoComplete="username"
+              required
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium text-amet-indigo">Senha</span>
             <input
               type="password"
-              value={inputKey}
-              onChange={(e) => setInputKey(e.target.value)}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
               className="mt-1 w-full rounded-xl border border-amet-blue/20 px-4 py-3 text-amet-indigo outline-none focus:border-amet-blue"
-              placeholder="Sua chave admin"
               autoComplete="current-password"
+              required
             />
           </label>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <button
             type="submit"
-            className="w-full rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-white hover:bg-amet-indigo"
+            disabled={submitting}
+            className="w-full rounded-full bg-amet-blue px-6 py-3 text-sm font-semibold text-white hover:bg-amet-indigo disabled:opacity-60"
           >
-            Entrar
+            {submitting ? "Entrando..." : "Entrar"}
           </button>
         </form>
-        <p className="mt-6 text-xs text-amet-indigo/70">
-          Padrão local: <code className="rounded bg-amet-blue/5 px-1">amet-admin</code> — altere com{" "}
-          <code className="rounded bg-amet-blue/5 px-1">ADMIN_KEY</code> no ambiente.
-        </p>
       </main>
     );
   }
@@ -89,41 +107,16 @@ export default function AdminPage() {
         <div>
           <h1 className="text-2xl font-bold text-amet-indigo">Painel administrativo</h1>
           <p className="mt-1 text-sm text-amet-indigo/70">
-            Gerencie a base de alunos AMET e as candidaturas de estágio.
+            As inscrições de estágio ficam só neste acesso, junto com o ERP e a orquestração das aulas.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="rounded-full border border-amet-purple/20 px-4 py-2 text-sm font-medium text-amet-purple hover:bg-amet-purple/5"
-        >
-          Sair
-        </button>
+        <AdminLogoutButton />
       </div>
 
-      <div className="mt-8 flex gap-2 border-b border-amet-blue/15 pb-px">
-        {(["candidaturas", "alunos"] as const).map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setTab(item)}
-            className={`rounded-t-xl px-4 py-2 text-sm font-medium ${
-              tab === item
-                ? "border border-b-white border-amet-blue/15 bg-white text-amet-blue"
-                : "text-amet-indigo/70 hover:text-amet-blue"
-            }`}
-          >
-            {tabLabel(item)}
-          </button>
-        ))}
-      </div>
+      <AdminSectionNav current={tab} />
 
       <div className="mt-8">
-        {tab === "candidaturas" ? (
-          <CandidaturasPanel adminKey={adminKey} />
-        ) : (
-          <AlunosPanel adminKey={adminKey} />
-        )}
+        {tab === "inscricoes" ? <CandidaturasPanel adminKey="" /> : <AlunosPanel adminKey="" />}
       </div>
     </main>
   );
